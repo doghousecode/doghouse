@@ -119,13 +119,13 @@
 }
 
 .pillToggle .avatar {
-  width: 96px;                     /* ~3x previous size */
+  width: 96px;
   height: 96px;
-  border-radius: 12px;
+  border-radius: 14px;         /* slightly squared image looks great */
   object-fit: cover;
   background: transparent;
-  border: 2px solid var(--border);
-  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+  border: none;                 /* no ring */
+  box-shadow: none;             /* no halo */
 }
 .pillToggle:active {
   transform: scale(0.98);
@@ -135,7 +135,9 @@
   font-weight: 600;
   font-size: 14px;
 }
-
+.pill.pillToggle {
+  box-shadow: 0 1px 0 rgba(0,0,0,.03);
+}
 /* Active state — THIS fixes the colour issue */
 .pill.active {
   background: var(--pill-active-bg);
@@ -422,14 +424,21 @@
     return { latestText, deltaText };
   }
 
-  function setActiveDog(dogKey) {
-    activeDog = dogKey;
-els.pillWatson.setAttribute("aria-pressed", dogKey === "watson");
-els.pillEddie.setAttribute("aria-pressed", dogKey === "eddie");
-    cancelEdit();
-    setMsg("");
-    render();
-  }
+ function setActiveDog(dogKey) {
+  activeDog = dogKey;
+
+  // Visual state (THIS drives the colour swap)
+  els.pillWatson.classList.toggle("active", dogKey === "watson");
+  els.pillEddie.classList.toggle("active", dogKey === "eddie");
+
+  // Accessibility state (nice to keep)
+  els.pillWatson.setAttribute("aria-pressed", dogKey === "watson");
+  els.pillEddie.setAttribute("aria-pressed", dogKey === "eddie");
+
+  cancelEdit();
+  setMsg("");
+  render();
+}
 
   function startEdit(id) {
     const entries = loadEntries(activeDog);
