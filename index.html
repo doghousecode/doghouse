@@ -145,11 +145,11 @@
   border-color: var(--pill-active-bg);
 }
 
-/* Active avatar styling */
-.pill.active .avatar {
-  border-color: var(--pill-active-text);
-  box-shadow: 0 0 0 4px rgba(255,255,255,0.25);
-  transform: scale(1.02);
+/* --- FINAL avatar reset: no borders, no halos, ever --- */
+.pillToggle .avatar,
+.pillToggle.active .avatar {
+  border: none !important;
+  box-shadow: none !important;
 }
 
 /* Dark mode avatar glow */
