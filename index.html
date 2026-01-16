@@ -106,42 +106,53 @@
       user-select: none;
     }
 
+/* --- Dog toggle buttons --- */
 .pillToggle {
   display: flex;
+  flex-direction: column;          /* stack image above name */
   align-items: center;
   justify-content: center;
-  gap: 10px;
-  padding: 10px 12px;
+  gap: 8px;
+  padding: 14px 16px;
+  text-align: center;
 }
 
 .pillToggle .avatar {
-  width: 34px;
-  height: 34px;
+  width: 96px;                     /* ~3x previous size */
+  height: 96px;
   border-radius: 999px;
   object-fit: cover;
-  border: 1px solid var(--border);
   background: transparent;
-  box-shadow: 0 1px 0 rgba(0,0,0,.06);
+  border: 2px solid var(--border);
+  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
 }
 
+/* Label text */
+.pillToggle span {
+  font-weight: 600;
+  font-size: 14px;
+}
+
+/* Active state — THIS fixes the colour issue */
+.pill.active {
+  background: var(--pill-active-bg);
+  color: var(--pill-active-text);
+  border-color: var(--pill-active-bg);
+}
+
+/* Active avatar styling */
 .pill.active .avatar {
-  border-color: rgba(255,255,255,.35);
-  box-shadow: 0 0 0 3px rgba(255,255,255,.12);
+  border-color: var(--pill-active-text);
+  box-shadow: 0 0 0 4px rgba(255,255,255,0.25);
+  transform: scale(1.02);
 }
 
-/* Dark mode tweak: subtle glow ring looks nicer */
+/* Dark mode avatar glow */
 @media (prefers-color-scheme: dark) {
   .pill.active .avatar {
-    border-color: rgba(0,0,0,.35);
-    box-shadow: 0 0 0 3px rgba(0,0,0,.18);
+    box-shadow: 0 0 0 4px rgba(0,0,0,0.35);
   }
 }
-
-    .pill.active {
-      background: var(--pill-active-bg);
-      color: var(--pill-active-text);
-      border-color: var(--pill-active-bg);
-    }
 
 
 
