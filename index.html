@@ -268,6 +268,14 @@
 
 /* Clamp any tiny overflow inside the card (iOS date controls can be weird) */
 .card { overflow: hidden; }
+
+
+#trend {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--card) 85%, var(--bg));
+}
+
   </style>
 </head>
 
@@ -296,7 +304,12 @@
       <div>Change: <b id="delta">—</b> <span class="muted">since previous</span></div>
     </div>
 
-    <label>Date</label>
+    <div style="margin-top:12px;">
+  <canvas id="trend" height="140" style="width:100%; display:block;"></canvas>
+  <div class="muted" id="trendLabel" style="margin-top:6px;">—</div>
+</div>
+
+<label>Date</label>
     <input id="date" type="date" />
 
     <label>Weight entry</label>
@@ -549,6 +562,103 @@
     }).join(",");
   }
 
+const trendCanvas = document.getElementById("trend");
+const trendLabel = document.getElementById("trendLabel");
+
+function parseISODate(s) {
+  // "YYYY-MM-DD" -> Date (local noon to avoid TZ edge weirdness)
+  const [y,m,d] = s.split("-").map(Number);
+  return new Date(y, (m-1), d, 12, 0, 0);
+}
+
+function drawTrend(entries) {
+  if (!trendCanvas) return;
+
+  const ctx = trendCanvas.getContext("2d");
+  const hostW = trendCanvas.clientWidth || 300;
+  const hostH = trendCanvas.height || 140;
+
+  // Make canvas crisp on retina
+  const dpr = window.devicePixelRatio || 1;
+  trendCanvas.width = Math.round(hostW * dpr);
+  trendCanvas.height = Math.round(hostH * dpr);
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+  ctx.clearRect(0, 0, hostW, hostH);
+
+  const data = (entries || [])
+    .filter(e => typeof e.kg === "number" && e.date)
+    .map(e => ({ t: parseISODate(e.date).getTime(), kg: e.kg }))
+    .sort((a,b) => a.t - b.t);
+
+  if (data.length < 2) {
+    trendLabel.textContent = data.length === 1 ? "Add one more entry to see a trend." : "No trend yet.";
+    return;
+  }
+
+  // pad chart area
+  const pad = 14;
+  const left = pad, top = pad, right = hostW - pad, bottom = hostH - pad;
+
+  const tMin = data[0].t, tMax = data[data.length - 1].t;
+  let yMin = Math.min(...data.map(d => d.kg));
+  let yMax = Math.max(...data.map(d => d.kg));
+
+  // Add vertical padding so line isn't glued to edges
+  const yPad = Math.max(0.2, (yMax - yMin) * 0.15);
+  yMin -= yPad; yMax += yPad;
+
+  const xFor = (t) => left + ( (t - tMin) / (tMax - tMin) ) * (right - left);
+  const yFor = (kg) => bottom - ( (kg - yMin) / (yMax - yMin) ) * (bottom - top);
+
+  const rootStyles = getComputedStyle(document.documentElement);
+  const stroke = (rootStyles.getPropertyValue("--text").trim() || "#111");
+  const grid = (rootStyles.getPropertyValue("--border").trim() || "#ddd");
+  const muted = (rootStyles.getPropertyValue("--muted").trim() || "#666");
+
+  // grid line (mid)
+  ctx.strokeStyle = grid;
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(left, (top + bottom)/2);
+  ctx.lineTo(right, (top + bottom)/2);
+  ctx.stroke();
+
+  // line
+  ctx.strokeStyle = stroke;
+  ctx.lineWidth = 2;
+  ctx.lineJoin = "round";
+  ctx.lineCap = "round";
+  ctx.beginPath();
+  data.forEach((p, i) => {
+    const x = xFor(p.t), y = yFor(p.kg);
+    if (i === 0) ctx.moveTo(x, y);
+    else ctx.lineTo(x, y);
+  });
+  ctx.stroke();
+
+  // points
+  ctx.fillStyle = stroke;
+  data.forEach(p => {
+    const x = xFor(p.t), y = yFor(p.kg);
+    ctx.beginPath();
+    ctx.arc(x, y, 2.6, 0, Math.PI * 2);
+    ctx.fill();
+  });
+
+  // label: range + last change
+  const first = data[0].kg;
+  const last = data[data.length - 1].kg;
+  const delta = last - first;
+  const sign = delta > 0 ? "+" : (delta < 0 ? "−" : "");
+  trendLabel.textContent = `Range: ${(yMax - yMin).toFixed(1)}kg • Net: ${sign}${Math.abs(delta).toFixed(1)}kg`;
+}
+
+window.addEventListener("resize", () => {
+  // redraw on resize
+  if (typeof window.__lastTrendEntries !== "undefined") drawTrend(window.__lastTrendEntries);
+});
+
   // Wire UI
   els.pillWatson.addEventListener("click", () => setActiveDog("watson"));
   els.pillEddie.addEventListener("click", () => setActiveDog("eddie"));
@@ -604,7 +714,12 @@
 
     setMsg(`Saved for ${DOGS[activeDog]}.`);
     render();
+    window.__lastTrendEntries = s;  // if you already computed sorted entries "s"
+drawTrend(s);
   });
+
+
+
 
   els.exportJson.addEventListener("click", () => {
     const payload = {
