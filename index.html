@@ -230,6 +230,18 @@
     @media (max-width: 420px) {
       th:nth-child(3), td:nth-child(3) { display: none; } /* hide Notes column on tiny screens */
     }
+
+    /* --- FORCE active toggle styles (final authority) --- */
+.pill.pillToggle {
+  background: var(--pill-bg);
+  color: var(--pill-text);
+}
+
+.pill.pillToggle.active {
+  background: var(--pill-active-bg) !important;
+  color: var(--pill-active-text) !important;
+  border-color: var(--pill-active-bg) !important;
+}
   </style>
 </head>
 
