@@ -252,6 +252,22 @@
   color: var(--pill-active-text) !important;
   border-color: var(--pill-active-bg) !important;
 }
+
+/* --- iOS Safari: prevent date input from overflowing its container --- */
+@supports (-webkit-touch-callout: none) {
+  input[type="date"] {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+    display: block;
+    -webkit-appearance: none;
+    appearance: none;
+  }
+}
+
+/* Clamp any tiny overflow inside the card (iOS date controls can be weird) */
+.card { overflow: hidden; }
   </style>
 </head>
 
