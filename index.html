@@ -27,6 +27,8 @@
 
       --kpi-bg: #fafafa;
       --danger: #b91c1c;
+
+      
     }
 
     @media (prefers-color-scheme: dark) {
@@ -104,11 +106,44 @@
       user-select: none;
     }
 
+.pillToggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 10px 12px;
+}
+
+.pillToggle .avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+  object-fit: cover;
+  border: 1px solid var(--border);
+  background: transparent;
+  box-shadow: 0 1px 0 rgba(0,0,0,.06);
+}
+
+.pill.active .avatar {
+  border-color: rgba(255,255,255,.35);
+  box-shadow: 0 0 0 3px rgba(255,255,255,.12);
+}
+
+/* Dark mode tweak: subtle glow ring looks nicer */
+@media (prefers-color-scheme: dark) {
+  .pill.active .avatar {
+    border-color: rgba(0,0,0,.35);
+    box-shadow: 0 0 0 3px rgba(0,0,0,.18);
+  }
+}
+
     .pill.active {
       background: var(--pill-active-bg);
       color: var(--pill-active-text);
       border-color: var(--pill-active-bg);
     }
+
+
 
     label { display: block; margin: 12px 0 6px; font-size: 12px; color: var(--muted); }
 
@@ -196,8 +231,15 @@
 <main>
   <div class="card">
     <div class="row" style="gap:8px;">
-      <div id="pill-watson" class="pill active" role="button" tabindex="0">Dr Watson</div>
-      <div id="pill-eddie" class="pill" role="button" tabindex="0">Eddie Spaghetti</div>
+      <div id="pill-watson" class="pill pillToggle active" role="button" tabindex="0" aria-pressed="true">
+  <img class="avatar" src="assets/watson.png" alt="Dr Watson" />
+  <span>Dr Watson</span>
+</div>
+
+<div id="pill-eddie" class="pill pillToggle" role="button" tabindex="0" aria-pressed="false">
+  <img class="avatar" src="assets/eddie.png" alt="Eddie Spaghetti" />
+  <span>Eddie Spaghetti</span>
+</div>
     </div>
 
     <div class="kpi muted">
@@ -354,8 +396,8 @@
 
   function setActiveDog(dogKey) {
     activeDog = dogKey;
-    els.pillWatson.classList.toggle("active", dogKey === "watson");
-    els.pillEddie.classList.toggle("active", dogKey === "eddie");
+els.pillWatson.setAttribute("aria-pressed", dogKey === "watson");
+els.pillEddie.setAttribute("aria-pressed", dogKey === "eddie");
     cancelEdit();
     setMsg("");
     render();
