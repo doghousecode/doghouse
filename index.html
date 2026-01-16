@@ -1,0 +1,611 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Dog Weights</title>
+  <style>
+    :root {
+      color-scheme: light dark;
+
+      --bg: #f6f6f7;
+      --card: #ffffff;
+      --text: #111111;
+      --muted: #666666;
+      --border: #e8e8ea;
+
+      --pill-bg: #ffffff;
+      --pill-text: #111111;
+      --pill-active-bg: #111111;
+      --pill-active-text: #ffffff;
+
+      --btn-bg: #111111;
+      --btn-text: #ffffff;
+
+      --field-bg: #ffffff;
+      --field-text: #111111;
+
+      --kpi-bg: #fafafa;
+      --danger: #b91c1c;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #0b0b0c;
+        --card: #141416;
+        --text: #f2f2f3;
+        --muted: #a1a1a7;
+        --border: #2a2a2e;
+
+        --pill-bg: #1b1b1e;
+        --pill-text: #f2f2f3;
+        --pill-active-bg: #f2f2f3;
+        --pill-active-text: #111111;
+
+        --btn-bg: #f2f2f3;
+        --btn-text: #111111;
+
+        --field-bg: #1b1b1e;
+        --field-text: #f2f2f3;
+
+        --kpi-bg: #1a1a1d;
+        --danger: #ff6b6b;
+      }
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      font-family: -apple-system, system-ui, Arial, sans-serif;
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    header {
+      padding: 16px 14px;
+      background: var(--card);
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    h1 { margin: 0; font-size: 18px; }
+    .sub { margin: 6px 0 0; color: var(--muted); font-size: 13px; }
+
+    main { padding: 14px; max-width: 900px; margin: 0 auto; }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 14px;
+      box-shadow: 0 1px 0 rgba(0,0,0,.03);
+    }
+
+    .row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    /* IMPORTANT: min-width:0 prevents iOS inputs (date) from overflowing */
+    .row > * { flex: 1; min-width: 0; }
+
+    .pill {
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 10px 12px;
+      text-align: center;
+      cursor: pointer;
+      background: var(--pill-bg);
+      color: var(--pill-text);
+      user-select: none;
+    }
+
+    .pill.active {
+      background: var(--pill-active-bg);
+      color: var(--pill-active-text);
+      border-color: var(--pill-active-bg);
+    }
+
+    label { display: block; margin: 12px 0 6px; font-size: 12px; color: var(--muted); }
+
+    input, select, textarea, button { width: 100%; font: inherit; }
+    input, select, textarea {
+      padding: 10px 12px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: var(--field-bg);
+      color: var(--field-text);
+      max-width: 100%;
+    }
+
+    /* Date overflow fix */
+    input[type="date"] {
+      width: 100%;
+      min-width: 0;
+      display: block;
+    }
+
+    textarea { min-height: 70px; resize: vertical; }
+
+    button.primary {
+      margin-top: 12px;
+      padding: 10px 12px;
+      border-radius: 12px;
+      border: 1px solid var(--btn-bg);
+      background: var(--btn-bg);
+      color: var(--btn-text);
+      cursor: pointer;
+    }
+
+    button.secondary {
+      margin-top: 12px;
+      padding: 10px 12px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: var(--card);
+      color: var(--text);
+      cursor: pointer;
+    }
+
+    .muted { color: var(--muted); font-size: 13px; }
+    .error { color: var(--danger); }
+
+    .kpi {
+      margin-top: 12px;
+      padding: 10px 12px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: var(--kpi-bg);
+    }
+
+    .kpi b { color: var(--text); }
+
+    table { width: 100%; border-collapse: collapse; margin-top: 12px; }
+    th, td { padding: 10px 8px; border-bottom: 1px solid var(--border); font-size: 13px; vertical-align: top; }
+    th { text-align: left; color: var(--muted); font-weight: 600; }
+
+    .btnrow { display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap; }
+    .smallbtn {
+      width: auto;
+      padding: 6px 10px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: var(--card);
+      color: var(--text);
+      cursor: pointer;
+    }
+
+    .actionsRow { margin-top: 12px; gap: 10px; }
+
+    @media (max-width: 420px) {
+      th:nth-child(3), td:nth-child(3) { display: none; } /* hide Notes column on tiny screens */
+    }
+  </style>
+</head>
+
+<body>
+<header>
+  <h1>Dog Weights</h1>
+  <p class="sub">Dr Watson & Eddie Spaghetti — canonical kg storage (lb supported)</p>
+</header>
+
+<main>
+  <div class="card">
+    <div class="row" style="gap:8px;">
+      <div id="pill-watson" class="pill active" role="button" tabindex="0">Dr Watson</div>
+      <div id="pill-eddie" class="pill" role="button" tabindex="0">Eddie Spaghetti</div>
+    </div>
+
+    <div class="kpi muted">
+      <div>Latest: <b id="latest">—</b></div>
+      <div>Change: <b id="delta">—</b> <span class="muted">since previous</span></div>
+    </div>
+
+    <label>Date</label>
+    <input id="date" type="date" />
+
+    <label>Weight entry</label>
+    <div class="row">
+      <input id="weight" type="number" inputmode="decimal" step="0.1" placeholder="e.g., 18.4" />
+      <select id="unit">
+        <option value="kg">kg</option>
+        <option value="lb">lb</option>
+      </select>
+    </div>
+    <div class="muted" id="converted">—</div>
+
+    <label>Notes (optional)</label>
+    <textarea id="notes" placeholder="e.g., annual checkup, on new food…"></textarea>
+
+    <div class="row" style="gap:10px;">
+      <button id="save" class="primary" type="button">Save entry</button>
+      <button id="cancelEdit" class="secondary" type="button" style="display:none;">Cancel edit</button>
+    </div>
+
+    <p class="muted" id="msg" style="margin: 10px 0 0;"></p>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Weight</th>
+          <th>Notes</th>
+          <th style="width:160px;"></th>
+        </tr>
+      </thead>
+      <tbody id="rows">
+        <tr><td colspan="4" class="muted">No entries yet.</td></tr>
+      </tbody>
+    </table>
+
+    <div class="row actionsRow">
+      <button id="exportJson" class="smallbtn" type="button">Export JSON</button>
+      <button id="exportCsv" class="smallbtn" type="button">Export CSV</button>
+      <button id="importJson" class="smallbtn" type="button">Import JSON</button>
+      <button id="clearDog" class="smallbtn" type="button">Clear dog data</button>
+    </div>
+  </div>
+</main>
+
+<script>
+  // Dogs
+  const DOGS = { watson: "Dr Watson", eddie: "Eddie Spaghetti" };
+
+  // Canonical: store kg only
+  const KG_PER_LB = 1 / 2.2046226218;
+  const LB_PER_KG = 2.2046226218;
+  function kgToLb(kg) { return kg * LB_PER_KG; }
+  function lbToKg(lb) { return lb * KG_PER_LB; }
+
+  // Elements
+  const els = {
+    pillWatson: document.getElementById("pill-watson"),
+    pillEddie: document.getElementById("pill-eddie"),
+    date: document.getElementById("date"),
+    weight: document.getElementById("weight"),
+    unit: document.getElementById("unit"),
+    notes: document.getElementById("notes"),
+    converted: document.getElementById("converted"),
+    save: document.getElementById("save"),
+    cancelEdit: document.getElementById("cancelEdit"),
+    rows: document.getElementById("rows"),
+    latest: document.getElementById("latest"),
+    delta: document.getElementById("delta"),
+    msg: document.getElementById("msg"),
+    exportJson: document.getElementById("exportJson"),
+    exportCsv: document.getElementById("exportCsv"),
+    importJson: document.getElementById("importJson"),
+    clearDog: document.getElementById("clearDog"),
+  };
+
+  let activeDog = "watson";
+  let editingId = null;
+
+  function todayISO() {
+    const d = new Date();
+    const off = d.getTimezoneOffset();
+    const local = new Date(d.getTime() - off * 60000);
+    return local.toISOString().slice(0, 10);
+  }
+
+  function keyForDog(dogKey) { return `dogweights:v3:${dogKey}`; }
+
+  function loadEntries(dogKey) {
+    try { return JSON.parse(localStorage.getItem(keyForDog(dogKey)) || "[]"); }
+    catch { return []; }
+  }
+
+  function saveEntries(dogKey, entries) {
+    localStorage.setItem(keyForDog(dogKey), JSON.stringify(entries));
+  }
+
+  function setMsg(text, isError=false) {
+    els.msg.textContent = text || "";
+    els.msg.classList.toggle("error", !!isError);
+  }
+
+  function sortedEntriesDesc(entries) {
+    return [...entries].sort((a,b) => (b.date > a.date ? 1 : (b.date < a.date ? -1 : 0)));
+  }
+
+  function esc(s) {
+    return (s || "")
+      .replaceAll("&","&amp;")
+      .replaceAll("<","&lt;")
+      .replaceAll(">","&gt;");
+  }
+
+  function canonicalKgFromInput() {
+    const w = Number(els.weight.value);
+    if (!Number.isFinite(w) || w <= 0) return null;
+    return (els.unit.value === "kg") ? w : lbToKg(w);
+  }
+
+  function updateConverted() {
+    const v = Number(els.weight.value);
+    if (!Number.isFinite(v) || v <= 0) { els.converted.textContent = "—"; return; }
+    if (els.unit.value === "kg") {
+      els.converted.textContent = `${kgToLb(v).toFixed(1)} lb (stored as ${v.toFixed(1)} kg)`;
+    } else {
+      const kg = lbToKg(v);
+      els.converted.textContent = `${kg.toFixed(1)} kg (stored as ${kg.toFixed(1)} kg)`;
+    }
+  }
+
+  function computeLatestAndDelta(entries) {
+    const s = sortedEntriesDesc(entries);
+    if (s.length === 0) return { latestText: "—", deltaText: "—" };
+
+    const latest = s[0];
+    const latestText = `${latest.kg.toFixed(1)} kg (${kgToLb(latest.kg).toFixed(1)} lb) on ${latest.date}`;
+
+    if (s.length < 2) return { latestText, deltaText: "—" };
+
+    const prev = s[1];
+    const deltaKg = latest.kg - prev.kg;
+    const sign = deltaKg > 0 ? "+" : (deltaKg < 0 ? "−" : "");
+    const deltaText = `${sign}${Math.abs(deltaKg).toFixed(1)} kg (${sign}${Math.abs(kgToLb(deltaKg)).toFixed(1)} lb)`;
+    return { latestText, deltaText };
+  }
+
+  function setActiveDog(dogKey) {
+    activeDog = dogKey;
+    els.pillWatson.classList.toggle("active", dogKey === "watson");
+    els.pillEddie.classList.toggle("active", dogKey === "eddie");
+    cancelEdit();
+    setMsg("");
+    render();
+  }
+
+  function startEdit(id) {
+    const entries = loadEntries(activeDog);
+    const e = entries.find(x => x.id === id);
+    if (!e) return;
+
+    editingId = id;
+    els.date.value = e.date;
+    els.weight.value = e.kg.toFixed(1);
+    els.unit.value = "kg"; // edit in canonical to avoid drift
+    els.notes.value = e.notes || "";
+    updateConverted();
+
+    els.save.textContent = "Save changes";
+    els.cancelEdit.style.display = "";
+    setMsg(`Editing entry for ${DOGS[activeDog]}.`);
+  }
+
+  function cancelEdit() {
+    editingId = null;
+    els.save.textContent = "Save entry";
+    els.cancelEdit.style.display = "none";
+    els.date.value = todayISO();
+    els.weight.value = "";
+    els.unit.value = "kg";
+    els.notes.value = "";
+    updateConverted();
+  }
+
+  function deleteEntry(id) {
+    const next = loadEntries(activeDog).filter(x => x.id !== id);
+    saveEntries(activeDog, next);
+    if (editingId === id) cancelEdit();
+    render();
+  }
+
+  function render() {
+    const entries = loadEntries(activeDog);
+    const { latestText, deltaText } = computeLatestAndDelta(entries);
+    els.latest.textContent = latestText;
+    els.delta.textContent = deltaText;
+
+    const s = sortedEntriesDesc(entries);
+    if (s.length === 0) {
+      els.rows.innerHTML = `<tr><td colspan="4" class="muted">No entries yet.</td></tr>`;
+      return;
+    }
+
+    els.rows.innerHTML = s.map(e => `
+      <tr>
+        <td>${e.date}</td>
+        <td>${e.kg.toFixed(1)} kg<br><span class="muted">${kgToLb(e.kg).toFixed(1)} lb</span></td>
+        <td>${esc(e.notes)}</td>
+        <td>
+          <div class="btnrow">
+            <button class="smallbtn" data-edit="${e.id}">Edit</button>
+            <button class="smallbtn" data-del="${e.id}">Delete</button>
+          </div>
+        </td>
+      </tr>
+    `).join("");
+
+    els.rows.querySelectorAll("button[data-edit]").forEach(btn => {
+      btn.addEventListener("click", () => startEdit(btn.getAttribute("data-edit")));
+    });
+    els.rows.querySelectorAll("button[data-del]").forEach(btn => {
+      btn.addEventListener("click", () => deleteEntry(btn.getAttribute("data-del")));
+    });
+  }
+
+  function downloadText(filename, text, mime) {
+    const blob = new Blob([text], { type: mime });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  }
+
+  function toCSVRow(fields) {
+    // CSV-safe quoting
+    return fields.map(v => {
+      const s = String(v ?? "");
+      const needs = /[",\n]/.test(s);
+      return needs ? `"${s.replaceAll('"', '""')}"` : s;
+    }).join(",");
+  }
+
+  // Wire UI
+  els.pillWatson.addEventListener("click", () => setActiveDog("watson"));
+  els.pillEddie.addEventListener("click", () => setActiveDog("eddie"));
+  els.weight.addEventListener("input", updateConverted);
+  els.unit.addEventListener("change", updateConverted);
+  els.cancelEdit.addEventListener("click", () => { setMsg(""); cancelEdit(); });
+
+  els.save.addEventListener("click", () => {
+    const date = els.date.value || todayISO();
+    const kg = canonicalKgFromInput();
+    const notes = els.notes.value.trim();
+
+    if (kg === null) { setMsg("Enter a valid weight first.", true); return; }
+
+    const entries = loadEntries(activeDog);
+    const latest = sortedEntriesDesc(entries)[0];
+    if (latest) {
+      const pct = Math.abs((kg - latest.kg) / latest.kg) * 100;
+      if (pct >= 20) setMsg(`Heads-up: that’s a ${pct.toFixed(0)}% change vs last entry. Double-check? (Saving anyway)`);
+      else setMsg("");
+    } else {
+      setMsg("");
+    }
+
+    if (editingId) {
+      const idx = entries.findIndex(x => x.id === editingId);
+      if (idx >= 0) {
+        entries[idx] = { ...entries[idx], date, kg, notes };
+        saveEntries(activeDog, entries);
+        setMsg(`Updated entry for ${DOGS[activeDog]}.`);
+      } else {
+        setMsg("Couldn’t find entry to edit (it may have been deleted).", true);
+      }
+      cancelEdit();
+      render();
+      return;
+    }
+
+    const entry = {
+      id: (crypto?.randomUUID ? crypto.randomUUID() : String(Date.now())),
+      date,
+      kg,
+      notes
+    };
+
+    entries.push(entry);
+    saveEntries(activeDog, entries);
+
+    els.weight.value = "";
+    els.notes.value = "";
+    els.unit.value = "kg";
+    updateConverted();
+
+    setMsg(`Saved for ${DOGS[activeDog]}.`);
+    render();
+  });
+
+  els.exportJson.addEventListener("click", () => {
+    const payload = {
+      version: 3,
+      exportedAt: new Date().toISOString(),
+      data: {
+        watson: loadEntries("watson"),
+        eddie: loadEntries("eddie"),
+      }
+    };
+    downloadText("dogweights-backup.json", JSON.stringify(payload, null, 2), "application/json");
+    setMsg("Exported JSON backup.");
+  });
+
+  els.exportCsv.addEventListener("click", () => {
+    // One CSV with both dogs so it's easy to share/analyze
+    const watson = loadEntries("watson").map(e => ({ dog: DOGS.watson, ...e }));
+    const eddie  = loadEntries("eddie").map(e => ({ dog: DOGS.eddie, ...e }));
+    const all = [...watson, ...eddie].sort((a,b) => (a.date > b.date ? 1 : (a.date < b.date ? -1 : 0)));
+
+    const header = toCSVRow(["dog", "date", "weight_kg", "weight_lb", "notes"]);
+    const rows = all.map(e => toCSVRow([
+      e.dog,
+      e.date,
+      Number(e.kg).toFixed(1),
+      kgToLb(Number(e.kg)).toFixed(1),
+      e.notes || ""
+    ]));
+
+    const csv = [header, ...rows].join("\n");
+    downloadText("dogweights.csv", csv, "text/csv");
+    setMsg("Exported CSV.");
+  });
+
+  els.importJson.addEventListener("click", async () => {
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = "application/json";
+
+    input.onchange = async () => {
+      const file = input.files?.[0];
+      if (!file) return;
+
+      try {
+        const text = await file.text();
+        const parsed = JSON.parse(text);
+
+        // Accept our v3 format
+        if (parsed?.data?.watson && parsed?.data?.eddie) {
+          saveEntries("watson", parsed.data.watson);
+          saveEntries("eddie", parsed.data.eddie);
+          setMsg("Imported successfully.");
+          cancelEdit();
+          render();
+          return;
+        }
+
+        // Accept older v1/v2 if they used {weight,unit} instead of kg
+        // We'll attempt a gentle conversion.
+        const convertLegacy = (arr) => (Array.isArray(arr) ? arr : []).map(e => {
+          if (typeof e?.kg === "number") return { id: e.id || String(Date.now()), date: e.date, kg: e.kg, notes: e.notes || "" };
+          if (typeof e?.weight === "number" && typeof e?.unit === "string") {
+            const kg = (e.unit === "kg") ? e.weight : lbToKg(e.weight);
+            return { id: e.id || String(Date.now()), date: e.date, kg, notes: e.notes || "" };
+          }
+          return null;
+        }).filter(Boolean);
+
+        if (parsed?.data?.watson || parsed?.data?.eddie) {
+          saveEntries("watson", convertLegacy(parsed.data.watson));
+          saveEntries("eddie", convertLegacy(parsed.data.eddie));
+          setMsg("Imported legacy backup (converted to canonical kg).");
+          cancelEdit();
+          render();
+          return;
+        }
+
+        setMsg("Import failed — not a valid dogweights backup.", true);
+      } catch (err) {
+        setMsg("Import failed — invalid JSON file.", true);
+      }
+    };
+
+    input.click();
+  });
+
+  els.clearDog.addEventListener("click", () => {
+    const name = DOGS[activeDog];
+    if (!confirm(`Clear all entries for ${name}?`)) return;
+    saveEntries(activeDog, []);
+    cancelEdit();
+    setMsg(`Cleared ${name}.`);
+    render();
+  });
+
+  // Init
+  els.date.value = todayISO();
+  updateConverted();
+  render();
+</script>
+</body>
+</html>
