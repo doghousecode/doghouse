@@ -539,6 +539,8 @@
     els.rows.querySelectorAll("button[data-del]").forEach(btn => {
       btn.addEventListener("click", () => deleteEntry(btn.getAttribute("data-del")));
     });
+    window.__lastTrendEntries = s;
+    drawTrend(s);
   }
 
   function downloadText(filename, text, mime) {
@@ -714,8 +716,7 @@ window.addEventListener("resize", () => {
 
     setMsg(`Saved for ${DOGS[activeDog]}.`);
     render();
-    window.__lastTrendEntries = s;  // if you already computed sorted entries "s"
-drawTrend(s);
+    
   });
 
 
