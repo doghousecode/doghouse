@@ -520,6 +520,8 @@ const TREND_HEIGHT = 140;
     const s = sortedEntriesDesc(entries);
     if (s.length === 0) {
       els.rows.innerHTML = `<tr><td colspan="4" class="muted">No entries yet.</td></tr>`;
+      window.__lastTrendEntries = [];
+      drawTrend([]);
       return;
     }
 
@@ -657,11 +659,7 @@ function drawTrend(entries) {
   trendLabel.textContent = "Weight trend";
 }
 
-const ctx = trendCanvas.getContext("2d");
-const width  = trendWidthPx;
-const height = TREND_HEIGHT;
 
-ctx.clearRect(0, 0, width, height);
 
   // Wire UI
   els.pillWatson.addEventListener("click", () => setActiveDog("watson"));
