@@ -681,13 +681,17 @@ const startKg = Math.ceil(yMin / step) * step;
 const endKg   = Math.floor(yMax / step) * step;
 
 for (let kg = startKg; kg <= endKg; kg += step) {
-  // draw label + gridline...
-}
-
-
   const y = yFor(kg);
+
   ctx.fillText(`${kg}kg`, left - 6, y);
 
+  // optional gridline
+  ctx.strokeStyle = "rgba(0,0,0,0.06)";
+  ctx.beginPath();
+  ctx.moveTo(left, y);
+  ctx.lineTo(right, y);
+  ctx.stroke();
+}
   // subtle horizontal guide line
   ctx.strokeStyle = "rgba(0,0,0,0.06)";
   ctx.lineWidth = 1;
