@@ -643,9 +643,26 @@ const bottom = TREND_HEIGHT - padB;
   const tMax = data[data.length - 1].t;
 
   let yMin = Math.min(...data.map(d => d.kg));
-  let yMax = Math.max(...data.map(d => d.kg));
-  const yPad = Math.max(0.2, (yMax - yMin) * 0.15);
-  yMin -= yPad; yMax += yPad;
+let yMax = Math.max(...data.map(d => d.kg));
+
+// --- Tick step + forced context labels ---
+const step = (activeDog === "watson") ? 10 : 5;
+
+// Force "context" labels:
+// - Watson: always show 30kg
+// - Eddie: always show 25kg (and 30 will show naturally, but harmless to include too)
+const forcedTicks = (activeDog === "watson") ? [30] : [25, 30];
+
+// Expand range so forced labels are inside chart bounds
+for (const t of forcedTicks) {
+  yMin = Math.min(yMin, t);
+  yMax = Math.max(yMax, t);
+}
+
+// Add vertical padding so line isn't glued to edges
+const yPad = Math.max(0.2, (yMax - yMin) * 0.12);
+yMin -= yPad;
+yMax += yPad;
 
   const xFor = t => left + (t - tMin) / (tMax - tMin) * (right - left);
   const yFor = kg => bottom - (kg - yMin) / (yMax - yMin) * (bottom - top);
@@ -660,10 +677,14 @@ ctx.font = "11px system-ui";
 ctx.textAlign = "right";
 ctx.textBaseline = "middle";
 
-const startKg = Math.ceil(yMin / 5) * 5;
-const endKg = Math.floor(yMax / 5) * 5;
+const startKg = Math.ceil(yMin / step) * step;
+const endKg   = Math.floor(yMax / step) * step;
 
-for (let kg = startKg; kg <= endKg; kg += 5) {
+for (let kg = startKg; kg <= endKg; kg += step) {
+  // draw label + gridline...
+}
+
+
   const y = yFor(kg);
   ctx.fillText(`${kg}kg`, left - 6, y);
 
