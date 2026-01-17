@@ -628,7 +628,7 @@ function drawTrend(entries) {
     return;
   }
 
-  const pad = 14;
+  const pad = 28;
   const left = pad, right = trendWidthPx - pad;
   const top = pad, bottom = TREND_HEIGHT - pad;
 
@@ -645,6 +645,51 @@ function drawTrend(entries) {
 
   const stroke = getComputedStyle(document.documentElement)
     .getPropertyValue("--text") || "#111";
+
+// --- Y axis labels (5kg increments) ---
+ctx.fillStyle = getComputedStyle(document.documentElement)
+  .getPropertyValue("--muted").trim() || "#666";
+ctx.font = "11px system-ui";
+ctx.textAlign = "right";
+ctx.textBaseline = "middle";
+
+const startKg = Math.ceil(yMin / 5) * 5;
+const endKg = Math.floor(yMax / 5) * 5;
+
+for (let kg = startKg; kg <= endKg; kg += 5) {
+  const y = yFor(kg);
+  ctx.fillText(`${kg}kg`, left - 6, y);
+
+  // subtle horizontal guide line
+  ctx.strokeStyle = "rgba(0,0,0,0.06)";
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(left, y);
+  ctx.lineTo(right, y);
+  ctx.stroke();
+}
+
+// --- X axis labels (whole years) ---
+ctx.textAlign = "center";
+ctx.textBaseline = "top";
+
+const startYear = new Date(tMin).getFullYear();
+const endYear = new Date(tMax).getFullYear();
+
+for (let year = startYear; year <= endYear; year++) {
+  const t = new Date(year, 0, 1, 12).getTime();
+  if (t < tMin || t > tMax) continue;
+
+  const x = xFor(t);
+  ctx.fillText(String(year), x, bottom + 6);
+
+  // subtle vertical tick
+  ctx.strokeStyle = "rgba(0,0,0,0.06)";
+  ctx.beginPath();
+  ctx.moveTo(x, top);
+  ctx.lineTo(x, bottom);
+  ctx.stroke();
+}
 
   ctx.strokeStyle = stroke;
   ctx.lineWidth = 2;
