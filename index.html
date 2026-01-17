@@ -27,8 +27,6 @@
 
       --kpi-bg: #fafafa;
       --danger: #b91c1c;
-
-      
     }
 
     @media (prefers-color-scheme: dark) {
@@ -83,6 +81,7 @@
       border-radius: 14px;
       padding: 14px;
       box-shadow: 0 1px 0 rgba(0,0,0,.03);
+      overflow: hidden;
     }
 
     .row {
@@ -92,7 +91,6 @@
       align-items: center;
     }
 
-    /* IMPORTANT: min-width:0 prevents iOS inputs (date) from overflowing */
     .row > * { flex: 1; min-width: 0; }
 
     .pill {
@@ -106,63 +104,44 @@
       user-select: none;
     }
 
-/* --- Toggle shape + layout --- */
-.pillToggle {
-  display: flex;
-  flex-direction: column;  /* image above name */
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  padding: 14px 12px;
-  text-align: center;
-  min-height: 150px;       /* gives it that “button tile” look */
-}
+    .pillToggle {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      padding: 14px 12px;
+      text-align: center;
+      min-height: 150px;
+      box-shadow: 0 1px 0 rgba(0,0,0,.03);
+    }
 
-.pillToggle .avatar {
-  width: 120px;
-  height: 150px;
-  border-radius: 14px;         /* slightly squared image looks great */
-  object-fit: cover;
-  background: transparent;
-  border: none;                 /* no ring */
-  box-shadow: none;             /* no halo */
-}
-.pillToggle:active {
-  transform: scale(0.98);
-}
-/* Label text */
-.pillToggle span {
-  font-weight: 600;
-  font-size: 14px;
-}
-.pill.pillToggle {
-  box-shadow: 0 1px 0 rgba(0,0,0,.03);
-}
-/* Active state — THIS fixes the colour issue */
-.pill.active {
-  background: var(--pill-active-bg);
-  color: var(--pill-active-text);
-  border-color: var(--pill-active-bg);
-}
+    .pillToggle .avatar {
+      width: 120px;
+      height: 150px;
+      border-radius: 14px;
+      object-fit: cover;
+      background: transparent;
+      border: none !important;
+      box-shadow: none !important;
+    }
 
-/* --- FINAL avatar reset: no borders, no halos, ever --- */
-.pillToggle .avatar,
-.pillToggle.active .avatar {
-  border: none !important;
-  box-shadow: none !important;
-}
-.pillToggle .avatar {
-  background: transparent;
-  border-radius: 14px;
-}
-/* Dark mode avatar glow */
-@media (prefers-color-scheme: dark) {
-  .pill.active .avatar {
-    box-shadow: 0 0 0 4px rgba(0,0,0,0.35);
-  }
-}
+    .pillToggle:active { transform: scale(0.98); }
 
+    .pillToggle span {
+      font-weight: 600;
+      font-size: 14px;
+    }
 
+    .pill.active {
+      background: var(--pill-active-bg);
+      color: var(--pill-active-text);
+      border-color: var(--pill-active-bg);
+    }
+
+    @media (prefers-color-scheme: dark) {
+      .pill.active .avatar { box-shadow: 0 0 0 4px rgba(0,0,0,0.35); }
+    }
 
     label { display: block; margin: 12px 0 6px; font-size: 12px; color: var(--muted); }
 
@@ -176,11 +155,18 @@
       max-width: 100%;
     }
 
-    /* Date overflow fix */
-    input[type="date"] {
-      width: 100%;
-      min-width: 0;
-      display: block;
+    input[type="date"] { width: 100%; min-width: 0; display: block; }
+
+    @supports (-webkit-touch-callout: none) {
+      input[type="date"] {
+        width: 100%;
+        max-width: 100%;
+        min-width: 0;
+        box-sizing: border-box;
+        display: block;
+        -webkit-appearance: none;
+        appearance: none;
+      }
     }
 
     textarea { min-height: 70px; resize: vertical; }
@@ -216,8 +202,6 @@
       background: var(--kpi-bg);
     }
 
-    .kpi b { color: var(--text); }
-
     table { width: 100%; border-collapse: collapse; margin-top: 12px; }
     th, td { padding: 10px 8px; border-bottom: 1px solid var(--border); font-size: 13px; vertical-align: top; }
     th { text-align: left; color: var(--muted); font-weight: 600; }
@@ -236,46 +220,26 @@
     .actionsRow { margin-top: 12px; gap: 10px; }
 
     @media (max-width: 420px) {
-      th:nth-child(3), td:nth-child(3) { display: none; } /* hide Notes column on tiny screens */
+      th:nth-child(3), td:nth-child(3) { display: none; }
     }
 
-    /* --- FORCE active toggle styles (final authority) --- */
-    /* --- FINAL authority for dog toggle colours --- */
-.pill.pillToggle {
-  background: var(--pill-bg) !important;
-  color: var(--pill-text) !important;
-  border-color: var(--border) !important;
-}
+    /* FINAL authority for dog toggle colours */
+    .pill.pillToggle {
+      background: var(--pill-bg) !important;
+      color: var(--pill-text) !important;
+      border-color: var(--border) !important;
+    }
+    .pill.pillToggle.active {
+      background: var(--pill-active-bg) !important;
+      color: var(--pill-active-text) !important;
+      border-color: var(--pill-active-bg) !important;
+    }
 
-.pill.pillToggle.active {
-  background: var(--pill-active-bg) !important;
-  color: var(--pill-active-text) !important;
-  border-color: var(--pill-active-bg) !important;
-}
-
-/* --- iOS Safari: prevent date input from overflowing its container --- */
-@supports (-webkit-touch-callout: none) {
-  input[type="date"] {
-    width: 100%;
-    max-width: 100%;
-    min-width: 0;
-    box-sizing: border-box;
-    display: block;
-    -webkit-appearance: none;
-    appearance: none;
-  }
-}
-
-/* Clamp any tiny overflow inside the card (iOS date controls can be weird) */
-.card { overflow: hidden; }
-
-
-#trend {
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  background: color-mix(in srgb, var(--card) 85%, var(--bg));
-}
-
+    #trend {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: color-mix(in srgb, var(--card) 85%, var(--bg));
+    }
   </style>
 </head>
 
@@ -289,14 +253,14 @@
   <div class="card">
     <div class="row" style="gap:8px;">
       <div id="pill-watson" class="pill pillToggle active" role="button" tabindex="0" aria-pressed="true">
-  <img class="avatar" src="assets/watson.png" alt="Dr Watson" />
-  <span>Dr Watson</span>
-</div>
+        <img class="avatar" src="assets/watson.png" alt="Dr Watson" />
+        <span>Dr Watson</span>
+      </div>
 
-<div id="pill-eddie" class="pill pillToggle" role="button" tabindex="0" aria-pressed="false">
-  <img class="avatar" src="assets/eddie.png" alt="Eddie Spaghetti" />
-  <span>Eddie Spaghetti</span>
-</div>
+      <div id="pill-eddie" class="pill pillToggle" role="button" tabindex="0" aria-pressed="false">
+        <img class="avatar" src="assets/eddie.png" alt="Eddie Spaghetti" />
+        <span>Eddie Spaghetti</span>
+      </div>
     </div>
 
     <div class="kpi muted">
@@ -305,11 +269,11 @@
     </div>
 
     <div style="margin-top:12px;">
-  <canvas id="trend" height="160" style="width:100%; height:160px; display:block;"></canvas>
-  <div class="muted" id="trendLabel" style="margin-top:6px;">—</div>
-</div>
+      <canvas id="trend" height="160" style="width:100%; height:160px; display:block;"></canvas>
+      <div class="muted" id="trendLabel" style="margin-top:6px;">—</div>
+    </div>
 
-<label>Date</label>
+    <label>Date</label>
     <input id="date" type="date" />
 
     <label>Weight entry</label>
@@ -356,24 +320,16 @@
 </main>
 
 <script>
-
-window.addEventListener("error", (e) => {
-  setMsg(`JS error: ${e.message}`, true);
-});
-
   let trendWidthPx = null;
-const TREND_HEIGHT = 140;
+  const TREND_HEIGHT = 160;
 
-  // Dogs
   const DOGS = { watson: "Dr Watson", eddie: "Eddie Spaghetti" };
 
-  // Canonical: store kg only
   const KG_PER_LB = 1 / 2.2046226218;
   const LB_PER_KG = 2.2046226218;
   function kgToLb(kg) { return kg * LB_PER_KG; }
   function lbToKg(lb) { return lb * KG_PER_LB; }
 
-  // Elements
   const els = {
     pillWatson: document.getElementById("pill-watson"),
     pillEddie: document.getElementById("pill-eddie"),
@@ -394,8 +350,24 @@ const TREND_HEIGHT = 140;
     clearDog: document.getElementById("clearDog"),
   };
 
+  const trendCanvas = document.getElementById("trend");
+  const trendLabel = document.getElementById("trendLabel");
+
   let activeDog = "watson";
   let editingId = null;
+
+  function setMsg(text, isError=false) {
+    els.msg.textContent = text || "";
+    els.msg.classList.toggle("error", !!isError);
+  }
+
+  // Safe error reporter (won't crash if something is off)
+  window.addEventListener("error", (e) => {
+    try {
+      const msg = e?.message || "Unknown error";
+      setMsg(`JS error: ${msg}`, true);
+    } catch {}
+  });
 
   function todayISO() {
     const d = new Date();
@@ -413,11 +385,6 @@ const TREND_HEIGHT = 140;
 
   function saveEntries(dogKey, entries) {
     localStorage.setItem(keyForDog(dogKey), JSON.stringify(entries));
-  }
-
-  function setMsg(text, isError=false) {
-    els.msg.textContent = text || "";
-    els.msg.classList.toggle("error", !!isError);
   }
 
   function sortedEntriesDesc(entries) {
@@ -464,21 +431,19 @@ const TREND_HEIGHT = 140;
     return { latestText, deltaText };
   }
 
- function setActiveDog(dogKey) {
-  activeDog = dogKey;
+  function setActiveDog(dogKey) {
+    activeDog = dogKey;
 
-  // Visual state (THIS drives the colour swap)
-  els.pillWatson.classList.toggle("active", dogKey === "watson");
-  els.pillEddie.classList.toggle("active", dogKey === "eddie");
+    els.pillWatson.classList.toggle("active", dogKey === "watson");
+    els.pillEddie.classList.toggle("active", dogKey === "eddie");
 
-  // Accessibility state (nice to keep)
-  els.pillWatson.setAttribute("aria-pressed", dogKey === "watson");
-  els.pillEddie.setAttribute("aria-pressed", dogKey === "eddie");
+    els.pillWatson.setAttribute("aria-pressed", dogKey === "watson");
+    els.pillEddie.setAttribute("aria-pressed", dogKey === "eddie");
 
-  cancelEdit();
-  setMsg("");
-  render();
-}
+    cancelEdit();
+    setMsg("");
+    render();
+  }
 
   function startEdit(id) {
     const entries = loadEntries(activeDog);
@@ -488,7 +453,7 @@ const TREND_HEIGHT = 140;
     editingId = id;
     els.date.value = e.date;
     els.weight.value = e.kg.toFixed(1);
-    els.unit.value = "kg"; // edit in canonical to avoid drift
+    els.unit.value = "kg";
     els.notes.value = e.notes || "";
     updateConverted();
 
@@ -514,6 +479,147 @@ const TREND_HEIGHT = 140;
     if (editingId === id) cancelEdit();
     render();
   }
+
+  function initTrendCanvas() {
+    if (!trendCanvas || trendWidthPx !== null) return;
+
+    const rect = trendCanvas.parentElement.getBoundingClientRect();
+    trendWidthPx = Math.floor(rect.width);
+
+    const dpr = window.devicePixelRatio || 1;
+
+    trendCanvas.style.width = trendWidthPx + "px";
+    trendCanvas.style.height = TREND_HEIGHT + "px";
+
+    trendCanvas.width  = Math.floor(trendWidthPx * dpr);
+    trendCanvas.height = Math.floor(TREND_HEIGHT * dpr);
+
+    const ctx = trendCanvas.getContext("2d");
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+
+  function drawTrend(entries) {
+    if (!trendCanvas) return;
+    initTrendCanvas();
+
+    const ctx = trendCanvas.getContext("2d");
+    ctx.clearRect(0, 0, trendWidthPx, TREND_HEIGHT);
+
+    const data = (entries || [])
+      .filter(e => typeof e.kg === "number" && e.date)
+      .map(e => ({
+        t: new Date(e.date + "T12:00:00").getTime(),
+        kg: e.kg
+      }))
+      .sort((a,b) => a.t - b.t);
+
+    if (data.length < 2) {
+      trendLabel.textContent = data.length === 1 ? "Add one more entry to see a trend." : "No trend yet.";
+      return;
+    }
+
+    // plot padding
+    const padL = 36;
+    const padR = 14;
+    const padT = 14;
+    const padB = 22;
+
+    const left = padL;
+    const right = trendWidthPx - padR;
+    const top = padT;
+    const bottom = TREND_HEIGHT - padB;
+
+    const tMin = data[0].t;
+    const tMax = data[data.length - 1].t;
+
+    let yMin = Math.min(...data.map(d => d.kg));
+    let yMax = Math.max(...data.map(d => d.kg));
+
+    // Tick step + forced context labels
+    const step = (activeDog === "watson") ? 10 : 5;
+    const forcedTicks = (activeDog === "watson") ? [30] : [25, 30];
+
+    for (const t of forcedTicks) {
+      yMin = Math.min(yMin, t);
+      yMax = Math.max(yMax, t);
+    }
+
+    const yPad = Math.max(0.2, (yMax - yMin) * 0.12);
+    yMin -= yPad;
+    yMax += yPad;
+
+    const xFor = t => left + (t - tMin) / (tMax - tMin) * (right - left);
+    const yFor = kg => bottom - (kg - yMin) / (yMax - yMin) * (bottom - top);
+
+    const root = getComputedStyle(document.documentElement);
+    const stroke = root.getPropertyValue("--text").trim() || "#111";
+    const muted = root.getPropertyValue("--muted").trim() || "#666";
+
+    // Y labels + grid
+    ctx.fillStyle = muted;
+    ctx.font = "11px system-ui";
+    ctx.textAlign = "right";
+    ctx.textBaseline = "middle";
+
+    const startKg = Math.ceil(yMin / step) * step;
+    const endKg   = Math.floor(yMax / step) * step;
+
+    ctx.strokeStyle = "rgba(0,0,0,0.06)";
+    ctx.lineWidth = 1;
+
+    for (let kg = startKg; kg <= endKg; kg += step) {
+      const y = yFor(kg);
+      ctx.fillText(`${kg}kg`, left - 6, y);
+
+      ctx.beginPath();
+      ctx.moveTo(left, y);
+      ctx.lineTo(right, y);
+      ctx.stroke();
+    }
+
+    // X labels (years)
+    ctx.textAlign = "center";
+    ctx.textBaseline = "top";
+    ctx.fillStyle = muted;
+
+    const startYear = new Date(tMin).getFullYear();
+    const endYear = new Date(tMax).getFullYear();
+
+    for (let year = startYear; year <= endYear; year++) {
+      const tt = new Date(year, 0, 1, 12).getTime();
+      if (tt < tMin || tt > tMax) continue;
+
+      const x = xFor(tt);
+      ctx.fillText(String(year), x, bottom + 6);
+
+      ctx.strokeStyle = "rgba(0,0,0,0.06)";
+      ctx.beginPath();
+      ctx.moveTo(x, top);
+      ctx.lineTo(x, bottom);
+      ctx.stroke();
+    }
+
+    // Line
+    ctx.strokeStyle = stroke;
+    ctx.lineWidth = 2;
+    ctx.lineJoin = "round";
+    ctx.lineCap = "round";
+    ctx.beginPath();
+    data.forEach((p, i) => {
+      const x = xFor(p.t);
+      const y = yFor(p.kg);
+      i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+    });
+    ctx.stroke();
+
+    trendLabel.textContent = "Weight trend";
+  }
+
+  window.addEventListener("resize", () => {
+    trendWidthPx = null;
+    initTrendCanvas();
+    if (window.__lastTrendEntries) drawTrend(window.__lastTrendEntries);
+  });
 
   function render() {
     const entries = loadEntries(activeDog);
@@ -549,6 +655,7 @@ const TREND_HEIGHT = 140;
     els.rows.querySelectorAll("button[data-del]").forEach(btn => {
       btn.addEventListener("click", () => deleteEntry(btn.getAttribute("data-del")));
     });
+
     window.__lastTrendEntries = s;
     drawTrend(s);
   }
@@ -566,181 +673,12 @@ const TREND_HEIGHT = 140;
   }
 
   function toCSVRow(fields) {
-    // CSV-safe quoting
     return fields.map(v => {
       const s = String(v ?? "");
       const needs = /[",\n]/.test(s);
       return needs ? `"${s.replaceAll('"', '""')}"` : s;
     }).join(",");
   }
-
-const trendCanvas = document.getElementById("trend");
-const trendLabel = document.getElementById("trendLabel");
-
-function parseISODate(s) {
-  // "YYYY-MM-DD" -> Date (local noon to avoid TZ edge weirdness)
-  const [y,m,d] = s.split("-").map(Number);
-  return new Date(y, (m-1), d, 12, 0, 0);
-}
-
-function initTrendCanvas() {
-  if (!trendCanvas || trendWidthPx !== null) return;
-
-  // Measure ONCE
-  const rect = trendCanvas.parentElement.getBoundingClientRect();
-  trendWidthPx = Math.floor(rect.width);
-
-  const dpr = window.devicePixelRatio || 1;
-
-  trendCanvas.style.width = trendWidthPx + "px";
-  trendCanvas.style.height = TREND_HEIGHT + "px";
-
-  trendCanvas.width  = Math.floor(trendWidthPx * dpr);
-  trendCanvas.height = Math.floor(TREND_HEIGHT * dpr);
-
-  const ctx = trendCanvas.getContext("2d");
-  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-}
-
-
-
-window.addEventListener("resize", () => {
-  trendWidthPx = null;
-  initTrendCanvas();
-  if (window.__lastTrendEntries) drawTrend(window.__lastTrendEntries);
-});
-
-initTrendCanvas();
-
-function drawTrend(entries) {
-  if (!trendCanvas) return;
-  initTrendCanvas();
-
-  const ctx = trendCanvas.getContext("2d");
-  ctx.clearRect(0, 0, trendWidthPx, TREND_HEIGHT);
-
-  const data = (entries || [])
-    .filter(e => typeof e.kg === "number" && e.date)
-    .map(e => ({
-      t: new Date(e.date + "T12:00:00").getTime(),
-      kg: e.kg
-    }))
-    .sort((a,b) => a.t - b.t);
-
-  if (data.length < 2) {
-    trendLabel.textContent = "Add another entry to see a trend.";
-    return;
-  }
-
-  // replace: const pad = 28;
-const padL = 36;  // space for "30kg"
-const padR = 14;
-const padT = 14;
-const padB = 22;  // space for year labels (smaller than left)
-
-const left = padL;
-const right = trendWidthPx - padR;
-const top = padT;
-const bottom = TREND_HEIGHT - padB;
-
-  const tMin = data[0].t;
-  const tMax = data[data.length - 1].t;
-
-  let yMin = Math.min(...data.map(d => d.kg));
-let yMax = Math.max(...data.map(d => d.kg));
-
-// --- Tick step + forced context labels ---
-const step = (activeDog === "watson") ? 10 : 5;
-
-// Force "context" labels:
-// - Watson: always show 30kg
-// - Eddie: always show 25kg (and 30 will show naturally, but harmless to include too)
-const forcedTicks = (activeDog === "watson") ? [30] : [25, 30];
-
-// Expand range so forced labels are inside chart bounds
-for (const t of forcedTicks) {
-  yMin = Math.min(yMin, t);
-  yMax = Math.max(yMax, t);
-}
-
-// Add vertical padding so line isn't glued to edges
-const yPad = Math.max(0.2, (yMax - yMin) * 0.12);
-yMin -= yPad;
-yMax += yPad;
-
-  const xFor = t => left + (t - tMin) / (tMax - tMin) * (right - left);
-  const yFor = kg => bottom - (kg - yMin) / (yMax - yMin) * (bottom - top);
-
-  const stroke = getComputedStyle(document.documentElement)
-    .getPropertyValue("--text") || "#111";
-
-// --- Y axis labels (5kg increments) ---
-ctx.fillStyle = getComputedStyle(document.documentElement)
-  .getPropertyValue("--muted").trim() || "#666";
-ctx.font = "11px system-ui";
-ctx.textAlign = "right";
-ctx.textBaseline = "middle";
-
-const startKg = Math.ceil(yMin / step) * step;
-const endKg   = Math.floor(yMax / step) * step;
-
-for (let kg = startKg; kg <= endKg; kg += step) {
-  const y = yFor(kg);
-
-  ctx.fillText(`${kg}kg`, left - 6, y);
-
-  // optional gridline
-  ctx.strokeStyle = "rgba(0,0,0,0.06)";
-  ctx.beginPath();
-  ctx.moveTo(left, y);
-  ctx.lineTo(right, y);
-  ctx.stroke();
-}
-  // subtle horizontal guide line
-  ctx.strokeStyle = "rgba(0,0,0,0.06)";
-  ctx.lineWidth = 1;
-  ctx.beginPath();
-  ctx.moveTo(left, y);
-  ctx.lineTo(right, y);
-  ctx.stroke();
-}
-
-// --- X axis labels (whole years) ---
-ctx.textAlign = "center";
-ctx.textBaseline = "top";
-
-const startYear = new Date(tMin).getFullYear();
-const endYear = new Date(tMax).getFullYear();
-
-for (let year = startYear; year <= endYear; year++) {
-  const t = new Date(year, 0, 1, 12).getTime();
-  if (t < tMin || t > tMax) continue;
-
-  const x = xFor(t);
-  ctx.fillText(String(year), x, bottom + 6);
-
-  // subtle vertical tick
-  ctx.strokeStyle = "rgba(0,0,0,0.06)";
-  ctx.beginPath();
-  ctx.moveTo(x, top);
-  ctx.lineTo(x, bottom);
-  ctx.stroke();
-}
-
-  ctx.strokeStyle = stroke;
-  ctx.lineWidth = 2;
-  ctx.beginPath();
-  data.forEach((p, i) => {
-    const x = xFor(p.t);
-    const y = yFor(p.kg);
-    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
-  });
-  ctx.stroke();
-
-  trendLabel.textContent = "Weight trend";
-}
-
-
 
   // Wire UI
   els.pillWatson.addEventListener("click", () => setActiveDog("watson"));
@@ -797,27 +735,19 @@ for (let year = startYear; year <= endYear; year++) {
 
     setMsg(`Saved for ${DOGS[activeDog]}.`);
     render();
-    
   });
-
-
-
 
   els.exportJson.addEventListener("click", () => {
     const payload = {
       version: 3,
       exportedAt: new Date().toISOString(),
-      data: {
-        watson: loadEntries("watson"),
-        eddie: loadEntries("eddie"),
-      }
+      data: { watson: loadEntries("watson"), eddie: loadEntries("eddie") }
     };
     downloadText("dogweights-backup.json", JSON.stringify(payload, null, 2), "application/json");
     setMsg("Exported JSON backup.");
   });
 
   els.exportCsv.addEventListener("click", () => {
-    // One CSV with both dogs so it's easy to share/analyze
     const watson = loadEntries("watson").map(e => ({ dog: DOGS.watson, ...e }));
     const eddie  = loadEntries("eddie").map(e => ({ dog: DOGS.eddie, ...e }));
     const all = [...watson, ...eddie].sort((a,b) => (a.date > b.date ? 1 : (a.date < b.date ? -1 : 0)));
@@ -831,8 +761,7 @@ for (let year = startYear; year <= endYear; year++) {
       e.notes || ""
     ]));
 
-    const csv = [header, ...rows].join("\n");
-    downloadText("dogweights.csv", csv, "text/csv");
+    downloadText("dogweights.csv", [header, ...rows].join("\n"), "text/csv");
     setMsg("Exported CSV.");
   });
 
@@ -849,7 +778,6 @@ for (let year = startYear; year <= endYear; year++) {
         const text = await file.text();
         const parsed = JSON.parse(text);
 
-        // Accept our v3 format
         if (parsed?.data?.watson && parsed?.data?.eddie) {
           saveEntries("watson", parsed.data.watson);
           saveEntries("eddie", parsed.data.eddie);
@@ -859,8 +787,6 @@ for (let year = startYear; year <= endYear; year++) {
           return;
         }
 
-        // Accept older v1/v2 if they used {weight,unit} instead of kg
-        // We'll attempt a gentle conversion.
         const convertLegacy = (arr) => (Array.isArray(arr) ? arr : []).map(e => {
           if (typeof e?.kg === "number") return { id: e.id || String(Date.now()), date: e.date, kg: e.kg, notes: e.notes || "" };
           if (typeof e?.weight === "number" && typeof e?.unit === "string") {
@@ -880,7 +806,7 @@ for (let year = startYear; year <= endYear; year++) {
         }
 
         setMsg("Import failed — not a valid dogweights backup.", true);
-      } catch (err) {
+      } catch {
         setMsg("Import failed — invalid JSON file.", true);
       }
     };
