@@ -628,9 +628,16 @@ function drawTrend(entries) {
     return;
   }
 
-  const pad = 36;
-  const left = pad, right = trendWidthPx - pad;
-  const top = pad, bottom = TREND_HEIGHT - pad;
+  // replace: const pad = 28;
+const padL = 36;  // space for "30kg"
+const padR = 14;
+const padT = 14;
+const padB = 22;  // space for year labels (smaller than left)
+
+const left = padL;
+const right = trendWidthPx - padR;
+const top = padT;
+const bottom = TREND_HEIGHT - padB;
 
   const tMin = data[0].t;
   const tMax = data[data.length - 1].t;
