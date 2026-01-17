@@ -357,6 +357,10 @@
 
 <script>
 
+window.addEventListener("error", (e) => {
+  setMsg(`JS error: ${e.message}`, true);
+});
+
   let trendWidthPx = null;
 const TREND_HEIGHT = 140;
 
