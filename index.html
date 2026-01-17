@@ -356,6 +356,10 @@
 </main>
 
 <script>
+
+  let trendWidthPx = null;
+const TREND_HEIGHT = 140;
+
   // Dogs
   const DOGS = { watson: "Dr Watson", eddie: "Eddie Spaghetti" };
 
@@ -573,12 +577,24 @@ function parseISODate(s) {
   return new Date(y, (m-1), d, 12, 0, 0);
 }
 
-function drawTrend(entries) {
-  if (!trendCanvas) return;
+function initTrendCanvas() {
+  if (!trendCanvas || trendWidthPx !== null) return;
+
+  // Measure ONCE
+  const rect = trendCanvas.parentElement.getBoundingClientRect();
+  trendWidthPx = Math.floor(rect.width);
+
+  const dpr = window.devicePixelRatio || 1;
+
+  trendCanvas.style.width = trendWidthPx + "px";
+  trendCanvas.style.height = TREND_HEIGHT + "px";
+
+  trendCanvas.width  = Math.floor(trendWidthPx * dpr);
+  trendCanvas.height = Math.floor(TREND_HEIGHT * dpr);
 
   const ctx = trendCanvas.getContext("2d");
-  const hostW = trendCanvas.clientWidth || 300;
-  const hostH = Number(trendCanvas.getAttribute("height")) || 140;
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+}
 
   // Make canvas crisp on retina
   const dpr = window.devicePixelRatio || 1;
@@ -657,9 +673,18 @@ function drawTrend(entries) {
 }
 
 window.addEventListener("resize", () => {
-  // redraw on resize
-  if (typeof window.__lastTrendEntries !== "undefined") drawTrend(window.__lastTrendEntries);
+  trendWidthPx = null;
+  initTrendCanvas();
+  if (window.__lastTrendEntries) drawTrend(window.__lastTrendEntries);
 });
+
+initTrendCanvas();
+
+const ctx = trendCanvas.getContext("2d");
+const width  = trendWidthPx;
+const height = TREND_HEIGHT;
+
+ctx.clearRect(0, 0, width, height);
 
   // Wire UI
   els.pillWatson.addEventListener("click", () => setActiveDog("watson"));
