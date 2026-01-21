@@ -33,6 +33,7 @@
       --inactive-line: rgba(0,0,0,0.22);
       --event-flea: #f59e0b;       /* amber */
       --event-vax: #22c55e;        /* green */
+      --event-vet: #ef4444;        /* red */
       --badge-bg: rgba(0,0,0,0.06);
     }
 
@@ -258,7 +259,7 @@
     .segRow { margin-top: 12px; }
     .seg {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
+      grid-template-columns: repeat(4, 1fr);
       gap: 8px;
     }
     .segBtn {
@@ -294,9 +295,11 @@
     .badgeWeight { }
     .badgeFlea { border-color: color-mix(in srgb, var(--event-flea) 40%, var(--border)); }
     .badgeVax  { border-color: color-mix(in srgb, var(--event-vax) 40%, var(--border)); }
+    .badgeVet  { border-color: color-mix(in srgb, var(--event-vet) 40%, var(--border)); }
 
     .rowFlea td { background: color-mix(in srgb, var(--event-flea) 12%, transparent); }
     .rowVax  td { background: color-mix(in srgb, var(--event-vax)  12%, transparent); }
+    .rowVet  td { background: color-mix(in srgb, var(--event-vet)  12%, transparent); }
 
     #trend {
       border: 1px solid var(--border);
@@ -328,6 +331,16 @@
       width: 12px;
       text-align: center;
       margin-right: 6px;
+    }
+
+    .rangeToggle {
+      display: inline-flex;
+      gap: 8px;
+      margin-top: 8px;
+    }
+    .rangeToggle .segBtn {
+      padding: 6px 10px;
+      font-size: 12px;
     }
   </style>
 </head>
@@ -363,11 +376,16 @@
 
     <div style="margin-top:12px;">
       <canvas id="trend" height="180" style="width:100%; height:180px; display:block;"></canvas>
+      <div class="rangeToggle" role="group" aria-label="Chart range">
+        <button id="range-12" class="segBtn" type="button" aria-pressed="true">12m</button>
+        <button id="range-all" class="segBtn" type="button" aria-pressed="false">All</button>
+      </div>
       <div class="legend">
-        <span><span class="legendSwatch" id="swActive"></span>Active dog (mid-blue)</span>
+        <span><span class="legendSwatch" id="swActive"></span>Active dog</span>
         <span><span class="legendSwatch" id="swInactive"></span>Other dog</span>
         <span><span class="legendX" style="color:var(--event-flea);">×</span>Flea/Worm</span>
         <span><span class="legendX" style="color:var(--event-vax);">×</span>Vax</span>
+        <span><span class="legendX" style="color:var(--event-vet);">×</span>Vet appt</span>
       </div>
       <div class="muted" id="trendLabel" style="margin-top:6px;">—</div>
     </div>
@@ -380,6 +398,7 @@
         <button id="type-weight" class="segBtn" type="button" aria-pressed="true">Weigh-in</button>
         <button id="type-flea" class="segBtn" type="button" aria-pressed="false">Flea &amp; worm</button>
         <button id="type-vax" class="segBtn" type="button" aria-pressed="false">Health check &amp; vax</button>
+        <button id="type-vet" class="segBtn" type="button" aria-pressed="false">Vet appt</button>
       </div>
       <div class="hintRow" id="typeHint">Record a weigh-in (stored in canonical kg, lb supported).</div>
     </div>
@@ -470,13 +489,18 @@
     typeWeight: document.getElementById("type-weight"),
     typeFlea: document.getElementById("type-flea"),
     typeVax: document.getElementById("type-vax"),
+    typeVet: document.getElementById("type-vet"),
     typeHint: document.getElementById("typeHint"),
     weightBlock: document.getElementById("weightBlock"),
+
+    range12: document.getElementById("range-12"),
+    rangeAll: document.getElementById("range-all"),
   };
 
   let activeDog = "watson";
   let editingId = null;
-  let entryType = "weight"; // "weight" | "flea" | "vax"
+  let entryType = "weight"; // "weight" | "flea" | "vax" | "vet"
+  let trendRange = "12m"; // "12m" | "all"
 
   function setMsg(text, isError=false) {
     els.msg.textContent = text || "";
@@ -548,7 +572,7 @@
   }
 
   function eventsOnly(entries) {
-    return entries.filter(e => e.type === "flea" || e.type === "vax");
+    return entries.filter(e => e.type === "flea" || e.type === "vax" || e.type === "vet");
   }
 
   function canonicalKgFromInput() {
@@ -614,12 +638,19 @@
     return `Last ${label}: ${lastIso} • Next due: ${nextIso}`;
   }
 
+  function applyDefaultNotes() {
+    if (!editingId && entryType === "flea" && !els.notes.value.trim()) {
+      els.notes.value = "Simparica Trio";
+    }
+  }
+
   function setEntryType(nextType) {
     entryType = nextType;
 
     els.typeWeight.setAttribute("aria-pressed", String(entryType === "weight"));
     els.typeFlea.setAttribute("aria-pressed", String(entryType === "flea"));
     els.typeVax.setAttribute("aria-pressed", String(entryType === "vax"));
+    els.typeVet.setAttribute("aria-pressed", String(entryType === "vet"));
 
     // UI toggles
     if (entryType === "weight") {
@@ -634,15 +665,29 @@
       els.notes.placeholder = "e.g., brand, dose, ‘ordered more’…";
       els.typeHint.textContent = "Record flea & worm meds (monthly reminder).";
       els.save.textContent = editingId ? "Save changes" : "Save entry";
-    } else {
+    } else if (entryType === "vax") {
       els.weightBlock.style.display = "none";
       els.notesLabel.textContent = "Notes (optional)";
       els.notes.placeholder = "e.g., clinic, batch number, due date…";
       els.typeHint.textContent = "Record annual health check & vaccination.";
       els.save.textContent = editingId ? "Save changes" : "Save entry";
+    } else {
+      els.weightBlock.style.display = "none";
+      els.notesLabel.textContent = "Notes (optional)";
+      els.notes.placeholder = "e.g., reason, name of vet, nails/glands…";
+      els.typeHint.textContent = "Record a vet appointment that’s not a routine vax.";
+      els.save.textContent = editingId ? "Save changes" : "Save entry";
     }
 
+    applyDefaultNotes();
     updateConverted();
+  }
+
+  function setTrendRange(nextRange) {
+    trendRange = nextRange;
+    els.range12.setAttribute("aria-pressed", String(trendRange === "12m"));
+    els.rangeAll.setAttribute("aria-pressed", String(trendRange === "all"));
+    if (window.__lastAllByDog) drawTrend(window.__lastAllByDog);
   }
 
   function setActiveDog(dogKey) {
@@ -762,6 +807,7 @@
     const inactiveLine = root.getPropertyValue("--inactive-line").trim() || "rgba(0,0,0,0.22)";
     const fleaC = root.getPropertyValue("--event-flea").trim() || "#f59e0b";
     const vaxC  = root.getPropertyValue("--event-vax").trim()  || "#22c55e";
+    const vetC  = root.getPropertyValue("--event-vet").trim()  || "#ef4444";
 
     // Collect weight points for both dogs
     const weightsByDog = {};
@@ -776,8 +822,32 @@
       allWeights = allWeights.concat(pts.map(p => ({...p, dog})));
     }
 
+    const dayMs = 24 * 60 * 60 * 1000;
+    let weightsByDogPlot = weightsByDog;
+    let allWeightsPlot = allWeights;
+    let rangeTMin = null;
+    let rangeTMax = null;
+
+    if (trendRange === "12m" && allWeights.length) {
+      const tMaxAll = Math.max(...allWeights.map(p => p.t));
+      const tMinRange = tMaxAll - (365 * dayMs);
+      const weightsByDogRange = {};
+      let allWeightsRange = [];
+      for (const dog of DOG_KEYS) {
+        const pts = (weightsByDog[dog] || []).filter(p => p.t >= tMinRange);
+        weightsByDogRange[dog] = pts;
+        allWeightsRange = allWeightsRange.concat(pts);
+      }
+      if (allWeightsRange.length >= 2) {
+        weightsByDogPlot = weightsByDogRange;
+        allWeightsPlot = allWeightsRange;
+        rangeTMin = tMinRange;
+        rangeTMax = Math.max(...allWeightsRange.map(p => p.t));
+      }
+    }
+
     // Need at least 2 total points to draw meaningful axes
-    if (allWeights.length < 2) {
+    if (allWeightsPlot.length < 2) {
       els.trendLabel.textContent = allWeights.length === 1 ? "Add one more weigh-in (either dog) to see trends." : "No trend yet.";
       return;
     }
@@ -794,12 +864,12 @@
     const bottom = TREND_HEIGHT - padB;
 
     // X domain
-    const tMin = Math.min(...allWeights.map(p => p.t));
-    const tMax = Math.max(...allWeights.map(p => p.t));
+    const tMin = rangeTMin ?? Math.min(...allWeightsPlot.map(p => p.t));
+    const tMax = rangeTMax ?? Math.max(...allWeightsPlot.map(p => p.t));
 
     // Y domain (include forced context ticks 25 and 30 always)
-    let yMin = Math.min(...allWeights.map(p => p.kg));
-    let yMax = Math.max(...allWeights.map(p => p.kg));
+    let yMin = Math.min(...allWeightsPlot.map(p => p.kg));
+    let yMax = Math.max(...allWeightsPlot.map(p => p.kg));
     const forcedTicks = [25, 30];
     for (const t of forcedTicks) {
       yMin = Math.min(yMin, t);
@@ -865,7 +935,7 @@
 
     // Draw lines: active dog in blue, other dog in inactive gray
     function drawLineForDog(dogKey) {
-      const pts = weightsByDog[dogKey] || [];
+      const pts = weightsByDogPlot[dogKey] || [];
       if (pts.length < 2) return;
 
       const isActive = dogKey === activeDog;
@@ -903,20 +973,20 @@
     function drawEventsForDog(dogKey) {
       const events = eventsOnly(allByDog[dogKey] || [])
         .filter(e => e.date)
-        .map(e => ({ t: toTime(e.date), type: e.type, date: e.date }));
+        .map(e => ({ t: toTime(e.date), type: e.type, date: e.date }))
+        .filter(e => (rangeTMin === null ? true : (e.t >= tMin && e.t <= tMax)));
 
       if (!events.length) return;
 
-      const pts = (weightsByDog[dogKey] || []);
+      const pts = (weightsByDogPlot[dogKey] || []);
       for (const ev of events) {
         const kgAt = findNearestWeightY(pts, ev.t);
         if (kgAt === null) continue; // no weight line to anchor to
         const x = xFor(ev.t);
         const y = yFor(kgAt);
 
-        const color = (ev.type === "flea") ? fleaC : vaxC;
-        const size = (dogKey === activeDog) ? 5 : 4;
-        drawX(ctx, x, y, size, color);
+        const color = (ev.type === "flea") ? fleaC : (ev.type === "vax" ? vaxC : vetC);
+        drawX(ctx, x, y, 3, color);
       }
     }
 
@@ -928,8 +998,8 @@
     els.swInactive.style.background = inactiveLine;
 
     // Summary label
-    const activePts = weightsByDog[activeDog] || [];
-    const otherPts = weightsByDog[otherDog] || [];
+    const activePts = weightsByDogPlot[activeDog] || [];
+    const otherPts = weightsByDogPlot[otherDog] || [];
     const aTxt = activePts.length ? `${DOGS[activeDog]}: ${activePts[activePts.length-1].kg.toFixed(1)}kg` : `${DOGS[activeDog]}: —`;
     const oTxt = otherPts.length ? `${DOGS[otherDog]}: ${otherPts[otherPts.length-1].kg.toFixed(1)}kg` : `${DOGS[otherDog]}: —`;
     els.trendLabel.textContent = `${aTxt} • ${oTxt}`;
@@ -944,12 +1014,14 @@
   function typeLabel(t) {
     if (t === "weight") return "Weigh-in";
     if (t === "flea") return "Flea/Worm";
-    return "Vax";
+    if (t === "vax") return "Vax";
+    return "Vet appt";
   }
 
   function typeBadgeClass(t) {
     if (t === "flea") return "badge badgeFlea";
     if (t === "vax") return "badge badgeVax";
+    if (t === "vet") return "badge badgeVet";
     return "badge badgeWeight";
   }
 
@@ -981,7 +1053,7 @@
             ? `${badge}<div style="margin-top:6px;"><b>${Number(e.kg).toFixed(1)} kg</b><br><span class="muted">${kgToLb(Number(e.kg)).toFixed(1)} lb</span></div>`
             : `${badge}`;
 
-        const trClass = e.type === "flea" ? "rowFlea" : (e.type === "vax" ? "rowVax" : "");
+        const trClass = e.type === "flea" ? "rowFlea" : (e.type === "vax" ? "rowVax" : (e.type === "vet" ? "rowVet" : ""));
         return `
           <tr class="${trClass}">
             <td>${e.date}</td>
@@ -1044,6 +1116,10 @@
   els.typeWeight.addEventListener("click", () => { if (!editingId) setEntryType("weight"); });
   els.typeFlea.addEventListener("click", () => { if (!editingId) setEntryType("flea"); });
   els.typeVax.addEventListener("click", () => { if (!editingId) setEntryType("vax"); });
+  els.typeVet.addEventListener("click", () => { if (!editingId) setEntryType("vet"); });
+
+  els.range12.addEventListener("click", () => setTrendRange("12m"));
+  els.rangeAll.addEventListener("click", () => setTrendRange("all"));
 
   els.save.addEventListener("click", () => {
     const date = els.date.value || todayISO();
@@ -1110,18 +1186,19 @@
       return;
     }
 
-    // flea / vax
+    // flea / vax / vet
     const entry = {
       id: (crypto?.randomUUID ? crypto.randomUUID() : String(Date.now())),
       date,
-      type: entryType, // "flea" or "vax"
+      type: entryType, // "flea" | "vax" | "vet"
       notes
     };
     entries.push(entry);
     saveEntries(activeDog, entries);
 
     els.notes.value = "";
-    setMsg(`Saved ${entryType === "flea" ? "flea/worm" : "vax"} for ${DOGS[activeDog]}.`);
+    applyDefaultNotes();
+    setMsg(`Saved ${entryType === "flea" ? "flea/worm" : (entryType === "vax" ? "vax" : "vet appt")} for ${DOGS[activeDog]}.`);
     render();
   });
 
@@ -1206,6 +1283,7 @@
   // Init
   els.date.value = todayISO();
   setEntryType("weight");
+  setTrendRange("12m");
   updateConverted();
   render();
 </script>
