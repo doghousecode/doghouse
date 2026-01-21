@@ -307,6 +307,28 @@
       background: color-mix(in srgb, var(--card) 85%, var(--bg));
     }
 
+    .trendWrap {
+      position: relative;
+    }
+    .trendTooltip {
+      position: absolute;
+      left: 0;
+      top: 0;
+      padding: 6px 8px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--card);
+      color: var(--text);
+      font-size: 12px;
+      white-space: nowrap;
+      box-shadow: 0 6px 18px rgba(0,0,0,0.12);
+      pointer-events: none;
+      opacity: 0;
+      transform: translate(-9999px, -9999px);
+      transition: opacity 120ms ease;
+      z-index: 2;
+    }
+
     .legend {
       display: flex;
       gap: 10px;
@@ -374,8 +396,9 @@
       </div>
     </div>
 
-    <div style="margin-top:12px;">
+    <div class="trendWrap" style="margin-top:12px;">
       <canvas id="trend" height="180" style="width:100%; height:180px; display:block;"></canvas>
+      <div id="trendTooltip" class="trendTooltip" role="status" aria-live="polite"></div>
       <div class="rangeToggle" role="group" aria-label="Chart range">
         <button id="range-12" class="segBtn" type="button" aria-pressed="true">12m</button>
         <button id="range-all" class="segBtn" type="button" aria-pressed="false">All</button>
@@ -483,6 +506,7 @@
     clearDog: document.getElementById("clearDog"),
     trendCanvas: document.getElementById("trend"),
     trendLabel: document.getElementById("trendLabel"),
+    trendTooltip: document.getElementById("trendTooltip"),
     swActive: document.getElementById("swActive"),
     swInactive: document.getElementById("swInactive"),
 
@@ -690,6 +714,34 @@
     if (window.__lastAllByDog) drawTrend(window.__lastAllByDog);
   }
 
+  function showTrendTooltip(text, canvasX, canvasY) {
+    const tip = els.trendTooltip;
+    if (!tip) return;
+    const wrap = els.trendCanvas.parentElement;
+    const wrapRect = wrap.getBoundingClientRect();
+    const canvasRect = els.trendCanvas.getBoundingClientRect();
+    const left = (canvasRect.left - wrapRect.left) + canvasX;
+    const top = (canvasRect.top - wrapRect.top) + canvasY;
+    tip.textContent = text;
+    tip.style.opacity = "1";
+    tip.style.transform = "translate(-50%, -100%)";
+    tip.style.left = `${left}px`;
+    tip.style.top = `${top - 8}px`;
+  }
+
+  function hideTrendTooltip() {
+    const tip = els.trendTooltip;
+    if (!tip) return;
+    tip.style.opacity = "0";
+    tip.style.transform = "translate(-9999px, -9999px)";
+  }
+
+  function eventLabel(type) {
+    if (type === "flea") return "Flea/Worm";
+    if (type === "vax") return "Health Check & Vax";
+    return "Vet Appt";
+  }
+
   function setActiveDog(dogKey) {
     activeDog = dogKey;
 
@@ -769,16 +821,19 @@
 
   function toTime(iso) { return new Date(iso + "T12:00:00").getTime(); }
 
-  function findNearestWeightY(dataWeightsSortedAsc, t) {
-    // Returns kg from nearest weight point by date.
+  function weightAtTime(dataWeightsSortedAsc, t) {
     if (!dataWeightsSortedAsc.length) return null;
-    let best = dataWeightsSortedAsc[0];
-    let bestDist = Math.abs(best.t - t);
+    if (t <= dataWeightsSortedAsc[0].t) return dataWeightsSortedAsc[0].kg;
     for (let i = 1; i < dataWeightsSortedAsc.length; i++) {
-      const d = Math.abs(dataWeightsSortedAsc[i].t - t);
-      if (d < bestDist) { best = dataWeightsSortedAsc[i]; bestDist = d; }
+      const cur = dataWeightsSortedAsc[i];
+      if (t <= cur.t) {
+        const prev = dataWeightsSortedAsc[i - 1];
+        const span = cur.t - prev.t;
+        const ratio = span ? (t - prev.t) / span : 0;
+        return prev.kg + (cur.kg - prev.kg) * ratio;
+      }
     }
-    return best.kg;
+    return dataWeightsSortedAsc[dataWeightsSortedAsc.length - 1].kg;
   }
 
   function drawX(ctx, x, y, size, color) {
@@ -884,6 +939,8 @@
     const xFor = t => left + (t - tMin) / (tMax - tMin) * (right - left);
     const yFor = kg => bottom - (kg - yMin) / (yMax - yMin) * (bottom - top);
 
+    const hoverPoints = { weights: [], events: [] };
+
     // choose tick step (avoid clutter)
     const range = (yMax - yMin);
     let step = 5;
@@ -961,6 +1018,12 @@
         ctx.beginPath();
         ctx.arc(x, y, isActive ? 2.8 : 2.2, 0, Math.PI * 2);
         ctx.fill();
+        hoverPoints.weights.push({
+          x,
+          y,
+          label: `${p.date} • ${p.kg.toFixed(1)} kg`,
+          priority: 1
+        });
       });
     }
 
@@ -971,22 +1034,46 @@
 
     // Draw event X markers for both dogs
     function drawEventsForDog(dogKey) {
-      const events = eventsOnly(allByDog[dogKey] || [])
+      const rawEvents = eventsOnly(allByDog[dogKey] || [])
         .filter(e => e.date)
         .map(e => ({ t: toTime(e.date), type: e.type, date: e.date }))
         .filter(e => (rangeTMin === null ? true : (e.t >= tMin && e.t <= tMax)));
 
-      if (!events.length) return;
+      if (!rawEvents.length) return;
 
       const pts = (weightsByDogPlot[dogKey] || []);
-      for (const ev of events) {
-        const kgAt = findNearestWeightY(pts, ev.t);
+
+      const byDate = new Map();
+      for (const ev of rawEvents) {
+        const key = ev.date;
+        if (!byDate.has(key)) byDate.set(key, new Set());
+        byDate.get(key).add(ev.type);
+      }
+
+      for (const [date, typeSet] of byDate.entries()) {
+        const t = toTime(date);
+        const kgAt = weightAtTime(pts, t);
         if (kgAt === null) continue; // no weight line to anchor to
-        const x = xFor(ev.t);
+        const x = xFor(t);
         const y = yFor(kgAt);
 
-        const color = (ev.type === "flea") ? fleaC : (ev.type === "vax" ? vaxC : vetC);
-        drawX(ctx, x, y, 3, color);
+        const types = new Set(typeSet);
+        if (types.has("vax") && types.has("flea")) types.delete("flea");
+
+        const order = ["vax", "vet", "flea"].filter(tn => types.has(tn));
+        const offsets = order.length === 2 ? [-6, 6] : (order.length === 3 ? [-8, 0, 8] : [0]);
+
+        order.forEach((type, idx) => {
+          const color = (type === "flea") ? fleaC : (type === "vax" ? vaxC : vetC);
+          const yy = y + offsets[idx];
+          drawX(ctx, x, yy, 3, color);
+          hoverPoints.events.push({
+            x,
+            y: yy,
+            label: `${date} • ${eventLabel(type)}`,
+            priority: 2
+          });
+        });
       }
     }
 
@@ -1003,6 +1090,9 @@
     const aTxt = activePts.length ? `${DOGS[activeDog]}: ${activePts[activePts.length-1].kg.toFixed(1)}kg` : `${DOGS[activeDog]}: —`;
     const oTxt = otherPts.length ? `${DOGS[otherDog]}: ${otherPts[otherPts.length-1].kg.toFixed(1)}kg` : `${DOGS[otherDog]}: —`;
     els.trendLabel.textContent = `${aTxt} • ${oTxt}`;
+
+    window.__trendHoverPoints = hoverPoints;
+    hideTrendTooltip();
   }
 
   window.addEventListener("resize", () => {
@@ -1086,6 +1176,24 @@
     drawTrend(allByDog);
   }
 
+  function findNearestHoverPoint(x, y) {
+    const points = window.__trendHoverPoints;
+    if (!points) return null;
+    const all = [...points.events, ...points.weights];
+    let best = null;
+    let bestDist = 10 * 10;
+    for (const p of all) {
+      const dx = x - p.x;
+      const dy = y - p.y;
+      const d = (dx * dx) + (dy * dy);
+      if (d <= bestDist && (!best || d < bestDist || (d === bestDist && p.priority > best.priority))) {
+        best = p;
+        bestDist = d;
+      }
+    }
+    return best;
+  }
+
   function downloadText(filename, text, mime) {
     const blob = new Blob([text], { type: mime });
     const url = URL.createObjectURL(blob);
@@ -1120,6 +1228,15 @@
 
   els.range12.addEventListener("click", () => setTrendRange("12m"));
   els.rangeAll.addEventListener("click", () => setTrendRange("all"));
+  els.trendCanvas.addEventListener("pointermove", (e) => {
+    const rect = els.trendCanvas.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    const hit = findNearestHoverPoint(x, y);
+    if (hit) showTrendTooltip(hit.label, hit.x, hit.y);
+    else hideTrendTooltip();
+  });
+  els.trendCanvas.addEventListener("pointerleave", hideTrendTooltip);
 
   els.save.addEventListener("click", () => {
     const date = els.date.value || todayISO();
