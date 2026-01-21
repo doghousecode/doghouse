@@ -117,21 +117,22 @@
       user-select: none;
     }
 
+    /* Less tall dog tiles (cleaner) */
     .pillToggle {
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      gap: 6px;
-      padding: 8px 10px;
+      gap: 8px;
+      padding: 10px 10px;
       text-align: center;
-      min-height: 200px;
+      min-height: 168px;
       box-shadow: 0 1px 0 rgba(0,0,0,.03);
     }
 
     .pillToggle .avatar {
-      width: 144px;
-      height: 180px;
+      width: 132px;
+      height: 152px;
       border-radius: 14px;
       object-fit: cover;
       background: transparent;
@@ -220,13 +221,13 @@
       grid-template-columns: repeat(2, minmax(0, 1fr));
     }
     .kpiBtn {
-      border: 1px solid color-mix(in srgb, var(--border) 70%, transparent);
+      border: 1px solid var(--border);
       border-radius: 12px;
-      background: color-mix(in srgb, var(--card) 92%, var(--bg));
+      background: var(--card);
       color: var(--text);
       padding: 10px;
       text-align: center;
-      min-height: 86px;
+      min-height: 92px;
       display: flex;
       flex-direction: column;
       justify-content: center;
@@ -234,7 +235,7 @@
       cursor: pointer;
     }
     .kpiSmall { font-size: 12px; color: var(--muted); }
-    .kpiBig { font-size: 24px; font-weight: 700; line-height: 1; }
+    .kpiBig { font-size: 28px; font-weight: 700; line-height: 1; }
 
     .entryList { margin-top: 12px; display: flex; flex-direction: column; gap: 8px; }
     .entryYear { margin-top: 8px; font-size: 12px; color: var(--muted); }
@@ -244,12 +245,10 @@
       border-radius: 12px;
       background: var(--card);
       overflow: hidden;
-      cursor: pointer;
     }
     .entryMain {
       display: grid;
-      grid-template-columns: 76px 120px 1fr 16px;
-      grid-template-areas: "date badge notes handle";
+      grid-template-columns: 76px 120px 1fr;
       gap: 8px;
       padding: 10px;
       align-items: center;
@@ -271,11 +270,7 @@
     }
     .entryRow.showActions .entryMain { transform: translateX(-110px); }
     .entryRow.showActions .entryActions { transform: translateX(0); }
-    .entryRow.showActions .entryHandle { opacity: 0; }
-    .entryDate { grid-area: date; }
-    .entryBadge { grid-area: badge; }
-    .entryNotes { grid-area: notes; color: var(--text); }
-    .entryHandle { grid-area: handle; color: var(--muted); text-align: right; }
+    .entryNotes { color: var(--text); }
 
     .btnrow { display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap; }
     .smallbtn {
@@ -291,13 +286,7 @@
     .actionsRow { margin-top: 12px; gap: 10px; }
 
     @media (max-width: 420px) {
-      .entryMain {
-        grid-template-columns: 1fr 16px;
-        grid-template-areas:
-          "badge handle"
-          "date handle"
-          "notes handle";
-      }
+      .entryMain { grid-template-columns: 64px 110px 1fr; }
     }
 
     /* FINAL authority for dog toggle colours */
@@ -309,8 +298,7 @@
     .pill.pillToggle.active {
       background: var(--pill-active-bg) !important;
       color: var(--pill-active-text) !important;
-      border-color: var(--active-line) !important;
-      box-shadow: 0 0 0 1px var(--active-line);
+      border-color: var(--pill-active-bg) !important;
     }
 
     /* Entry type segmented control */
@@ -337,7 +325,6 @@
       color: var(--pill-active-text);
       border-color: var(--pill-active-bg);
     }
-    .hintRow { margin-top: 6px; font-size: 12px; color: var(--muted); }
 
     /* Row badges */
     .badge {
@@ -350,7 +337,6 @@
       line-height: 18px;
       white-space: nowrap;
     }
-    .badgeWeight { }
     .badgeFlea { border-color: color-mix(in srgb, var(--event-flea) 40%, var(--border)); }
     .badgeVax  { border-color: color-mix(in srgb, var(--event-vax) 40%, var(--border)); }
     .badgeVet  { border-color: color-mix(in srgb, var(--event-vet) 40%, var(--border)); }
@@ -365,9 +351,7 @@
       background: color-mix(in srgb, var(--card) 85%, var(--bg));
     }
 
-    .trendWrap {
-      position: relative;
-    }
+    .trendWrap { position: relative; }
     .trendTooltip {
       position: absolute;
       left: 0;
@@ -387,16 +371,15 @@
       z-index: 2;
     }
 
+    /* Legend: clearer + less ragged */
     .legend {
-      display: flex;
-      flex-direction: column;
+      display: grid;
       gap: 6px;
-      align-items: flex-end;
+      justify-items: end;
       text-align: right;
       font-size: 12px;
       color: var(--muted);
       margin-left: auto;
-      margin-top: 6px;
     }
     .legendSwatch {
       width: 10px;
@@ -427,25 +410,14 @@
     .trendRow {
       display: flex;
       gap: 12px;
-      align-items: flex-start;
+      align-items: center;
       justify-content: space-between;
       flex-wrap: wrap;
-      margin-top: 8px;
-    }
-
-    @media (max-width: 520px) {
-      .trendRow { flex-direction: column; align-items: flex-start; }
-      .legend { width: 100%; }
-    }
-
-    .formCard {
-      margin-top: 12px;
-      padding-top: 12px;
-      border-top: 1px solid var(--border);
+      margin-top: 10px;
     }
 
     .sectionLabel {
-      margin-top: 12px;
+      margin-top: 16px;
       font-size: 12px;
       color: var(--muted);
       text-transform: uppercase;
@@ -462,6 +434,19 @@
       clip: rect(0,0,0,0);
       border: 0;
     }
+
+    /* --- Polish wins --- */
+    button, .pill, .segBtn, .kpiBtn { -webkit-tap-highlight-color: transparent; }
+
+    button:focus-visible, .pill:focus-visible, .segBtn:focus-visible, .kpiBtn:focus-visible,
+    input:focus-visible, textarea:focus-visible, select:focus-visible {
+      outline: 3px solid color-mix(in srgb, var(--active-line) 55%, transparent);
+      outline-offset: 2px;
+    }
+
+    .kpiBtn:active, .segBtn:active, button.primary:active, button.secondary:active, .smallbtn:active {
+      transform: translateY(1px);
+    }
   </style>
 </head>
 
@@ -477,6 +462,7 @@
       <button id="importJsonTop" class="smallbtn" type="button">Import JSON</button>
       <button id="exportJsonTop" class="smallbtn" type="button">Export JSON</button>
     </div>
+
     <div class="row" style="gap:8px;">
       <div id="pill-watson" class="pill pillToggle active" role="button" tabindex="0" aria-pressed="true">
         <img class="avatar" src="assets/watson.png" alt="Dr Watson" />
@@ -489,23 +475,6 @@
         <span>Eddie Spaghetti</span>
         <span class="pillWeight" id="pillWeight-eddie">—</span>
       </div>
-    </div>
-
-    <div class="trendWrap" style="margin-top:12px;">
-      <canvas id="trend" height="180" style="width:100%; height:180px; display:block;"></canvas>
-      <div id="trendTooltip" class="trendTooltip" role="status" aria-live="polite"></div>
-      <div class="trendRow">
-        <div class="rangeToggle" role="group" aria-label="Chart range">
-          <button id="range-all" class="segBtn" type="button" aria-pressed="true">All</button>
-          <button id="range-12" class="segBtn" type="button" aria-pressed="false">Last 12 months</button>
-        </div>
-        <div class="legend">
-          <span><span class="legendX" style="color:var(--event-flea);">×</span>Last flea/worm</span>
-          <span><span class="legendX" style="color:var(--event-vax);">×</span>Annual vax</span>
-          <span><span class="legendX" style="color:var(--event-vet);">×</span>Vet appt</span>
-        </div>
-      </div>
-      <div class="muted" id="trendLabel" style="margin-top:6px;">—</div>
     </div>
 
     <div class="kpiGrid kpiButtons">
@@ -529,42 +498,62 @@
       </button>
     </div>
 
-    <div class="formCard">
-      <div class="sectionLabel">New record</div>
-      <label class="srOnly" for="date">Date</label>
-      <input id="date" type="date" />
+    <div class="trendWrap" style="margin-top:12px;">
+      <canvas id="trend" height="180" style="width:100%; height:180px; display:block;"></canvas>
+      <div id="trendTooltip" class="trendTooltip" role="status" aria-live="polite"></div>
 
-      <div class="segRow">
-        <div class="seg" role="group" aria-label="Entry type">
-          <button id="type-weight" class="segBtn" type="button" aria-pressed="true">Weigh-in</button>
-          <button id="type-flea" class="segBtn" type="button" aria-pressed="false">Flea &amp; worm</button>
-          <button id="type-vax" class="segBtn" type="button" aria-pressed="false">Annual vax</button>
-          <button id="type-vet" class="segBtn" type="button" aria-pressed="false">Vet appt</button>
+      <div class="trendRow">
+        <div class="rangeToggle" role="group" aria-label="Chart range">
+          <button id="range-12" class="segBtn" type="button" aria-pressed="true">12m</button>
+          <button id="range-all" class="segBtn" type="button" aria-pressed="false">All</button>
+        </div>
+
+        <div class="legend">
+          <span><span class="legendSwatch" style="background:var(--active-line);"></span>Active dog</span>
+          <span><span class="legendSwatch" style="background:var(--inactive-line);"></span>Other dog</span>
+          <span><span class="legendX" style="color:var(--event-flea);">×</span>Flea/worm</span>
+          <span><span class="legendX" style="color:var(--event-vax);">×</span>Annual vax</span>
+          <span><span class="legendX" style="color:var(--event-vet);">×</span>Vet appt</span>
         </div>
       </div>
 
-      <div id="weightBlock">
-        <label>Weight entry</label>
-        <div class="row">
-          <input id="weight" type="number" inputmode="decimal" step="0.1" placeholder="e.g., 18.4" />
-          <select id="unit">
-            <option value="kg">kg</option>
-            <option value="lb">lb</option>
-          </select>
-        </div>
-        <div class="muted" id="converted">—</div>
-      </div>
-
-      <label id="notesLabel">Notes (optional)</label>
-      <textarea id="notes" placeholder="e.g., annual checkup, on new food…"></textarea>
-
-      <div class="row" style="gap:10px;">
-        <button id="save" class="primary" type="button">Save entry</button>
-        <button id="cancelEdit" class="secondary" type="button" style="display:none;">Cancel edit</button>
-      </div>
-
-      <p class="muted" id="msg" style="margin: 10px 0 0;"></p>
+      <div class="muted" id="trendLabel" style="margin-top:6px;">—</div>
     </div>
+
+    <div class="sectionLabel">New record</div>
+    <label class="srOnly" for="date">Date</label>
+    <input id="date" type="date" />
+
+    <div class="segRow">
+      <div class="seg" role="group" aria-label="Entry type">
+        <button id="type-weight" class="segBtn" type="button" aria-pressed="true">Weigh-in</button>
+        <button id="type-flea" class="segBtn" type="button" aria-pressed="false">Flea &amp; worm</button>
+        <button id="type-vax" class="segBtn" type="button" aria-pressed="false">Annual vax</button>
+        <button id="type-vet" class="segBtn" type="button" aria-pressed="false">Vet appt</button>
+      </div>
+    </div>
+
+    <div id="weightBlock">
+      <label>Weight entry</label>
+      <div class="row">
+        <input id="weight" type="number" inputmode="decimal" step="0.1" placeholder="e.g., 18.4" />
+        <select id="unit">
+          <option value="kg">kg</option>
+          <option value="lb">lb</option>
+        </select>
+      </div>
+      <div class="muted" id="converted">—</div>
+    </div>
+
+    <label id="notesLabel">Notes (optional)</label>
+    <textarea id="notes" placeholder="e.g., annual checkup, on new food…"></textarea>
+
+    <div class="row" style="gap:10px;">
+      <button id="save" class="primary" type="button">Save entry</button>
+      <button id="cancelEdit" class="secondary" type="button" style="display:none;">Cancel edit</button>
+    </div>
+
+    <p class="muted" id="msg" style="margin: 10px 0 0;"></p>
 
     <div id="rows" class="entryList">
       <div class="muted">No entries yet.</div>
@@ -635,7 +624,7 @@
   let activeDog = "watson";
   let editingId = null;
   let entryType = "weight"; // "weight" | "flea" | "vax" | "vet"
-  let trendRange = "all"; // "12m" | "all"
+  let trendRange = "12m";   // "12m" | "all"
 
   function setMsg(text, isError=false) {
     els.msg.textContent = text || "";
@@ -729,22 +718,6 @@
     }
   }
 
-  function computeLatestAndDelta(entries) {
-    const w = sortedEntriesDesc(weightsOnly(entries));
-    if (w.length === 0) return { latestText: "—", deltaText: "—" };
-
-    const latest = w[0];
-    const latestText = `${latest.kg.toFixed(1)} kg on ${latest.date}`;
-
-    if (w.length < 2) return { latestText, deltaText: "—" };
-
-    const prev = w[1];
-    const deltaKg = latest.kg - prev.kg;
-    const sign = deltaKg > 0 ? "+" : (deltaKg < 0 ? "−" : "");
-    const deltaText = `${sign}${Math.abs(deltaKg).toFixed(1)} kg`;
-    return { latestText, deltaText };
-  }
-
   function lastOfType(entries, type) {
     const s = sortedEntriesDesc(entries.filter(e => e.type === type));
     return s[0] || null;
@@ -787,7 +760,6 @@
       els.notes.value = "";
     }
 
-    // UI toggles
     if (entryType === "weight") {
       els.weightBlock.style.display = "";
       els.notesLabel.textContent = "Notes (optional)";
@@ -871,7 +843,6 @@
     editingId = id;
     els.date.value = e.date;
 
-    // Match type selector to entry being edited
     setEntryType(e.type);
 
     if (e.type === "weight") {
@@ -945,7 +916,7 @@
 
   function drawX(ctx, x, y, size, color) {
     ctx.strokeStyle = color;
-    ctx.lineWidth = 2;
+    ctx.lineWidth = 1.6; // thinner
     ctx.beginPath();
     ctx.moveTo(x - size, y - size);
     ctx.lineTo(x + size, y + size);
@@ -962,9 +933,7 @@
     ctx.clearRect(0, 0, trendWidthPx, TREND_HEIGHT);
 
     const root = getComputedStyle(document.documentElement);
-    const text = root.getPropertyValue("--text").trim() || "#111";
     const muted = root.getPropertyValue("--muted").trim() || "#666";
-    const border = root.getPropertyValue("--border").trim() || "#ddd";
     const activeLine = root.getPropertyValue("--active-line").trim() || "#3b82f6";
     const inactiveLine = root.getPropertyValue("--inactive-line").trim() || "rgba(0,0,0,0.22)";
     const gridLine = root.getPropertyValue("--grid-line").trim() || "rgba(0,0,0,0.08)";
@@ -976,7 +945,7 @@
     const weightsByDog = {};
     let allWeights = [];
     for (const dog of DOG_KEYS) {
-      const w = weightsOnly(allByDog[dog] || []);
+      const w = (allByDog[dog] || []).filter(e => e.type === "weight" && typeof e.kg === "number");
       const pts = w
         .filter(e => e.date && typeof e.kg === "number")
         .map(e => ({ t: toTime(e.date), kg: e.kg, date: e.date }))
@@ -995,11 +964,13 @@
       const tMaxAll = Math.max(...allWeights.map(p => p.t));
       const tMinRange = tMaxAll - (365 * dayMs);
       const tMaxRange = tMaxAll;
+
       const weightsByDogRange = {};
       let allWeightsRange = [];
       for (const dog of DOG_KEYS) {
         const fullPts = (weightsByDog[dog] || []);
         const pts = fullPts.filter(p => p.t >= tMinRange);
+
         if (fullPts.length) {
           const startKg = weightAtTime(fullPts, tMinRange);
           const endKg = weightAtTime(fullPts, tMaxRange);
@@ -1010,9 +981,11 @@
             pts.push({ t: tMaxRange, kg: endKg, date: "", synthetic: true });
           }
         }
+
         weightsByDogRange[dog] = pts;
         allWeightsRange = allWeightsRange.concat(pts);
       }
+
       if (allWeightsRange.length >= 2) {
         weightsByDogPlot = weightsByDogRange;
         allWeightsPlot = allWeightsRange;
@@ -1021,14 +994,13 @@
       }
     }
 
-    // Need at least 2 total points to draw meaningful axes
     if (allWeightsPlot.length < 2) {
       els.trendLabel.textContent = allWeights.length === 1 ? "Add one more weigh-in (either dog) to see trends." : "No trend yet.";
       els.trendLabel.style.display = "";
       return;
     }
 
-    // plot padding (left bigger for kg labels, bottom smaller for years)
+    // plot padding
     const padL = 38;
     const padR = 14;
     const padT = 14;
@@ -1052,7 +1024,6 @@
       yMax = Math.max(yMax, t);
     }
 
-    // pad y range a bit
     const yPad = Math.max(0.2, (yMax - yMin) * 0.12);
     yMin -= yPad;
     yMax += yPad;
@@ -1062,11 +1033,10 @@
 
     const hoverPoints = { weights: [], events: [] };
 
-    // choose tick step (avoid clutter)
+    // choose tick step
     const range = (yMax - yMin);
     let step = 5;
-    const approxTicks = Math.floor(range / step);
-    if (approxTicks > 9) step = 10;
+    if (Math.floor(range / step) > 9) step = 10;
 
     // grid + Y labels
     ctx.fillStyle = muted;
@@ -1149,7 +1119,6 @@
       });
     }
 
-    // Draw inactive first, then active on top
     const otherDog = activeDog === "watson" ? "eddie" : "watson";
     drawLineForDog(otherDog);
     drawLineForDog(activeDog);
@@ -1163,6 +1132,7 @@
 
       if (!rawEvents.length) return;
 
+      // only show latest flea/worm
       const fleaEvents = rawEvents.filter(e => e.type === "flea");
       const latestFleaT = fleaEvents.length ? Math.max(...fleaEvents.map(e => e.t)) : null;
       if (latestFleaT !== null) {
@@ -1181,7 +1151,8 @@
       for (const [date, typeSet] of byDate.entries()) {
         const t = toTime(date);
         const kgAt = weightAtTime(pts, t);
-        if (kgAt === null) continue; // no weight line to anchor to
+        if (kgAt === null) continue;
+
         const x = xFor(t);
         const y = yFor(kgAt);
 
@@ -1194,7 +1165,7 @@
         order.forEach((type, idx) => {
           const color = (type === "flea") ? fleaC : (type === "vax" ? vaxC : vetC);
           const yy = y + offsets[idx];
-          drawX(ctx, x, yy, 3, color);
+          drawX(ctx, x, yy, 2, color);  // smaller, consistent
           hoverPoints.events.push({
             x,
             y: yy,
@@ -1208,7 +1179,6 @@
     drawEventsForDog(otherDog);
     drawEventsForDog(activeDog);
 
-    // Summary label
     els.trendLabel.textContent = "";
     els.trendLabel.style.display = "none";
 
@@ -1233,7 +1203,7 @@
     if (t === "flea") return "badge badgeFlea";
     if (t === "vax") return "badge badgeVax";
     if (t === "vet") return "badge badgeVet";
-    return "badge badgeWeight";
+    return "badge";
   }
 
   function render() {
@@ -1250,7 +1220,7 @@
     const fleaNext = fleaLast ? addDaysISO(fleaLast.date, 30) : null;
     const vaxNext  = vaxLast ? addYearsISO(vaxLast.date, 1) : null;
 
-    // Table: show ALL entry types for active dog
+    // List: show ALL entry types for active dog
     const s = sortedEntriesDesc(activeEntries);
     if (s.length === 0) {
       els.rows.innerHTML = `<div class="muted">No entries yet.</div>`;
@@ -1276,14 +1246,13 @@
           ${header}
           <div class="entryRow ${trClass}" data-entry="${e.id}">
             <div class="entryMain">
-              <div class="muted entryDate">${dateText}</div>
-              <div class="entryBadge">${badge}</div>
+              <div class="muted">${dateText}</div>
+              <div>${badge}</div>
               <div class="entryNotes">${notesText || "—"}</div>
-              <div class="entryHandle">›</div>
             </div>
             <div class="entryActions">
-              <button class="smallbtn" data-edit="${e.id}">Edit</button>
-              <button class="smallbtn" data-del="${e.id}">Delete</button>
+              <button class="smallbtn" data-edit="${e.id}" type="button">Edit</button>
+              <button class="smallbtn" data-del="${e.id}" type="button">Delete</button>
             </div>
           </div>
         `;
@@ -1336,7 +1305,6 @@
     els.nextWormMonth.textContent = nextWormParts ? monthShort[nextWormParts.getMonth()] : "—";
     els.nextWormDay.textContent = nextWormParts ? String(nextWormParts.getDate()) : "—";
 
-    // Chart uses both dogs data
     window.__lastAllByDog = allByDog;
     drawTrend(allByDog);
   }
@@ -1393,6 +1361,7 @@
 
   els.range12.addEventListener("click", () => setTrendRange("12m"));
   els.rangeAll.addEventListener("click", () => setTrendRange("all"));
+
   els.trendCanvas.addEventListener("pointermove", (e) => {
     const rect = els.trendCanvas.getBoundingClientRect();
     const x = e.clientX - rect.left;
@@ -1402,6 +1371,7 @@
     else hideTrendTooltip();
   });
   els.trendCanvas.addEventListener("pointerleave", hideTrendTooltip);
+
   els.quickWormBtn.addEventListener("click", () => {
     const entries = loadEntries(activeDog);
     const entry = {
@@ -1415,6 +1385,7 @@
     setMsg(`Saved flea/worm for ${DOGS[activeDog]}.`);
     render();
   });
+
   els.callVetBtn.addEventListener("click", () => {
     window.location.href = "tel:+441732452344";
   });
@@ -1445,7 +1416,6 @@
         const text = await file.text();
         const parsed = JSON.parse(text);
 
-        // v4 format
         if (parsed?.data?.watson && parsed?.data?.eddie) {
           const watson = (Array.isArray(parsed.data.watson) ? parsed.data.watson : []).map(normalizeEntry).filter(Boolean);
           const eddie  = (Array.isArray(parsed.data.eddie) ? parsed.data.eddie : []).map(normalizeEntry).filter(Boolean);
@@ -1469,10 +1439,8 @@
   els.save.addEventListener("click", () => {
     const date = els.date.value || todayISO();
     const notes = els.notes.value.trim();
-
     const entries = loadEntries(activeDog);
 
-    // Editing flow
     if (editingId) {
       const idx = entries.findIndex(x => x.id === editingId);
       if (idx < 0) { setMsg("Couldn’t find entry to edit (it may have been deleted).", true); cancelEdit(); render(); return; }
@@ -1496,12 +1464,10 @@
       return;
     }
 
-    // New entry flow
     if (entryType === "weight") {
       const kg = canonicalKgFromInput();
       if (kg === null) { setMsg("Enter a valid weight first.", true); return; }
 
-      // sanity check vs last weigh-in
       const latestW = sortedEntriesDesc(weightsOnly(entries))[0];
       if (latestW) {
         const pct = Math.abs((kg - latestW.kg) / latestW.kg) * 100;
@@ -1531,11 +1497,10 @@
       return;
     }
 
-    // flea / vax / vet
     const entry = {
       id: (crypto?.randomUUID ? crypto.randomUUID() : String(Date.now())),
       date,
-      type: entryType, // "flea" | "vax" | "vet"
+      type: entryType,
       notes
     };
     entries.push(entry);
@@ -1587,7 +1552,7 @@
   // Init
   els.date.value = todayISO();
   setEntryType("weight");
-  setTrendRange("all");
+  setTrendRange("12m");   // default view
   updateConverted();
   render();
 </script>
