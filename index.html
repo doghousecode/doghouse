@@ -27,6 +27,13 @@
 
       --kpi-bg: #fafafa;
       --danger: #b91c1c;
+
+      /* Chart + badges */
+      --active-line: #3b82f6;      /* mid-blue */
+      --inactive-line: rgba(0,0,0,0.22);
+      --event-flea: #f59e0b;       /* amber */
+      --event-vax: #22c55e;        /* green */
+      --badge-bg: rgba(0,0,0,0.06);
     }
 
     @media (prefers-color-scheme: dark) {
@@ -50,6 +57,9 @@
 
         --kpi-bg: #1a1a1d;
         --danger: #ff6b6b;
+
+        --inactive-line: rgba(255,255,255,0.22);
+        --badge-bg: rgba(255,255,255,0.08);
       }
     }
 
@@ -202,6 +212,15 @@
       background: var(--kpi-bg);
     }
 
+    .kpiGrid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 6px;
+    }
+
+    .kpiLine b { color: var(--text); }
+    .kpiSmall { font-size: 12px; }
+
     table { width: 100%; border-collapse: collapse; margin-top: 12px; }
     th, td { padding: 10px 8px; border-bottom: 1px solid var(--border); font-size: 13px; vertical-align: top; }
     th { text-align: left; color: var(--muted); font-weight: 600; }
@@ -235,18 +254,87 @@
       border-color: var(--pill-active-bg) !important;
     }
 
+    /* Entry type segmented control */
+    .segRow { margin-top: 12px; }
+    .seg {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+    .segBtn {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 10px 10px;
+      background: var(--card);
+      color: var(--text);
+      cursor: pointer;
+      user-select: none;
+      text-align: center;
+      font-weight: 600;
+      font-size: 13px;
+    }
+    .segBtn[aria-pressed="true"] {
+      background: var(--pill-active-bg);
+      color: var(--pill-active-text);
+      border-color: var(--pill-active-bg);
+    }
+    .hintRow { margin-top: 6px; font-size: 12px; color: var(--muted); }
+
+    /* Row badges */
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 999px;
+      background: var(--badge-bg);
+      border: 1px solid var(--border);
+      font-size: 12px;
+      line-height: 18px;
+      white-space: nowrap;
+    }
+    .badgeWeight { }
+    .badgeFlea { border-color: color-mix(in srgb, var(--event-flea) 40%, var(--border)); }
+    .badgeVax  { border-color: color-mix(in srgb, var(--event-vax) 40%, var(--border)); }
+
+    .rowFlea td { background: color-mix(in srgb, var(--event-flea) 12%, transparent); }
+    .rowVax  td { background: color-mix(in srgb, var(--event-vax)  12%, transparent); }
+
     #trend {
       border: 1px solid var(--border);
       border-radius: 12px;
       background: color-mix(in srgb, var(--card) 85%, var(--bg));
+    }
+
+    .legend {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+      margin-top: 6px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+    .legendSwatch {
+      width: 10px;
+      height: 10px;
+      border-radius: 999px;
+      display: inline-block;
+      vertical-align: middle;
+      margin-right: 6px;
+      border: 1px solid var(--border);
+    }
+    .legendX {
+      font-weight: 900;
+      display: inline-block;
+      width: 12px;
+      text-align: center;
+      margin-right: 6px;
     }
   </style>
 </head>
 
 <body>
 <header>
-  <h1>The Doghouse
-  </h1>
+  <h1>The Doghouse</h1>
   <p class="sub">He ain't heavy...he's my brother</p>
 </header>
 
@@ -265,29 +353,50 @@
     </div>
 
     <div class="kpi muted">
-      <div>Latest: <b id="latest">—</b></div>
-      <div>Change: <b id="delta">—</b> <span class="muted">since previous</span></div>
+      <div class="kpiGrid">
+        <div class="kpiLine">Latest weigh-in: <b id="latest">—</b></div>
+        <div class="kpiLine">Change: <b id="delta">—</b> <span class="muted">since previous weigh-in</span></div>
+        <div class="kpiLine kpiSmall">Flea &amp; worm: <b id="fleaDue">—</b></div>
+        <div class="kpiLine kpiSmall">Health check &amp; vax: <b id="vaxDue">—</b></div>
+      </div>
     </div>
 
     <div style="margin-top:12px;">
-      <canvas id="trend" height="160" style="width:100%; height:160px; display:block;"></canvas>
+      <canvas id="trend" height="180" style="width:100%; height:180px; display:block;"></canvas>
+      <div class="legend">
+        <span><span class="legendSwatch" id="swActive"></span>Active dog (mid-blue)</span>
+        <span><span class="legendSwatch" id="swInactive"></span>Other dog</span>
+        <span><span class="legendX" style="color:var(--event-flea);">×</span>Flea/Worm</span>
+        <span><span class="legendX" style="color:var(--event-vax);">×</span>Vax</span>
+      </div>
       <div class="muted" id="trendLabel" style="margin-top:6px;">—</div>
     </div>
 
     <label>Date</label>
     <input id="date" type="date" />
 
-    <label>Weight entry</label>
-    <div class="row">
-      <input id="weight" type="number" inputmode="decimal" step="0.1" placeholder="e.g., 18.4" />
-      <select id="unit">
-        <option value="kg">kg</option>
-        <option value="lb">lb</option>
-      </select>
+    <div class="segRow">
+      <div class="seg" role="group" aria-label="Entry type">
+        <button id="type-weight" class="segBtn" type="button" aria-pressed="true">Weigh-in</button>
+        <button id="type-flea" class="segBtn" type="button" aria-pressed="false">Flea &amp; worm</button>
+        <button id="type-vax" class="segBtn" type="button" aria-pressed="false">Health check &amp; vax</button>
+      </div>
+      <div class="hintRow" id="typeHint">Record a weigh-in (stored in canonical kg, lb supported).</div>
     </div>
-    <div class="muted" id="converted">—</div>
 
-    <label>Notes (optional)</label>
+    <div id="weightBlock">
+      <label>Weight entry</label>
+      <div class="row">
+        <input id="weight" type="number" inputmode="decimal" step="0.1" placeholder="e.g., 18.4" />
+        <select id="unit">
+          <option value="kg">kg</option>
+          <option value="lb">lb</option>
+        </select>
+      </div>
+      <div class="muted" id="converted">—</div>
+    </div>
+
+    <label id="notesLabel">Notes (optional)</label>
     <textarea id="notes" placeholder="e.g., annual checkup, on new food…"></textarea>
 
     <div class="row" style="gap:10px;">
@@ -301,7 +410,7 @@
       <thead>
         <tr>
           <th>Date</th>
-          <th>Weight</th>
+          <th>Entry</th>
           <th>Notes</th>
           <th style="width:160px;"></th>
         </tr>
@@ -322,9 +431,10 @@
 
 <script>
   let trendWidthPx = null;
-  const TREND_HEIGHT = 160;
+  const TREND_HEIGHT = 180;
 
   const DOGS = { watson: "Dr Watson", eddie: "Eddie Spaghetti" };
+  const DOG_KEYS = ["watson","eddie"];
 
   const KG_PER_LB = 1 / 2.2046226218;
   const LB_PER_KG = 2.2046226218;
@@ -338,24 +448,35 @@
     weight: document.getElementById("weight"),
     unit: document.getElementById("unit"),
     notes: document.getElementById("notes"),
+    notesLabel: document.getElementById("notesLabel"),
     converted: document.getElementById("converted"),
     save: document.getElementById("save"),
     cancelEdit: document.getElementById("cancelEdit"),
     rows: document.getElementById("rows"),
     latest: document.getElementById("latest"),
     delta: document.getElementById("delta"),
+    fleaDue: document.getElementById("fleaDue"),
+    vaxDue: document.getElementById("vaxDue"),
     msg: document.getElementById("msg"),
     exportJson: document.getElementById("exportJson"),
     exportCsv: document.getElementById("exportCsv"),
     importJson: document.getElementById("importJson"),
     clearDog: document.getElementById("clearDog"),
-  };
+    trendCanvas: document.getElementById("trend"),
+    trendLabel: document.getElementById("trendLabel"),
+    swActive: document.getElementById("swActive"),
+    swInactive: document.getElementById("swInactive"),
 
-  const trendCanvas = document.getElementById("trend");
-  const trendLabel = document.getElementById("trendLabel");
+    typeWeight: document.getElementById("type-weight"),
+    typeFlea: document.getElementById("type-flea"),
+    typeVax: document.getElementById("type-vax"),
+    typeHint: document.getElementById("typeHint"),
+    weightBlock: document.getElementById("weightBlock"),
+  };
 
   let activeDog = "watson";
   let editingId = null;
+  let entryType = "weight"; // "weight" | "flea" | "vax"
 
   function setMsg(text, isError=false) {
     els.msg.textContent = text || "";
@@ -377,19 +498,38 @@
     return local.toISOString().slice(0, 10);
   }
 
-  function keyForDog(dogKey) { return `dogweights:v3:${dogKey}`; }
+  function keyForDog(dogKey) { return `dogweights:v4:${dogKey}`; }
+
+  function normalizeEntry(e) {
+    // v4 native:
+    if (e && typeof e === "object" && e.type) return e;
+
+    // v3/v2 legacy weight entry {id,date,kg,notes}
+    if (e && typeof e === "object" && typeof e.kg === "number" && e.date) {
+      return { id: e.id || String(Date.now()), date: e.date, type: "weight", kg: e.kg, notes: e.notes || "" };
+    }
+
+    // v1 legacy {weight,unit}
+    if (e && typeof e === "object" && typeof e.weight === "number" && typeof e.unit === "string" && e.date) {
+      const kg = (e.unit === "kg") ? e.weight : lbToKg(e.weight);
+      return { id: e.id || String(Date.now()), date: e.date, type: "weight", kg, notes: e.notes || "" };
+    }
+
+    return null;
+  }
 
   function loadEntries(dogKey) {
-    try { return JSON.parse(localStorage.getItem(keyForDog(dogKey)) || "[]"); }
-    catch { return []; }
+    try {
+      const raw = JSON.parse(localStorage.getItem(keyForDog(dogKey)) || "[]");
+      const arr = Array.isArray(raw) ? raw : [];
+      return arr.map(normalizeEntry).filter(Boolean);
+    } catch {
+      return [];
+    }
   }
 
   function saveEntries(dogKey, entries) {
     localStorage.setItem(keyForDog(dogKey), JSON.stringify(entries));
-  }
-
-  function sortedEntriesDesc(entries) {
-    return [...entries].sort((a,b) => (b.date > a.date ? 1 : (b.date < a.date ? -1 : 0)));
   }
 
   function esc(s) {
@@ -399,6 +539,18 @@
       .replaceAll(">","&gt;");
   }
 
+  function sortedEntriesDesc(entries) {
+    return [...entries].sort((a,b) => (b.date > a.date ? 1 : (b.date < a.date ? -1 : 0)));
+  }
+
+  function weightsOnly(entries) {
+    return entries.filter(e => e.type === "weight" && typeof e.kg === "number");
+  }
+
+  function eventsOnly(entries) {
+    return entries.filter(e => e.type === "flea" || e.type === "vax");
+  }
+
   function canonicalKgFromInput() {
     const w = Number(els.weight.value);
     if (!Number.isFinite(w) || w <= 0) return null;
@@ -406,6 +558,8 @@
   }
 
   function updateConverted() {
+    if (entryType !== "weight") { els.converted.textContent = "—"; return; }
+
     const v = Number(els.weight.value);
     if (!Number.isFinite(v) || v <= 0) { els.converted.textContent = "—"; return; }
     if (els.unit.value === "kg") {
@@ -417,19 +571,78 @@
   }
 
   function computeLatestAndDelta(entries) {
-    const s = sortedEntriesDesc(entries);
-    if (s.length === 0) return { latestText: "—", deltaText: "—" };
+    const w = sortedEntriesDesc(weightsOnly(entries));
+    if (w.length === 0) return { latestText: "—", deltaText: "—" };
 
-    const latest = s[0];
+    const latest = w[0];
     const latestText = `${latest.kg.toFixed(1)} kg (${kgToLb(latest.kg).toFixed(1)} lb) on ${latest.date}`;
 
-    if (s.length < 2) return { latestText, deltaText: "—" };
+    if (w.length < 2) return { latestText, deltaText: "—" };
 
-    const prev = s[1];
+    const prev = w[1];
     const deltaKg = latest.kg - prev.kg;
     const sign = deltaKg > 0 ? "+" : (deltaKg < 0 ? "−" : "");
     const deltaText = `${sign}${Math.abs(deltaKg).toFixed(1)} kg (${sign}${Math.abs(kgToLb(deltaKg)).toFixed(1)} lb)`;
     return { latestText, deltaText };
+  }
+
+  function lastOfType(entries, type) {
+    const s = sortedEntriesDesc(entries.filter(e => e.type === type));
+    return s[0] || null;
+  }
+
+  function addDaysISO(iso, days) {
+    const [y,m,d] = iso.split("-").map(Number);
+    const dt = new Date(y, m-1, d, 12, 0, 0);
+    dt.setDate(dt.getDate() + days);
+    const off = dt.getTimezoneOffset();
+    const local = new Date(dt.getTime() - off * 60000);
+    return local.toISOString().slice(0, 10);
+  }
+
+  function addYearsISO(iso, years) {
+    const [y,m,d] = iso.split("-").map(Number);
+    const dt = new Date(y, m-1, d, 12, 0, 0);
+    dt.setFullYear(dt.getFullYear() + years);
+    const off = dt.getTimezoneOffset();
+    const local = new Date(dt.getTime() - off * 60000);
+    return local.toISOString().slice(0, 10);
+  }
+
+  function formatDueLine(lastIso, nextIso, label) {
+    if (!lastIso) return `No ${label} recorded yet.`;
+    return `Last ${label}: ${lastIso} • Next due: ${nextIso}`;
+  }
+
+  function setEntryType(nextType) {
+    entryType = nextType;
+
+    els.typeWeight.setAttribute("aria-pressed", String(entryType === "weight"));
+    els.typeFlea.setAttribute("aria-pressed", String(entryType === "flea"));
+    els.typeVax.setAttribute("aria-pressed", String(entryType === "vax"));
+
+    // UI toggles
+    if (entryType === "weight") {
+      els.weightBlock.style.display = "";
+      els.notesLabel.textContent = "Notes (optional)";
+      els.notes.placeholder = "e.g., annual checkup, on new food…";
+      els.typeHint.textContent = "Record a weigh-in (stored in canonical kg, lb supported).";
+      els.save.textContent = editingId ? "Save changes" : "Save entry";
+    } else if (entryType === "flea") {
+      els.weightBlock.style.display = "none";
+      els.notesLabel.textContent = "Notes (optional)";
+      els.notes.placeholder = "e.g., brand, dose, ‘ordered more’…";
+      els.typeHint.textContent = "Record flea & worm meds (monthly reminder).";
+      els.save.textContent = editingId ? "Save changes" : "Save entry";
+    } else {
+      els.weightBlock.style.display = "none";
+      els.notesLabel.textContent = "Notes (optional)";
+      els.notes.placeholder = "e.g., clinic, batch number, due date…";
+      els.typeHint.textContent = "Record annual health check & vaccination.";
+      els.save.textContent = editingId ? "Save changes" : "Save entry";
+    }
+
+    updateConverted();
   }
 
   function setActiveDog(dogKey) {
@@ -453,24 +666,36 @@
 
     editingId = id;
     els.date.value = e.date;
-    els.weight.value = e.kg.toFixed(1);
-    els.unit.value = "kg";
+
+    // Match type selector to entry being edited
+    setEntryType(e.type);
+
+    if (e.type === "weight") {
+      els.weight.value = Number(e.kg).toFixed(1);
+      els.unit.value = "kg";
+      updateConverted();
+    } else {
+      els.weight.value = "";
+      els.unit.value = "kg";
+      updateConverted();
+    }
+
     els.notes.value = e.notes || "";
-    updateConverted();
 
     els.save.textContent = "Save changes";
     els.cancelEdit.style.display = "";
-    setMsg(`Editing entry for ${DOGS[activeDog]}.`);
+    setMsg(`Editing ${e.type} entry for ${DOGS[activeDog]}.`);
   }
 
   function cancelEdit() {
     editingId = null;
-    els.save.textContent = "Save entry";
     els.cancelEdit.style.display = "none";
+    els.save.textContent = "Save entry";
     els.date.value = todayISO();
     els.weight.value = "";
     els.unit.value = "kg";
     els.notes.value = "";
+    setEntryType("weight");
     updateConverted();
   }
 
@@ -482,45 +707,83 @@
   }
 
   function initTrendCanvas() {
-    if (!trendCanvas || trendWidthPx !== null) return;
+    if (!els.trendCanvas || trendWidthPx !== null) return;
 
-    const rect = trendCanvas.parentElement.getBoundingClientRect();
+    const rect = els.trendCanvas.parentElement.getBoundingClientRect();
     trendWidthPx = Math.floor(rect.width);
 
     const dpr = window.devicePixelRatio || 1;
+    els.trendCanvas.style.width = trendWidthPx + "px";
+    els.trendCanvas.style.height = TREND_HEIGHT + "px";
+    els.trendCanvas.width  = Math.floor(trendWidthPx * dpr);
+    els.trendCanvas.height = Math.floor(TREND_HEIGHT * dpr);
 
-    trendCanvas.style.width = trendWidthPx + "px";
-    trendCanvas.style.height = TREND_HEIGHT + "px";
-
-    trendCanvas.width  = Math.floor(trendWidthPx * dpr);
-    trendCanvas.height = Math.floor(TREND_HEIGHT * dpr);
-
-    const ctx = trendCanvas.getContext("2d");
+    const ctx = els.trendCanvas.getContext("2d");
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   }
 
-  function drawTrend(entries) {
-    if (!trendCanvas) return;
+  function toTime(iso) { return new Date(iso + "T12:00:00").getTime(); }
+
+  function findNearestWeightY(dataWeightsSortedAsc, t) {
+    // Returns kg from nearest weight point by date.
+    if (!dataWeightsSortedAsc.length) return null;
+    let best = dataWeightsSortedAsc[0];
+    let bestDist = Math.abs(best.t - t);
+    for (let i = 1; i < dataWeightsSortedAsc.length; i++) {
+      const d = Math.abs(dataWeightsSortedAsc[i].t - t);
+      if (d < bestDist) { best = dataWeightsSortedAsc[i]; bestDist = d; }
+    }
+    return best.kg;
+  }
+
+  function drawX(ctx, x, y, size, color) {
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(x - size, y - size);
+    ctx.lineTo(x + size, y + size);
+    ctx.moveTo(x - size, y + size);
+    ctx.lineTo(x + size, y - size);
+    ctx.stroke();
+  }
+
+  function drawTrend(allByDog) {
+    if (!els.trendCanvas) return;
     initTrendCanvas();
 
-    const ctx = trendCanvas.getContext("2d");
+    const ctx = els.trendCanvas.getContext("2d");
     ctx.clearRect(0, 0, trendWidthPx, TREND_HEIGHT);
 
-    const data = (entries || [])
-      .filter(e => typeof e.kg === "number" && e.date)
-      .map(e => ({
-        t: new Date(e.date + "T12:00:00").getTime(),
-        kg: e.kg
-      }))
-      .sort((a,b) => a.t - b.t);
+    const root = getComputedStyle(document.documentElement);
+    const text = root.getPropertyValue("--text").trim() || "#111";
+    const muted = root.getPropertyValue("--muted").trim() || "#666";
+    const border = root.getPropertyValue("--border").trim() || "#ddd";
+    const activeLine = root.getPropertyValue("--active-line").trim() || "#3b82f6";
+    const inactiveLine = root.getPropertyValue("--inactive-line").trim() || "rgba(0,0,0,0.22)";
+    const fleaC = root.getPropertyValue("--event-flea").trim() || "#f59e0b";
+    const vaxC  = root.getPropertyValue("--event-vax").trim()  || "#22c55e";
 
-    if (data.length < 2) {
-      trendLabel.textContent = data.length === 1 ? "Add one more entry to see a trend." : "No trend yet.";
+    // Collect weight points for both dogs
+    const weightsByDog = {};
+    let allWeights = [];
+    for (const dog of DOG_KEYS) {
+      const w = weightsOnly(allByDog[dog] || []);
+      const pts = w
+        .filter(e => e.date && typeof e.kg === "number")
+        .map(e => ({ t: toTime(e.date), kg: e.kg, date: e.date }))
+        .sort((a,b) => a.t - b.t);
+      weightsByDog[dog] = pts;
+      allWeights = allWeights.concat(pts.map(p => ({...p, dog})));
+    }
+
+    // Need at least 2 total points to draw meaningful axes
+    if (allWeights.length < 2) {
+      els.trendLabel.textContent = allWeights.length === 1 ? "Add one more weigh-in (either dog) to see trends." : "No trend yet.";
       return;
     }
 
-    // plot padding
-    const padL = 36;
+    // plot padding (left bigger for kg labels, bottom smaller for years)
+    const padL = 38;
     const padR = 14;
     const padT = 14;
     const padB = 22;
@@ -530,21 +793,20 @@
     const top = padT;
     const bottom = TREND_HEIGHT - padB;
 
-    const tMin = data[0].t;
-    const tMax = data[data.length - 1].t;
+    // X domain
+    const tMin = Math.min(...allWeights.map(p => p.t));
+    const tMax = Math.max(...allWeights.map(p => p.t));
 
-    let yMin = Math.min(...data.map(d => d.kg));
-    let yMax = Math.max(...data.map(d => d.kg));
-
-    // Tick step + forced context labels
-    const step = (activeDog === "watson") ? 10 : 5;
-    const forcedTicks = (activeDog === "watson") ? [30] : [25, 30];
-
+    // Y domain (include forced context ticks 25 and 30 always)
+    let yMin = Math.min(...allWeights.map(p => p.kg));
+    let yMax = Math.max(...allWeights.map(p => p.kg));
+    const forcedTicks = [25, 30];
     for (const t of forcedTicks) {
       yMin = Math.min(yMin, t);
       yMax = Math.max(yMax, t);
     }
 
+    // pad y range a bit
     const yPad = Math.max(0.2, (yMax - yMin) * 0.12);
     yMin -= yPad;
     yMax += yPad;
@@ -552,11 +814,13 @@
     const xFor = t => left + (t - tMin) / (tMax - tMin) * (right - left);
     const yFor = kg => bottom - (kg - yMin) / (yMax - yMin) * (bottom - top);
 
-    const root = getComputedStyle(document.documentElement);
-    const stroke = root.getPropertyValue("--text").trim() || "#111";
-    const muted = root.getPropertyValue("--muted").trim() || "#666";
+    // choose tick step (avoid clutter)
+    const range = (yMax - yMin);
+    let step = 5;
+    const approxTicks = Math.floor(range / step);
+    if (approxTicks > 9) step = 10;
 
-    // Y labels + grid
+    // grid + Y labels
     ctx.fillStyle = muted;
     ctx.font = "11px system-ui";
     ctx.textAlign = "right";
@@ -571,14 +835,13 @@
     for (let kg = startKg; kg <= endKg; kg += step) {
       const y = yFor(kg);
       ctx.fillText(`${kg}kg`, left - 6, y);
-
       ctx.beginPath();
       ctx.moveTo(left, y);
       ctx.lineTo(right, y);
       ctx.stroke();
     }
 
-    // X labels (years)
+    // X labels (whole years)
     ctx.textAlign = "center";
     ctx.textBaseline = "top";
     ctx.fillStyle = muted;
@@ -600,65 +863,155 @@
       ctx.stroke();
     }
 
-    // Line
-    ctx.strokeStyle = stroke;
-    ctx.lineWidth = 2;
-    ctx.lineJoin = "round";
-    ctx.lineCap = "round";
-    ctx.beginPath();
-    data.forEach((p, i) => {
-      const x = xFor(p.t);
-      const y = yFor(p.kg);
-      i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
-    });
-    ctx.stroke();
+    // Draw lines: active dog in blue, other dog in inactive gray
+    function drawLineForDog(dogKey) {
+      const pts = weightsByDog[dogKey] || [];
+      if (pts.length < 2) return;
 
-    trendLabel.textContent = "Weight trend";
+      const isActive = dogKey === activeDog;
+      ctx.strokeStyle = isActive ? activeLine : inactiveLine;
+      ctx.lineWidth = isActive ? 2.6 : 2;
+      ctx.lineJoin = "round";
+      ctx.lineCap = "round";
+
+      ctx.beginPath();
+      pts.forEach((p, i) => {
+        const x = xFor(p.t);
+        const y = yFor(p.kg);
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      });
+      ctx.stroke();
+
+      // Points
+      ctx.fillStyle = isActive ? activeLine : inactiveLine;
+      pts.forEach(p => {
+        const x = xFor(p.t);
+        const y = yFor(p.kg);
+        ctx.beginPath();
+        ctx.arc(x, y, isActive ? 2.8 : 2.2, 0, Math.PI * 2);
+        ctx.fill();
+      });
+    }
+
+    // Draw inactive first, then active on top
+    const otherDog = activeDog === "watson" ? "eddie" : "watson";
+    drawLineForDog(otherDog);
+    drawLineForDog(activeDog);
+
+    // Draw event X markers for both dogs
+    function drawEventsForDog(dogKey) {
+      const events = eventsOnly(allByDog[dogKey] || [])
+        .filter(e => e.date)
+        .map(e => ({ t: toTime(e.date), type: e.type, date: e.date }));
+
+      if (!events.length) return;
+
+      const pts = (weightsByDog[dogKey] || []);
+      for (const ev of events) {
+        const kgAt = findNearestWeightY(pts, ev.t);
+        if (kgAt === null) continue; // no weight line to anchor to
+        const x = xFor(ev.t);
+        const y = yFor(kgAt);
+
+        const color = (ev.type === "flea") ? fleaC : vaxC;
+        const size = (dogKey === activeDog) ? 5 : 4;
+        drawX(ctx, x, y, size, color);
+      }
+    }
+
+    drawEventsForDog(otherDog);
+    drawEventsForDog(activeDog);
+
+    // Legend swatches
+    els.swActive.style.background = activeLine;
+    els.swInactive.style.background = inactiveLine;
+
+    // Summary label
+    const activePts = weightsByDog[activeDog] || [];
+    const otherPts = weightsByDog[otherDog] || [];
+    const aTxt = activePts.length ? `${DOGS[activeDog]}: ${activePts[activePts.length-1].kg.toFixed(1)}kg` : `${DOGS[activeDog]}: —`;
+    const oTxt = otherPts.length ? `${DOGS[otherDog]}: ${otherPts[otherPts.length-1].kg.toFixed(1)}kg` : `${DOGS[otherDog]}: —`;
+    els.trendLabel.textContent = `${aTxt} • ${oTxt}`;
   }
 
   window.addEventListener("resize", () => {
     trendWidthPx = null;
     initTrendCanvas();
-    if (window.__lastTrendEntries) drawTrend(window.__lastTrendEntries);
+    if (window.__lastAllByDog) drawTrend(window.__lastAllByDog);
   });
 
+  function typeLabel(t) {
+    if (t === "weight") return "Weigh-in";
+    if (t === "flea") return "Flea/Worm";
+    return "Vax";
+  }
+
+  function typeBadgeClass(t) {
+    if (t === "flea") return "badge badgeFlea";
+    if (t === "vax") return "badge badgeVax";
+    return "badge badgeWeight";
+  }
+
   function render() {
-    const entries = loadEntries(activeDog);
-    const { latestText, deltaText } = computeLatestAndDelta(entries);
+    const activeEntries = loadEntries(activeDog);
+    const { latestText, deltaText } = computeLatestAndDelta(activeEntries);
     els.latest.textContent = latestText;
     els.delta.textContent = deltaText;
 
-    const s = sortedEntriesDesc(entries);
+    // Reminders for active dog
+    const fleaLast = lastOfType(activeEntries, "flea");
+    const vaxLast = lastOfType(activeEntries, "vax");
+
+    const fleaNext = fleaLast ? addDaysISO(fleaLast.date, 30) : null;
+    const vaxNext  = vaxLast ? addYearsISO(vaxLast.date, 1) : null;
+
+    els.fleaDue.textContent = fleaLast ? formatDueLine(fleaLast.date, fleaNext, "flea/worm") : "No flea/worm recorded yet.";
+    els.vaxDue.textContent  = vaxLast ? formatDueLine(vaxLast.date, vaxNext, "vax") : "No vax recorded yet.";
+
+    // Table: show ALL entry types for active dog
+    const s = sortedEntriesDesc(activeEntries);
     if (s.length === 0) {
       els.rows.innerHTML = `<tr><td colspan="4" class="muted">No entries yet.</td></tr>`;
-      window.__lastTrendEntries = [];
-      drawTrend([]);
-      return;
+    } else {
+      els.rows.innerHTML = s.map(e => {
+        const badge = `<span class="${typeBadgeClass(e.type)}">${typeLabel(e.type)}</span>`;
+        const entryText =
+          e.type === "weight"
+            ? `${badge}<div style="margin-top:6px;"><b>${Number(e.kg).toFixed(1)} kg</b><br><span class="muted">${kgToLb(Number(e.kg)).toFixed(1)} lb</span></div>`
+            : `${badge}`;
+
+        const trClass = e.type === "flea" ? "rowFlea" : (e.type === "vax" ? "rowVax" : "");
+        return `
+          <tr class="${trClass}">
+            <td>${e.date}</td>
+            <td>${entryText}</td>
+            <td>${esc(e.notes)}</td>
+            <td>
+              <div class="btnrow">
+                <button class="smallbtn" data-edit="${e.id}">Edit</button>
+                <button class="smallbtn" data-del="${e.id}">Delete</button>
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join("");
+
+      els.rows.querySelectorAll("button[data-edit]").forEach(btn => {
+        btn.addEventListener("click", () => startEdit(btn.getAttribute("data-edit")));
+      });
+      els.rows.querySelectorAll("button[data-del]").forEach(btn => {
+        btn.addEventListener("click", () => deleteEntry(btn.getAttribute("data-del")));
+      });
     }
 
-    els.rows.innerHTML = s.map(e => `
-      <tr>
-        <td>${e.date}</td>
-        <td>${e.kg.toFixed(1)} kg<br><span class="muted">${kgToLb(e.kg).toFixed(1)} lb</span></td>
-        <td>${esc(e.notes)}</td>
-        <td>
-          <div class="btnrow">
-            <button class="smallbtn" data-edit="${e.id}">Edit</button>
-            <button class="smallbtn" data-del="${e.id}">Delete</button>
-          </div>
-        </td>
-      </tr>
-    `).join("");
-
-    els.rows.querySelectorAll("button[data-edit]").forEach(btn => {
-      btn.addEventListener("click", () => startEdit(btn.getAttribute("data-edit")));
-    });
-    els.rows.querySelectorAll("button[data-del]").forEach(btn => {
-      btn.addEventListener("click", () => deleteEntry(btn.getAttribute("data-del")));
-    });
-
-    window.__lastTrendEntries = s;
-    drawTrend(s);
+    // Chart uses both dogs data
+    const allByDog = {
+      watson: loadEntries("watson"),
+      eddie: loadEntries("eddie"),
+    };
+    window.__lastAllByDog = allByDog;
+    drawTrend(allByDog);
   }
 
   function downloadText(filename, text, mime) {
@@ -686,83 +1039,124 @@
   els.pillEddie.addEventListener("click", () => setActiveDog("eddie"));
   els.weight.addEventListener("input", updateConverted);
   els.unit.addEventListener("change", updateConverted);
-  els.cancelEdit.addEventListener("click", () => { setMsg(""); cancelEdit(); });
+  els.cancelEdit.addEventListener("click", () => { setMsg(""); cancelEdit(); render(); });
+
+  els.typeWeight.addEventListener("click", () => { if (!editingId) setEntryType("weight"); });
+  els.typeFlea.addEventListener("click", () => { if (!editingId) setEntryType("flea"); });
+  els.typeVax.addEventListener("click", () => { if (!editingId) setEntryType("vax"); });
 
   els.save.addEventListener("click", () => {
     const date = els.date.value || todayISO();
-    const kg = canonicalKgFromInput();
     const notes = els.notes.value.trim();
 
-    if (kg === null) { setMsg("Enter a valid weight first.", true); return; }
-
     const entries = loadEntries(activeDog);
-    const latest = sortedEntriesDesc(entries)[0];
-    if (latest) {
-      const pct = Math.abs((kg - latest.kg) / latest.kg) * 100;
-      if (pct >= 20) setMsg(`Heads-up: that’s a ${pct.toFixed(0)}% change vs last entry. Double-check? (Saving anyway)`);
-      else setMsg("");
-    } else {
-      setMsg("");
-    }
 
+    // Editing flow
     if (editingId) {
       const idx = entries.findIndex(x => x.id === editingId);
-      if (idx >= 0) {
-        entries[idx] = { ...entries[idx], date, kg, notes };
-        saveEntries(activeDog, entries);
-        setMsg(`Updated entry for ${DOGS[activeDog]}.`);
+      if (idx < 0) { setMsg("Couldn’t find entry to edit (it may have been deleted).", true); cancelEdit(); render(); return; }
+
+      const original = entries[idx];
+      const nextType = entryType;
+
+      if (nextType === "weight") {
+        const kg = canonicalKgFromInput();
+        if (kg === null) { setMsg("Enter a valid weight first.", true); return; }
+        entries[idx] = { ...original, date, type: "weight", kg, notes };
       } else {
-        setMsg("Couldn’t find entry to edit (it may have been deleted).", true);
+        entries[idx] = { ...original, date, type: nextType, notes, kg: undefined };
+        delete entries[idx].kg;
       }
+
+      saveEntries(activeDog, entries);
+      setMsg(`Updated entry for ${DOGS[activeDog]}.`);
       cancelEdit();
       render();
       return;
     }
 
+    // New entry flow
+    if (entryType === "weight") {
+      const kg = canonicalKgFromInput();
+      if (kg === null) { setMsg("Enter a valid weight first.", true); return; }
+
+      // sanity check vs last weigh-in
+      const latestW = sortedEntriesDesc(weightsOnly(entries))[0];
+      if (latestW) {
+        const pct = Math.abs((kg - latestW.kg) / latestW.kg) * 100;
+        if (pct >= 20) setMsg(`Heads-up: that’s a ${pct.toFixed(0)}% change vs last weigh-in. Double-check? (Saving anyway)`);
+        else setMsg("");
+      } else {
+        setMsg("");
+      }
+
+      const entry = {
+        id: (crypto?.randomUUID ? crypto.randomUUID() : String(Date.now())),
+        date,
+        type: "weight",
+        kg,
+        notes
+      };
+      entries.push(entry);
+      saveEntries(activeDog, entries);
+
+      els.weight.value = "";
+      els.notes.value = "";
+      els.unit.value = "kg";
+      updateConverted();
+
+      setMsg(`Saved weigh-in for ${DOGS[activeDog]}.`);
+      render();
+      return;
+    }
+
+    // flea / vax
     const entry = {
       id: (crypto?.randomUUID ? crypto.randomUUID() : String(Date.now())),
       date,
-      kg,
+      type: entryType, // "flea" or "vax"
       notes
     };
-
     entries.push(entry);
     saveEntries(activeDog, entries);
 
-    els.weight.value = "";
     els.notes.value = "";
-    els.unit.value = "kg";
-    updateConverted();
-
-    setMsg(`Saved for ${DOGS[activeDog]}.`);
+    setMsg(`Saved ${entryType === "flea" ? "flea/worm" : "vax"} for ${DOGS[activeDog]}.`);
     render();
   });
 
   els.exportJson.addEventListener("click", () => {
     const payload = {
-      version: 3,
+      version: 4,
       exportedAt: new Date().toISOString(),
-      data: { watson: loadEntries("watson"), eddie: loadEntries("eddie") }
+      data: {
+        watson: loadEntries("watson"),
+        eddie: loadEntries("eddie"),
+      }
     };
-    downloadText("dogweights-backup.json", JSON.stringify(payload, null, 2), "application/json");
+    downloadText("doghouse-backup.json", JSON.stringify(payload, null, 2), "application/json");
     setMsg("Exported JSON backup.");
   });
 
   els.exportCsv.addEventListener("click", () => {
-    const watson = loadEntries("watson").map(e => ({ dog: DOGS.watson, ...e }));
-    const eddie  = loadEntries("eddie").map(e => ({ dog: DOGS.eddie, ...e }));
-    const all = [...watson, ...eddie].sort((a,b) => (a.date > b.date ? 1 : (a.date < b.date ? -1 : 0)));
+    const all = [];
+    for (const dog of DOG_KEYS) {
+      const entries = loadEntries(dog).map(e => ({ dog: DOGS[dog], ...e }));
+      all.push(...entries);
+    }
+    all.sort((a,b) => (a.date > b.date ? 1 : (a.date < b.date ? -1 : 0)));
 
-    const header = toCSVRow(["dog", "date", "weight_kg", "weight_lb", "notes"]);
+    const header = toCSVRow(["dog", "date", "type", "weight_kg", "weight_lb", "notes"]);
     const rows = all.map(e => toCSVRow([
       e.dog,
       e.date,
-      Number(e.kg).toFixed(1),
-      kgToLb(Number(e.kg)).toFixed(1),
+      e.type,
+      (e.type === "weight" && typeof e.kg === "number") ? Number(e.kg).toFixed(1) : "",
+      (e.type === "weight" && typeof e.kg === "number") ? kgToLb(Number(e.kg)).toFixed(1) : "",
       e.notes || ""
     ]));
 
-    downloadText("dogweights.csv", [header, ...rows].join("\n"), "text/csv");
+    downloadText("doghouse.csv", [header, ...rows].join("\n"), "text/csv");
     setMsg("Exported CSV.");
   });
 
@@ -779,34 +1173,19 @@
         const text = await file.text();
         const parsed = JSON.parse(text);
 
+        // v4 format
         if (parsed?.data?.watson && parsed?.data?.eddie) {
-          saveEntries("watson", parsed.data.watson);
-          saveEntries("eddie", parsed.data.eddie);
+          const watson = (Array.isArray(parsed.data.watson) ? parsed.data.watson : []).map(normalizeEntry).filter(Boolean);
+          const eddie  = (Array.isArray(parsed.data.eddie) ? parsed.data.eddie : []).map(normalizeEntry).filter(Boolean);
+          saveEntries("watson", watson);
+          saveEntries("eddie", eddie);
           setMsg("Imported successfully.");
           cancelEdit();
           render();
           return;
         }
 
-        const convertLegacy = (arr) => (Array.isArray(arr) ? arr : []).map(e => {
-          if (typeof e?.kg === "number") return { id: e.id || String(Date.now()), date: e.date, kg: e.kg, notes: e.notes || "" };
-          if (typeof e?.weight === "number" && typeof e?.unit === "string") {
-            const kg = (e.unit === "kg") ? e.weight : lbToKg(e.weight);
-            return { id: e.id || String(Date.now()), date: e.date, kg, notes: e.notes || "" };
-          }
-          return null;
-        }).filter(Boolean);
-
-        if (parsed?.data?.watson || parsed?.data?.eddie) {
-          saveEntries("watson", convertLegacy(parsed.data.watson));
-          saveEntries("eddie", convertLegacy(parsed.data.eddie));
-          setMsg("Imported legacy backup (converted to canonical kg).");
-          cancelEdit();
-          render();
-          return;
-        }
-
-        setMsg("Import failed — not a valid dogweights backup.", true);
+        setMsg("Import failed — not a valid Doghouse backup.", true);
       } catch {
         setMsg("Import failed — invalid JSON file.", true);
       }
@@ -826,6 +1205,7 @@
 
   // Init
   els.date.value = todayISO();
+  setEntryType("weight");
   updateConverted();
   render();
 </script>
