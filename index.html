@@ -122,16 +122,16 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      gap: 10px;
-      padding: 14px 12px;
+      gap: 6px;
+      padding: 8px 10px;
       text-align: center;
-      min-height: 150px;
+      min-height: 200px;
       box-shadow: 0 1px 0 rgba(0,0,0,.03);
     }
 
     .pillToggle .avatar {
-      width: 120px;
-      height: 150px;
+      width: 144px;
+      height: 180px;
       border-radius: 14px;
       object-fit: cover;
       background: transparent;
@@ -340,7 +340,6 @@
       gap: 10px;
       flex-wrap: wrap;
       align-items: center;
-      margin-top: 6px;
       font-size: 12px;
       color: var(--muted);
     }
@@ -364,11 +363,19 @@
     .rangeToggle {
       display: inline-flex;
       gap: 8px;
-      margin-top: 8px;
     }
     .rangeToggle .segBtn {
       padding: 6px 10px;
       font-size: 12px;
+    }
+
+    .trendRow {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      margin-top: 8px;
     }
   </style>
 </head>
@@ -401,26 +408,28 @@
 
     <div class="kpi muted">
       <div class="kpiGrid">
-        <div class="kpiLine">Latest weigh-in: <b id="latest">—</b></div>
+        <div class="kpiLine">Last weigh-in: <b id="latest">—</b></div>
         <div class="kpiLine">Change: <b id="delta">—</b> <span class="muted">since previous weigh-in</span></div>
-        <div class="kpiLine kpiSmall">Flea &amp; worm: <b id="fleaDue">—</b></div>
-        <div class="kpiLine kpiSmall">Health check &amp; vax: <b id="vaxDue">—</b></div>
+        <div class="kpiLine kpiSmall">Last flea &amp; worm: <b id="fleaLast">—</b></div>
+        <div class="kpiLine kpiSmall">Next flea &amp; worm: <b id="fleaNext">—</b></div>
+        <div class="kpiLine kpiSmall">Latest vax: <b id="vaxLast">—</b></div>
+        <div class="kpiLine kpiSmall">Next vax: <b id="vaxNext">—</b></div>
       </div>
     </div>
 
     <div class="trendWrap" style="margin-top:12px;">
       <canvas id="trend" height="180" style="width:100%; height:180px; display:block;"></canvas>
       <div id="trendTooltip" class="trendTooltip" role="status" aria-live="polite"></div>
-      <div class="rangeToggle" role="group" aria-label="Chart range">
-        <button id="range-all" class="segBtn" type="button" aria-pressed="true">All</button>
-        <button id="range-12" class="segBtn" type="button" aria-pressed="false">Last 12 months</button>
-      </div>
-      <div class="legend">
-        <span><span class="legendSwatch" id="swActive"></span>Active dog</span>
-        <span><span class="legendSwatch" id="swInactive"></span>Other dog</span>
-        <span><span class="legendX" style="color:var(--event-flea);">×</span>Flea/Worm</span>
-        <span><span class="legendX" style="color:var(--event-vax);">×</span>Vax</span>
-        <span><span class="legendX" style="color:var(--event-vet);">×</span>Vet appt</span>
+      <div class="trendRow">
+        <div class="rangeToggle" role="group" aria-label="Chart range">
+          <button id="range-all" class="segBtn" type="button" aria-pressed="true">All</button>
+          <button id="range-12" class="segBtn" type="button" aria-pressed="false">Last 12 months</button>
+        </div>
+        <div class="legend">
+          <span><span class="legendX" style="color:var(--event-flea);">×</span>Last flea/worm</span>
+          <span><span class="legendX" style="color:var(--event-vax);">×</span>Annual check &amp; vax</span>
+          <span><span class="legendX" style="color:var(--event-vet);">×</span>Vet appt</span>
+        </div>
       </div>
       <div class="muted" id="trendLabel" style="margin-top:6px;">—</div>
     </div>
@@ -509,8 +518,10 @@
     rows: document.getElementById("rows"),
     latest: document.getElementById("latest"),
     delta: document.getElementById("delta"),
-    fleaDue: document.getElementById("fleaDue"),
-    vaxDue: document.getElementById("vaxDue"),
+    fleaLast: document.getElementById("fleaLast"),
+    fleaNext: document.getElementById("fleaNext"),
+    vaxLast: document.getElementById("vaxLast"),
+    vaxNext: document.getElementById("vaxNext"),
     msg: document.getElementById("msg"),
     exportJson: document.getElementById("exportJson"),
     exportCsv: document.getElementById("exportCsv"),
@@ -519,8 +530,6 @@
     trendCanvas: document.getElementById("trend"),
     trendLabel: document.getElementById("trendLabel"),
     trendTooltip: document.getElementById("trendTooltip"),
-    swActive: document.getElementById("swActive"),
-    swInactive: document.getElementById("swInactive"),
     pillWeightWatson: document.getElementById("pillWeight-watson"),
     pillWeightEddie: document.getElementById("pillWeight-eddie"),
 
@@ -639,14 +648,14 @@
     if (w.length === 0) return { latestText: "—", deltaText: "—" };
 
     const latest = w[0];
-    const latestText = `${latest.kg.toFixed(1)} kg (${kgToLb(latest.kg).toFixed(1)} lb) on ${latest.date}`;
+    const latestText = `${latest.kg.toFixed(1)} kg on ${latest.date}`;
 
     if (w.length < 2) return { latestText, deltaText: "—" };
 
     const prev = w[1];
     const deltaKg = latest.kg - prev.kg;
     const sign = deltaKg > 0 ? "+" : (deltaKg < 0 ? "−" : "");
-    const deltaText = `${sign}${Math.abs(deltaKg).toFixed(1)} kg (${sign}${Math.abs(kgToLb(deltaKg)).toFixed(1)} lb)`;
+    const deltaText = `${sign}${Math.abs(deltaKg).toFixed(1)} kg`;
     return { latestText, deltaText };
   }
 
@@ -1065,12 +1074,18 @@
 
     // Draw event X markers for both dogs
     function drawEventsForDog(dogKey) {
-      const rawEvents = eventsOnly(allByDog[dogKey] || [])
+      let rawEvents = eventsOnly(allByDog[dogKey] || [])
         .filter(e => e.date)
         .map(e => ({ t: toTime(e.date), type: e.type, date: e.date }))
         .filter(e => (rangeTMin === null ? true : (e.t >= tMin && e.t <= tMax)));
 
       if (!rawEvents.length) return;
+
+      const fleaEvents = rawEvents.filter(e => e.type === "flea");
+      const latestFleaT = fleaEvents.length ? Math.max(...fleaEvents.map(e => e.t)) : null;
+      if (latestFleaT !== null) {
+        rawEvents = rawEvents.filter(e => e.type !== "flea" || e.t === latestFleaT);
+      }
 
       const pts = (weightsByDogPlot[dogKey] || []);
 
@@ -1110,10 +1125,6 @@
 
     drawEventsForDog(otherDog);
     drawEventsForDog(activeDog);
-
-    // Legend swatches
-    els.swActive.style.background = activeLine;
-    els.swInactive.style.background = inactiveLine;
 
     // Summary label
     els.trendLabel.textContent = "";
@@ -1160,8 +1171,10 @@
     const fleaNext = fleaLast ? addDaysISO(fleaLast.date, 30) : null;
     const vaxNext  = vaxLast ? addYearsISO(vaxLast.date, 1) : null;
 
-    els.fleaDue.textContent = fleaLast ? formatDueLine(fleaLast.date, fleaNext, "flea/worm") : "No flea/worm recorded yet.";
-    els.vaxDue.textContent  = vaxLast ? formatDueLine(vaxLast.date, vaxNext, "vax") : "No vax recorded yet.";
+    els.fleaLast.textContent = fleaLast ? fleaLast.date : "—";
+    els.fleaNext.textContent = fleaNext || "—";
+    els.vaxLast.textContent = vaxLast ? vaxLast.date : "—";
+    els.vaxNext.textContent = vaxNext || "—";
 
     // Table: show ALL entry types for active dog
     const s = sortedEntriesDesc(activeEntries);
@@ -1201,8 +1214,8 @@
 
     const watsonLatest = sortedEntriesDesc(weightsOnly(allByDog.watson))[0];
     const eddieLatest = sortedEntriesDesc(weightsOnly(allByDog.eddie))[0];
-    els.pillWeightWatson.textContent = watsonLatest ? `${watsonLatest.kg.toFixed(1)} kg` : "—";
-    els.pillWeightEddie.textContent = eddieLatest ? `${eddieLatest.kg.toFixed(1)} kg` : "—";
+    els.pillWeightWatson.textContent = watsonLatest ? `${watsonLatest.kg.toFixed(1)} kg (${kgToLb(watsonLatest.kg).toFixed(1)} lb)` : "—";
+    els.pillWeightEddie.textContent = eddieLatest ? `${eddieLatest.kg.toFixed(1)} kg (${kgToLb(eddieLatest.kg).toFixed(1)} lb)` : "—";
 
     // Chart uses both dogs data
     window.__lastAllByDog = allByDog;
