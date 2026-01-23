@@ -599,12 +599,15 @@ const DOG_KEYS = ["watson", "eddie"];
   function kgToLb(kg) { return kg * LB_PER_KG; }
   function lbToKg(lb) { return lb * KG_PER_LB; }
 // --- Supabase auth (Step 2: auth only) ---
-const SUPABASE_URL = "https://kalqcilwbcsomheqexto.supabaseClient.co";
+// --- Supabase auth (auth only) ---
+const SUPABASE_URL = "https://kalqcilwbcsomheqexto.supabase.co";
 const SUPABASE_KEY = "sb_publishable_UxMaR9SbV6fhKQiJ8DGK3A_L2sAAgEw";
+
 if (!window.supabase) {
   alert("Supabase library didn’t load. Check the CDN script tag.");
 }
-const supabaseClient = window.supabaseClient.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 // auth UI elements
 const loginBtn = document.getElementById("loginBtn");
@@ -637,7 +640,6 @@ loginBtn.addEventListener("click", async () => {
   const email = prompt("Email for magic link:");
   if (!email) return;
 
-  // IMPORTANT: this must match your GitHub Pages app URL
   const redirectTo = "https://doghousecode.github.io/doghouse/";
 
   const { error } = await supabaseClient.auth.signInWithOtp({
