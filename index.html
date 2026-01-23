@@ -606,91 +606,29 @@ const DOG_KEYS = ["watson", "eddie"];
 const SUPABASE_URL = "https://kalqcilwbcsomheqexto.supabase.co";
 const SUPABASE_KEY = "sb_publishable_UxMaR9SbV6fhKQiJ8DGK3A_L2sAAgEw";
 
-async function fetchDogEntriesFromSupabase(dogKey) {
-  const { data: sessionData } = await supabaseClient.auth.getSession();
-  const user = sessionData?.session?.user;
-  if (!user) return null;
-  async function getUserAndHouseholdId() {
-  const { data: sessionData } = await supabaseClient.auth.getSession();
-  const user = sessionData?.session?.user;
-  if (!user) return { user: null, householdId: null };
 
-  const { data: hm, error } = await supabaseClient
-    .from("household_members")
-    .select("household_id")
-    .eq("user_id", user.id)
-    .single();
 
-  if (error || !hm) return { user, householdId: null };
-  return { user, householdId: hm.household_id };
+  
+
+
+
+
+  
+
+
+if (!window.supabase || !window.supabase.createClient) {
+  alert("Supabase JS failed to load. Check the CDN <script> tag is above this block.");
 }
 
-async function insertDogEntrySupabase(dogKey, entry) {
+const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+async function fetchDogEntriesFromSupabase(dogKey) {
   const { user, householdId } = await getUserAndHouseholdId();
   if (!user || !householdId) return null;
-
-  const payload = {
-    household_id: householdId,
-    dog: dogKey,
-    type: entry.type,
-    date: entry.date,
-    kg: entry.type === "weight" ? entry.kg : null,
-    notes: entry.notes || null,
-    created_by: user.id
-  };
-
-  const { data, error } = await supabaseClient
-    .from("dog_entries")
-    .insert(payload)
-    .select()
-    .single();
-
-  if (error) {
-    console.error("Insert failed", error);
-    setMsg(`Supabase insert failed: ${error.message}`, true);
-    return null;
-  }
-  return data;
-}
-
-async function updateDogEntrySupabase(dogKey, entry) {
-  const { user, householdId } = await getUserAndHouseholdId();
-  if (!user || !householdId) return false;
-
-  // IMPORTANT: needs dog_entries.id to exist in your table, and your UI entry.id to match it.
-  // If you’re still using local UUIDs, we’ll switch to storing supabase row id in entry.id.
-  const { error } = await supabaseClient
-    .from("dog_entries")
-    .update({
-      type: entry.type,
-      date: entry.date,
-      kg: entry.type === "weight" ? entry.kg : null,
-      notes: entry.notes || null
-    })
-    .eq("household_id", householdId)
-    .eq("dog", dogKey)
-    .eq("id", entry.id);
-
-  if (error) {
-    console.error("Update failed", error);
-    setMsg(`Supabase update failed: ${error.message}`, true);
-    return false;
-  }
-  return true;
-}
-
-  const { data: hm, error: hmErr } = await supabaseClient
-    .from("household_members")
-    .select("household_id")
-    .eq("user_id", user.id)
-    .single();
-
-  if (hmErr || !hm) return null;
 
   const { data, error } = await supabaseClient
     .from("dog_entries")
     .select("*")
-    .eq("household_id", hm.household_id)
+    .eq("household_id", householdId)
     .eq("dog", dogKey)
     .order("date", { ascending: false });
 
@@ -698,15 +636,8 @@ async function updateDogEntrySupabase(dogKey, entry) {
     console.error("Supabase fetch error", error);
     return null;
   }
-
   return data || [];
 }
-
-if (!window.supabase || !window.supabase.createClient) {
-  alert("Supabase JS failed to load. Check the CDN <script> tag is above this block.");
-}
-
-const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 // auth UI elements
 const loginBtn = document.getElementById("loginBtn");
