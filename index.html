@@ -469,6 +469,11 @@
 <header>
   <h1>The Doghouse</h1>
   <p class="sub">He ain't heavy...he's my brother</p>
+  <div style="margin-top:10px; display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+  <button id="loginBtn" class="smallbtn" type="button">Login</button>
+  <button id="logoutBtn" class="smallbtn" type="button" style="display:none;">Logout</button>
+  <span id="authStatus" class="muted">Not signed in</span>
+</div>
 </header>
 
 <main>
@@ -578,7 +583,7 @@
     </div>
   </div>
 </main>
-
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
   let trendWidthPx = null;
   const TREND_HEIGHT = 180;
@@ -590,7 +595,57 @@
   const LB_PER_KG = 2.2046226218;
   function kgToLb(kg) { return kg * LB_PER_KG; }
   function lbToKg(lb) { return lb * KG_PER_LB; }
+// --- Supabase auth (Step 2: auth only) ---
+const SUPABASE_URL = "https://kalqcilwbcsomheqexto.supabase.co";
+const SUPABASE_KEY = "sb_publishable_UxMaR9SbV6fhKQiJ8DGK3A_L2sAAgEw";
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+// auth UI elements
+const loginBtn = document.getElementById("loginBtn");
+const logoutBtn = document.getElementById("logoutBtn");
+const authStatus = document.getElementById("authStatus");
+
+function setAuthUI(user) {
+  if (user) {
+    loginBtn.style.display = "none";
+    logoutBtn.style.display = "";
+    authStatus.textContent = `Signed in: ${user.email || user.id}`;
+  } else {
+    loginBtn.style.display = "";
+    logoutBtn.style.display = "none";
+    authStatus.textContent = "Not signed in";
+  }
+}
+
+// On load: show current session
+supabase.auth.getSession().then(({ data }) => {
+  setAuthUI(data?.session?.user || null);
+});
+
+// Live updates
+supabase.auth.onAuthStateChange((_event, session) => {
+  setAuthUI(session?.user || null);
+});
+
+loginBtn.addEventListener("click", async () => {
+  const email = prompt("Email for magic link:");
+  if (!email) return;
+
+  // IMPORTANT: this must match your GitHub Pages app URL
+  const redirectTo = "https://doghousecode.github.io/doghouse/";
+
+  const { error } = await supabase.auth.signInWithOtp({
+    email,
+    options: { emailRedirectTo: redirectTo }
+  });
+
+  if (error) alert(error.message);
+  else alert("Magic link sent. Open it on this device to sign in.");
+});
+
+logoutBtn.addEventListener("click", async () => {
+  await supabase.auth.signOut();
+});
   const els = {
     pillWatson: document.getElementById("pill-watson"),
     pillEddie: document.getElementById("pill-eddie"),
