@@ -857,8 +857,19 @@ logoutBtn.addEventListener("click", async () => {
     setAuthUI(null);
     setSpaceUI(null);
 
-    setMsg("Signed out ✅");
-    await render();
+    // Verify session is actually gone
+const { data } = await supabaseClient.auth.getSession();
+const stillUser = data?.session?.user;
+
+if (stillUser) {
+  // If Supabase didn't fully clear, force a hard reset
+  setMsg("Sign out didn’t fully clear session — refreshing…", true);
+  location.reload();
+  return;
+}
+
+setMsg("Signed out ✅");
+await render();
   } catch (e) {
     console.error("Logout crashed:", e);
     setMsg(`Logout crashed: ${e?.message || e}`, true);
