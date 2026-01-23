@@ -599,12 +599,12 @@ const DOG_KEYS = ["watson", "eddie"];
   function kgToLb(kg) { return kg * LB_PER_KG; }
   function lbToKg(lb) { return lb * KG_PER_LB; }
 // --- Supabase auth (Step 2: auth only) ---
-const SUPABASE_URL = "https://kalqcilwbcsomheqexto.supabase.co";
+const SUPABASE_URL = "https://kalqcilwbcsomheqexto.supabaseClient.co";
 const SUPABASE_KEY = "sb_publishable_UxMaR9SbV6fhKQiJ8DGK3A_L2sAAgEw";
 if (!window.supabase) {
   alert("Supabase library didn’t load. Check the CDN script tag.");
 }
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const supabaseClient = window.supabaseClient.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 // auth UI elements
 const loginBtn = document.getElementById("loginBtn");
@@ -624,12 +624,12 @@ function setAuthUI(user) {
 }
 
 // On load: show current session
-supabase.auth.getSession().then(({ data }) => {
+supabaseClient.auth.getSession().then(({ data }) => {
   setAuthUI(data?.session?.user || null);
 });
 
 // Live updates
-supabase.auth.onAuthStateChange((_event, session) => {
+supabaseClient.auth.onAuthStateChange((_event, session) => {
   setAuthUI(session?.user || null);
 });
 
@@ -640,7 +640,7 @@ loginBtn.addEventListener("click", async () => {
   // IMPORTANT: this must match your GitHub Pages app URL
   const redirectTo = "https://doghousecode.github.io/doghouse/";
 
-  const { error } = await supabase.auth.signInWithOtp({
+  const { error } = await supabaseClient.auth.signInWithOtp({
     email,
     options: { emailRedirectTo: redirectTo }
   });
@@ -650,7 +650,7 @@ loginBtn.addEventListener("click", async () => {
 });
 
 logoutBtn.addEventListener("click", async () => {
-  await supabase.auth.signOut();
+  await supabaseClient.auth.signOut();
 });
   const els = {
     pillWatson: document.getElementById("pill-watson"),
