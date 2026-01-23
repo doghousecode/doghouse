@@ -616,6 +616,9 @@ const loginBtn = document.getElementById("loginBtn");
 const logoutBtn = document.getElementById("logoutBtn");
 const authStatus = document.getElementById("authStatus");
 
+// 🔐 Auth mode switch (pro tip)
+const AUTH_MODE = "password"; // change to "magic" later if you want
+
 function setAuthUI(user) {
   if (user) {
     loginBtn.style.display = "none";
@@ -672,9 +675,12 @@ function loginWithPassword() {
   });
 }
 
-// 🔽 THIS is the switch — only ONE should be active
-// loginWithMagicLink();   // ⛔ paused
-loginWithPassword();      // ✅ active
+// ✅ ONE line decides everything
+if (AUTH_MODE === "magic") {
+  loginWithMagicLink();
+} else {
+  loginWithPassword();
+}
 
 logoutBtn.addEventListener("click", async () => {
   // =====================
