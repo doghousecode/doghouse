@@ -640,18 +640,36 @@ supabaseClient.auth.onAuthStateChange((_event, session) => {
 });
 
 loginBtn.addEventListener("click", async () => {
+  const cooldownKey = "doghouse:loginCooldownUntil";
+  const now = Date.now();
+  const until = Number(localStorage.getItem(cooldownKey) || "0");
+
+  if (until && now < until) {
+    const secs = Math.ceil((until - now) / 1000);
+    alert(`Login already requested. Try again in ${secs}s.`);
+    return;
+  }
+
   const email = prompt("Email for magic link:");
   if (!email) return;
 
+  // prevent re-sending for 60 seconds
+  localStorage.setItem(cooldownKey, String(now + 60_000));
+
   const redirectTo = "https://doghousecode.github.io/doghouse/";
 
-  const { error } = await supabaseClient.auth.signInWithOtp({
+  const { error } = await supabase.auth.signInWithOtp({
     email,
     options: { emailRedirectTo: redirectTo }
   });
 
-  if (error) alert(error.message);
-  else alert("Magic link sent. Open it on this device to sign in.");
+  if (error) {
+    // if it failed, clear cooldown so you can retry later
+    localStorage.removeItem(cooldownKey);
+    alert(error.message);
+  } else {
+    alert("Magic link sent. Open it on this device to sign in.");
+  }
 });
 
 logoutBtn.addEventListener("click", async () => {
