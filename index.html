@@ -1103,9 +1103,13 @@ async function deleteDogEntrySupabase(id) {
 
   async function loadEntries(dogKey) {
   const supabaseData = await fetchDogEntriesFromSupabase(dogKey);
-  if (supabaseData) return supabaseData;
 
-  // fallback to localStorage (temporary)
+  // Only use Supabase if it returned real entries
+  if (Array.isArray(supabaseData) && supabaseData.length > 0) {
+    return supabaseData.map(normalizeEntry).filter(Boolean);
+  }
+
+  // Otherwise fallback to localStorage
   try {
     const raw = JSON.parse(localStorage.getItem(keyForDog(dogKey)) || "[]");
     const arr = Array.isArray(raw) ? raw : [];
