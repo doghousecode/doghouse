@@ -1125,11 +1125,11 @@ supabaseClient.auth.onAuthStateChange(async (_event, session) => {
 
     cancelEdit();
     setMsg("");
-    render();
+    void render();
   }
 
-  function startEdit(id) {
-    const entries = loadEntries(activeDog);
+  async function startEdit(id) {
+    const entries = await loadEntries(activeDog);
     const e = entries.find(x => x.id === id);
     if (!e) return;
 
@@ -1168,11 +1168,12 @@ supabaseClient.auth.onAuthStateChange(async (_event, session) => {
     updateConverted();
   }
 
-  function deleteEntry(id) {
-    const next = loadEntries(activeDog).filter(x => x.id !== id);
+  async function deleteEntry(id) {
+    const entries = await loadEntries(activeDog);
+    const next = entries.filter(x => x.id !== id);
     saveEntries(activeDog, next);
     if (editingId === id) cancelEdit();
-    render();
+    void render();
   }
 
   function initTrendCanvas() {
@@ -1559,7 +1560,7 @@ supabaseClient.auth.onAuthStateChange(async (_event, session) => {
         const id = row.getAttribute("data-entry");
         row.addEventListener("click", (e) => {
           if (e.target.closest("button")) return;
-          startEdit(id);
+          void startEdit(id);
         });
         let startX = null;
         row.addEventListener("touchstart", (e) => {
@@ -1577,13 +1578,13 @@ supabaseClient.auth.onAuthStateChange(async (_event, session) => {
       els.rows.querySelectorAll("button[data-edit]").forEach(btn => {
         btn.addEventListener("click", (e) => {
           e.stopPropagation();
-          startEdit(btn.getAttribute("data-edit"));
+          void startEdit(btn.getAttribute("data-edit"));
         });
       });
       els.rows.querySelectorAll("button[data-del]").forEach(btn => {
         btn.addEventListener("click", (e) => {
           e.stopPropagation();
-          deleteEntry(btn.getAttribute("data-del"));
+          void deleteEntry(btn.getAttribute("data-del"));
         });
       });
     }
@@ -1649,7 +1650,7 @@ supabaseClient.auth.onAuthStateChange(async (_event, session) => {
   els.pillEddie.addEventListener("click", () => setActiveDog("eddie"));
   els.weight.addEventListener("input", updateConverted);
   els.unit.addEventListener("change", updateConverted);
-  els.cancelEdit.addEventListener("click", () => { setMsg(""); cancelEdit(); render(); });
+  els.cancelEdit.addEventListener("click", () => { setMsg(""); cancelEdit(); void render(); });
 
   els.typeWeight.addEventListener("click", () => { if (!editingId) setEntryType("weight"); });
   els.typeFlea.addEventListener("click", () => { if (!editingId) setEntryType("flea"); });
@@ -1667,8 +1668,8 @@ supabaseClient.auth.onAuthStateChange(async (_event, session) => {
     else hideTrendTooltip();
   });
   els.trendCanvas.addEventListener("pointerleave", hideTrendTooltip);
-  els.quickWormBtn.addEventListener("click", () => {
-    const entries = loadEntries(activeDog);
+  els.quickWormBtn.addEventListener("click", async () => {
+    const entries = await loadEntries(activeDog);
     const entry = {
       id: (crypto?.randomUUID ? crypto.randomUUID() : String(Date.now())),
       date: todayISO(),
@@ -1678,19 +1679,19 @@ supabaseClient.auth.onAuthStateChange(async (_event, session) => {
     entries.push(entry);
     saveEntries(activeDog, entries);
     setMsg(`Saved flea/worm for ${DOGS[activeDog]}.`);
-    render();
+    void render();
   });
   els.callVetBtn.addEventListener("click", () => {
     window.location.href = "tel:+441732452344";
   });
 
-  function handleExportJson() {
+  async function handleExportJson() {
     const payload = {
       version: 4,
       exportedAt: new Date().toISOString(),
       data: {
-        watson: loadEntries("watson"),
-        eddie: loadEntries("eddie"),
+        watson: await loadEntries("watson"),
+        eddie: await loadEntries("eddie"),
       }
     };
     downloadText("doghouse-backup.json", JSON.stringify(payload, null, 2), "application/json");
@@ -1731,11 +1732,11 @@ supabaseClient.auth.onAuthStateChange(async (_event, session) => {
     input.click();
   }
 
-  els.save.addEventListener("click", () => {
+  els.save.addEventListener("click", async () => {
     const date = els.date.value || todayISO();
     const notes = els.notes.value.trim();
 
-    const entries = loadEntries(activeDog);
+    const entries = await loadEntries(activeDog);
 
     // Editing flow
     if (editingId) {
@@ -1757,9 +1758,9 @@ supabaseClient.auth.onAuthStateChange(async (_event, session) => {
       saveEntries(activeDog, entries);
       setMsg(`Updated entry for ${DOGS[activeDog]}.`);
       cancelEdit();
-      render();
-      return;
-    }
+    void render();
+    return;
+  }
 
     // New entry flow
     if (entryType === "weight") {
@@ -1792,9 +1793,9 @@ supabaseClient.auth.onAuthStateChange(async (_event, session) => {
       updateConverted();
 
       setMsg(`Saved weigh-in for ${DOGS[activeDog]}.`);
-      render();
-      return;
-    }
+    void render();
+    return;
+  }
 
     // flea / vax / vet
     const entry = {
@@ -1809,16 +1810,16 @@ supabaseClient.auth.onAuthStateChange(async (_event, session) => {
     els.notes.value = "";
     applyDefaultNotes();
     setMsg(`Saved ${entryType === "flea" ? "flea/worm" : (entryType === "vax" ? "vax" : "vet appt")} for ${DOGS[activeDog]}.`);
-    render();
+    void render();
   });
 
   els.exportJson.addEventListener("click", handleExportJson);
   els.exportJsonTop.addEventListener("click", handleExportJson);
 
-  els.exportCsv.addEventListener("click", () => {
+  els.exportCsv.addEventListener("click", async () => {
     const all = [];
     for (const dog of DOG_KEYS) {
-      const entries = loadEntries(dog).map(e => ({ dog: DOGS[dog], ...e }));
+      const entries = (await loadEntries(dog)).map(e => ({ dog: DOGS[dog], ...e }));
       all.push(...entries);
     }
     all.sort((a,b) => (a.date > b.date ? 1 : (a.date < b.date ? -1 : 0)));
@@ -1846,7 +1847,7 @@ supabaseClient.auth.onAuthStateChange(async (_event, session) => {
     saveEntries(activeDog, []);
     cancelEdit();
     setMsg(`Cleared ${name}.`);
-    render();
+    void render();
   });
 
   // Init
@@ -1854,7 +1855,7 @@ supabaseClient.auth.onAuthStateChange(async (_event, session) => {
   setEntryType("weight");
   setTrendRange("all");
   updateConverted();
-  render();
+  void render();
 
   
 </script>
