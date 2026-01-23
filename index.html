@@ -607,11 +607,11 @@ const SUPABASE_URL = "https://kalqcilwbcsomheqexto.supabase.co";
 const SUPABASE_KEY = "sb_publishable_UxMaR9SbV6fhKQiJ8DGK3A_L2sAAgEw";
 
 async function fetchDogEntriesFromSupabase(dogKey) {
-  const { data: sessionData } = await supabase.auth.getSession();
+  const { data: sessionData } = await supabaseClient.auth.getSession();
   const user = sessionData?.session?.user;
   if (!user) return null;
 
-  const { data: hm, error: hmErr } = await supabase
+  const { data: hm, error: hmErr } = await supabaseClient
     .from("household_members")
     .select("household_id")
     .eq("user_id", user.id)
@@ -619,7 +619,7 @@ async function fetchDogEntriesFromSupabase(dogKey) {
 
   if (hmErr || !hm) return null;
 
-  const { data, error } = await supabase
+  const { data, error } = await supabaseClient
     .from("dog_entries")
     .select("*")
     .eq("household_id", hm.household_id)
@@ -639,7 +639,6 @@ if (!window.supabase || !window.supabase.createClient) {
 }
 
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-const supabase = supabaseClient; // alias so older code using "supabase" keeps working
 
 // auth UI elements
 const loginBtn = document.getElementById("loginBtn");
@@ -869,12 +868,12 @@ supabaseClient.auth.onAuthStateChange(async (_event, session) => {
 
   function keyForDog(dogKey) { return `dogweights:v4:${dogKey}`; }
   async function migrateLocalDataToSupabaseOnce() {
-  const { data: sessionData } = await supabase.auth.getSession();
+  const { data: sessionData } = await supabaseClient.auth.getSession();
   const user = sessionData?.session?.user;
   if (!user) return;
 
   // find household
-  const { data: hm, error: hmErr } = await supabase
+  const { data: hm, error: hmErr } = await supabaseClient
     .from("household_members")
     .select("household_id")
     .eq("user_id", user.id)
@@ -902,7 +901,7 @@ supabaseClient.auth.onAuthStateChange(async (_event, session) => {
       created_by: user.id
     }));
 
-    const { error } = await supabase
+    const { error } = await supabaseClient
       .from("dog_entries")
       .insert(payload, { ignoreDuplicates: true });
 
