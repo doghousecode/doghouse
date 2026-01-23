@@ -773,7 +773,13 @@ if (spaceBtn) {
 
 // When auth state changes, refresh space UI
 supabase.auth.onAuthStateChange(async (_event, session) => {
-  setSpaceUI(session?.user || null);
+  setAuthUI(session?.user || null);
+
+  if (session?.user && !localStorage.getItem("doghouse:migrated:v1")) {
+    await migrateLocalDataToSupabaseOnce();
+    render();
+  }
+});
 
   // Optional: if logged in and no space yet, prompt once
   if (session?.user && !getSpaceId()) {
@@ -782,7 +788,7 @@ supabase.auth.onAuthStateChange(async (_event, session) => {
   }
 });
   await supabaseClient.auth.signOut();
-});
+;
   const els = {
     pillWatson: document.getElementById("pill-watson"),
     pillEddie: document.getElementById("pill-eddie"),
@@ -850,6 +856,57 @@ supabase.auth.onAuthStateChange(async (_event, session) => {
   }
 
   function keyForDog(dogKey) { return `dogweights:v4:${dogKey}`; }
+  async function migrateLocalDataToSupabaseOnce() {
+  const { data: sessionData } = await supabase.auth.getSession();
+  const user = sessionData?.session?.user;
+  if (!user) return;
+
+  // find household
+  const { data: hm, error: hmErr } = await supabase
+    .from("household_members")
+    .select("household_id")
+    .eq("user_id", user.id)
+    .single();
+
+  if (hmErr || !hm) return;
+
+  const householdId = hm.household_id;
+
+  for (const dog of ["watson", "eddie"]) {
+    const raw = JSON.parse(localStorage.getItem(keyForDog(dog)) || "[]");
+    if (!Array.isArray(raw) || raw.length === 0) continue;
+
+    const normalized = raw.map(normalizeEntry).filter(Boolean);
+
+    if (!normalized.length) continue;
+
+    const payload = normalized.map(e => ({
+      household_id: householdId,
+      dog,
+      type: e.type,
+      date: e.date,
+      kg: e.type === "weight" ? e.kg : null,
+      notes: e.notes || null,
+      created_by: user.id
+    }));
+
+    const { error } = await supabase
+      .from("dog_entries")
+      .insert(payload, { ignoreDuplicates: true });
+
+    if (error) {
+      console.error("Migration error for", dog, error);
+      setMsg("Migration failed — check console", true);
+      return;
+    }
+
+    // mark as migrated so we don’t re-run
+    localStorage.removeItem(keyForDog(dog));
+  }
+
+  localStorage.setItem("doghouse:migrated:v1", "yes");
+  setMsg("Local data migrated to Supabase ✅");
+}
 
   function normalizeEntry(e) {
     // v4 native:
