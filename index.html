@@ -638,6 +638,7 @@ if (!window.supabase || !window.supabase.createClient) {
 }
 
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const supabase = supabaseClient; // alias so older code using "supabase" keeps working
 
 // auth UI elements
 const loginBtn = document.getElementById("loginBtn");
@@ -657,7 +658,7 @@ function setAuthUI(user) {
     logoutBtn.style.display = "none";
     authStatus.textContent = "Not signed in";
   }
-    setSpaceUI(user);
+    if (typeof setSpaceUI === "function") setSpaceUI(user);
 }
 
 // On load: show current session
@@ -710,8 +711,7 @@ if (AUTH_MODE === "magic") {
   loginWithPassword();
 }
 
-logoutBtn.addEventListener("click", async () => {
-  // =====================
+// =====================
 // Space / household join
 // =====================
 const spaceBtn = document.getElementById("spaceBtn");
@@ -744,18 +744,18 @@ function setSpaceUI(user) {
 }
 
 async function joinSpaceFlow() {
-  const user = (await supabase.auth.getUser()).data?.user;
+  const { data: userData } = await supabaseClient.auth.getUser();
+  const user = userData?.user;
   if (!user) {
     alert("Please login first.");
     return;
   }
 
-  const existing = getSpaceId();
   const codeDefault = "DOGHOUSE-001";
   const code = prompt("Enter Doghouse invite code:", codeDefault);
   if (!code) return;
 
-  const { data, error } = await supabase.rpc("join_space", { invite_code_input: code.trim() });
+  const { data, error } = await supabaseClient.rpc("join_space", { invite_code_input: code.trim() });
 
   if (error) {
     alert(`Join failed: ${error.message}`);
@@ -771,24 +771,35 @@ if (spaceBtn) {
   spaceBtn.addEventListener("click", joinSpaceFlow);
 }
 
-// When auth state changes, refresh space UI
-supabase.auth.onAuthStateChange(async (_event, session) => {
-  setAuthUI(session?.user || null);
-
-  if (session?.user && !localStorage.getItem("doghouse:migrated:v1")) {
-    await migrateLocalDataToSupabaseOnce();
-    render();
-  }
+// ---------------------
+// Auth: logout handler
+// ---------------------
+logoutBtn.addEventListener("click", async () => {
+  await supabaseClient.auth.signOut();
 });
+
+// ---------------------
+// Auth: state changes
+// ---------------------
+supabaseClient.auth.onAuthStateChange(async (_event, session) => {
+  const user = session?.user || null;
+
+  setAuthUI(user);
+  setSpaceUI(user);
+
+  // One-time migration after first successful login
+  if (user && !localStorage.getItem("doghouse:migrated:v1")) {
+    await migrateLocalDataToSupabaseOnce();
+    localStorage.setItem("doghouse:migrated:v1", "1");
+    await render();
+  }
 
   // Optional: if logged in and no space yet, prompt once
-  if (session?.user && !getSpaceId()) {
-    // comment this out if you find it annoying
-    await joinSpaceFlow();
+  if (user && !getSpaceId()) {
+    // comment out if annoying
+    // await joinSpaceFlow();
   }
 });
-  await supabaseClient.auth.signOut();
-;
   const els = {
     pillWatson: document.getElementById("pill-watson"),
     pillEddie: document.getElementById("pill-eddie"),
