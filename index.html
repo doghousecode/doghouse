@@ -600,11 +600,13 @@ const DOG_KEYS = ["watson", "eddie"];
   function lbToKg(lb) { return lb * KG_PER_LB; }
 // --- Supabase auth (Step 2: auth only) ---
 // --- Supabase auth (auth only) ---
+
+
 const SUPABASE_URL = "https://kalqcilwbcsomheqexto.supabase.co";
 const SUPABASE_KEY = "sb_publishable_UxMaR9SbV6fhKQiJ8DGK3A_L2sAAgEw";
 
-if (!window.supabase) {
-  alert("Supabase library didn’t load. Check the CDN script tag.");
+if (!window.supabase || !window.supabase.createClient) {
+  alert("Supabase JS failed to load. Check the CDN <script> tag is above this block.");
 }
 
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
