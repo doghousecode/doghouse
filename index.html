@@ -605,6 +605,34 @@ const DOG_KEYS = ["watson", "eddie"];
 const SUPABASE_URL = "https://kalqcilwbcsomheqexto.supabase.co";
 const SUPABASE_KEY = "sb_publishable_UxMaR9SbV6fhKQiJ8DGK3A_L2sAAgEw";
 
+async function fetchDogEntriesFromSupabase(dogKey) {
+  const { data: sessionData } = await supabase.auth.getSession();
+  const user = sessionData?.session?.user;
+  if (!user) return null;
+
+  const { data: hm, error: hmErr } = await supabase
+    .from("household_members")
+    .select("household_id")
+    .eq("user_id", user.id)
+    .single();
+
+  if (hmErr || !hm) return null;
+
+  const { data, error } = await supabase
+    .from("dog_entries")
+    .select("*")
+    .eq("household_id", hm.household_id)
+    .eq("dog", dogKey)
+    .order("date", { ascending: false });
+
+  if (error) {
+    console.error("Supabase fetch error", error);
+    return null;
+  }
+
+  return data || [];
+}
+
 if (!window.supabase || !window.supabase.createClient) {
   alert("Supabase JS failed to load. Check the CDN <script> tag is above this block.");
 }
@@ -841,15 +869,19 @@ supabase.auth.onAuthStateChange(async (_event, session) => {
     return null;
   }
 
-  function loadEntries(dogKey) {
-    try {
-      const raw = JSON.parse(localStorage.getItem(keyForDog(dogKey)) || "[]");
-      const arr = Array.isArray(raw) ? raw : [];
-      return arr.map(normalizeEntry).filter(Boolean);
-    } catch {
-      return [];
-    }
+  async function loadEntries(dogKey) {
+  const supabaseData = await fetchDogEntriesFromSupabase(dogKey);
+  if (supabaseData) return supabaseData;
+
+  // fallback to localStorage (temporary)
+  try {
+    const raw = JSON.parse(localStorage.getItem(keyForDog(dogKey)) || "[]");
+    const arr = Array.isArray(raw) ? raw : [];
+    return arr.map(normalizeEntry).filter(Boolean);
+  } catch {
+    return [];
   }
+}
 
   function saveEntries(dogKey, entries) {
     localStorage.setItem(keyForDog(dogKey), JSON.stringify(entries));
@@ -1400,11 +1432,11 @@ supabase.auth.onAuthStateChange(async (_event, session) => {
     return "badge badgeWeight";
   }
 
-  function render() {
+  async function render() {
     const allByDog = {
-      watson: loadEntries("watson"),
-      eddie: loadEntries("eddie"),
-    };
+  watson: await loadEntries("watson"),
+  eddie: await loadEntries("eddie"),
+};
     const activeEntries = allByDog[activeDog];
 
     // Reminders for active dog
