@@ -467,9 +467,10 @@
 
 <body>
 <header>
-  <h1>The Doghouse</h1>
-  <p class="sub">He ain't heavy...he's my brother</p>
-  <div style="margin-top:10px; display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+<h1>The Doghouse</h1>
+<p class="sub">He ain't heavy...he's my brother</p>
+
+<div style="margin-top:10px; display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
   <button id="loginBtn" class="smallbtn" type="button">Login</button>
   <button id="logoutBtn" class="smallbtn" type="button" style="display:none;">Logout</button>
   <span id="authStatus" class="muted">Not signed in</span>
@@ -585,11 +586,13 @@
 </main>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-  let trendWidthPx = null;
-  const TREND_HEIGHT = 180;
 
-  const DOGS = { watson: "Dr Watson", eddie: "Eddie Spaghetti" };
-  const DOG_KEYS = ["watson","eddie"];
+// ---- Core app globals (missing right now) ----
+let trendWidthPx = null;
+const TREND_HEIGHT = 180;
+
+const DOGS = { watson: "Dr Watson", eddie: "Eddie Spaghetti" };
+const DOG_KEYS = ["watson", "eddie"];
 
   const KG_PER_LB = 1 / 2.2046226218;
   const LB_PER_KG = 2.2046226218;
@@ -598,6 +601,9 @@
 // --- Supabase auth (Step 2: auth only) ---
 const SUPABASE_URL = "https://kalqcilwbcsomheqexto.supabase.co";
 const SUPABASE_KEY = "sb_publishable_UxMaR9SbV6fhKQiJ8DGK3A_L2sAAgEw";
+if (!window.supabase) {
+  alert("Supabase library didn’t load. Check the CDN script tag.");
+}
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 // auth UI elements
@@ -1645,6 +1651,8 @@ logoutBtn.addEventListener("click", async () => {
   setTrendRange("all");
   updateConverted();
   render();
+
+  
 </script>
 </body>
 </html>
