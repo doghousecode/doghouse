@@ -840,7 +840,29 @@ if (spaceBtn) {
 // Auth: logout handler
 // ---------------------
 logoutBtn.addEventListener("click", async () => {
-  await supabaseClient.auth.signOut();
+  try {
+    setMsg("Signing out…");
+
+    const { error } = await supabaseClient.auth.signOut();
+    if (error) {
+      console.error("Supabase signOut error:", error);
+      setMsg(`Logout failed: ${error.message}`, true);
+      return;
+    }
+
+    // Optional: clear space selection when logging out
+    setSpaceId(null);
+
+    // Force UI to reflect logged-out state immediately
+    setAuthUI(null);
+    setSpaceUI(null);
+
+    setMsg("Signed out ✅");
+    await render();
+  } catch (e) {
+    console.error("Logout crashed:", e);
+    setMsg(`Logout crashed: ${e?.message || e}`, true);
+  }
 });
 
 // ---------------------
