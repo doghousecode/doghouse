@@ -626,6 +626,7 @@ function setAuthUI(user) {
     logoutBtn.style.display = "none";
     authStatus.textContent = "Not signed in";
   }
+    setSpaceUI(user);
 }
 
 // On load: show current session
@@ -654,6 +655,76 @@ loginBtn.addEventListener("click", async () => {
 });
 
 logoutBtn.addEventListener("click", async () => {
+  // =====================
+// Space / household join
+// =====================
+const spaceBtn = document.getElementById("spaceBtn");
+const spaceStatus = document.getElementById("spaceStatus");
+
+const SPACE_KEY = "doghouse:space_id";
+
+function getSpaceId() {
+  return localStorage.getItem(SPACE_KEY);
+}
+
+function setSpaceId(id) {
+  if (id) localStorage.setItem(SPACE_KEY, id);
+  else localStorage.removeItem(SPACE_KEY);
+}
+
+function setSpaceUI(user) {
+  const sid = getSpaceId();
+  if (!user) {
+    if (spaceBtn) spaceBtn.style.display = "none";
+    if (spaceStatus) spaceStatus.style.display = "none";
+    return;
+  }
+
+  if (spaceBtn) spaceBtn.style.display = "";
+  if (spaceStatus) {
+    spaceStatus.style.display = "";
+    spaceStatus.textContent = sid ? `Space: ${sid.slice(0, 8)}…` : "Space: not set";
+  }
+}
+
+async function joinSpaceFlow() {
+  const user = (await supabase.auth.getUser()).data?.user;
+  if (!user) {
+    alert("Please login first.");
+    return;
+  }
+
+  const existing = getSpaceId();
+  const codeDefault = "DOGHOUSE-001";
+  const code = prompt("Enter Doghouse invite code:", codeDefault);
+  if (!code) return;
+
+  const { data, error } = await supabase.rpc("join_space", { invite_code_input: code.trim() });
+
+  if (error) {
+    alert(`Join failed: ${error.message}`);
+    return;
+  }
+
+  setSpaceId(data);
+  setSpaceUI(user);
+  alert("Joined space ✅");
+}
+
+if (spaceBtn) {
+  spaceBtn.addEventListener("click", joinSpaceFlow);
+}
+
+// When auth state changes, refresh space UI
+supabase.auth.onAuthStateChange(async (_event, session) => {
+  setSpaceUI(session?.user || null);
+
+  // Optional: if logged in and no space yet, prompt once
+  if (session?.user && !getSpaceId()) {
+    // comment this out if you find it annoying
+    await joinSpaceFlow();
+  }
+});
   await supabaseClient.auth.signOut();
 });
   const els = {
