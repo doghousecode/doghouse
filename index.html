@@ -622,13 +622,13 @@ if (!window.supabase || !window.supabase.createClient) {
 
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 async function fetchDogEntriesFromSupabase(dogKey) {
-  const { user, householdId } = await getUserAndHouseholdId();
-  if (!user || !householdId) return null;
+  const { user, spaceId } = await getUserAndSpaceId();
+if (!user || !spaceId) return null;
 
   const { data, error } = await supabaseClient
     .from("dog_entries")
     .select("*")
-    .eq("household_id", householdId)
+    .eq("space_id", spaceId)
     .eq("dog", dogKey)
     .order("date", { ascending: false });
 
@@ -896,27 +896,27 @@ supabaseClient.auth.onAuthStateChange(async (_event, session) => {
   }
 
   function keyForDog(dogKey) { return `dogweights:v4:${dogKey}`; }
-  async function getUserAndHouseholdId() {
+  async function getUserAndSpaceId() {
   const { data: sessionData } = await supabaseClient.auth.getSession();
   const user = sessionData?.session?.user;
-  if (!user) return { user: null, householdId: null };
+  if (!user) return { user: null, spaceId: null };
 
   const { data: hm, error } = await supabaseClient
     .from("household_members")
-    .select("household_id")
+    .select("space_id")
     .eq("user_id", user.id)
     .single();
 
-  if (error || !hm) return { user, householdId: null };
-  return { user, householdId: hm.household_id };
+  if (error || !hm?.space_id) return { user, spaceId: null };
+  return { user, spaceId: hm.space_id };
 }
 
 async function insertDogEntrySupabase(dogKey, entry) {
-  const { user, householdId } = await getUserAndHouseholdId();
-  if (!user || !householdId) return null;
+  const { user, spaceId } = await getUserAndSpaceId();
+  if (!user || !spaceId) return null;
 
   const payload = {
-    household_id: householdId,
+    space_id: spaceId,
     dog: dogKey,
     type: entry.type,
     date: entry.date,
@@ -1941,8 +1941,8 @@ return;
         kg,
         notes
       };
-      const { user, householdId } = await getUserAndHouseholdId();
-if (user && householdId) {
+      const { user, SpaceId } = await getUserAndSpaceId();
+if (user && SpaceId) {
   const row = await insertDogEntrySupabase(activeDog, entry);
   if (!row) return;
   setMsg(`Saved to Supabase ✅`);
@@ -1952,8 +1952,8 @@ if (user && householdId) {
 
 // Fallback: localStorage
 entries.push(entry);
-const { user: sbUser, householdId: sbHouseholdId } = await getUserAndHouseholdId();
-if (sbUser && sbHouseholdId) {
+const { user: sbUser, spaceId: sbspaceId } = await getUserAndspaceId();
+if (sbUser && sbspaceId) {
   const row = await insertDogEntrySupabase(activeDog, entry);
   if (!row) return;
 } else {
