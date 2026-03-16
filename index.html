@@ -280,12 +280,25 @@
     }
     .entryMain {
       display: grid;
-      grid-template-columns: 76px 120px 1fr 16px;
-      grid-template-areas: "date badge notes handle";
+      grid-template-columns: 76px 120px 1fr 22px 16px;
+      grid-template-areas: "date badge notes creator handle";
       gap: 8px;
       padding: 10px;
       align-items: center;
       transition: transform 160ms ease;
+    }
+    .creatorAvatar {
+      grid-area: creator;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      font-size: 11px;
+      font-weight: 700;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
     }
     .entryActions {
       position: absolute;
@@ -382,11 +395,11 @@
 
     @media (max-width: 420px) {
       .entryMain {
-        grid-template-columns: 1fr 16px;
+        grid-template-columns: 1fr 22px 16px;
         grid-template-areas:
-          "badge handle"
-          "date handle"
-          "notes handle";
+          "badge creator handle"
+          "date  creator handle"
+          "notes creator handle";
       }
     }
 
@@ -729,6 +742,15 @@ if (!window.supabase || !window.supabase.createClient) {
 }
 
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+let creatorMap = {}; // { [user_id]: { initial, color } }
+
+async function fetchProfiles() {
+  const { data, error } = await supabaseClient.from("profiles").select("user_id, initial, color");
+  if (error || !data) return;
+  creatorMap = {};
+  for (const p of data) creatorMap[p.user_id] = { initial: p.initial, color: p.color };
+}
+
 async function fetchDogEntriesFromSupabase(dogKey) {
   const { user, spaceId } = await getUserAndSpaceId();
 if (!user || !spaceId) return null;
@@ -926,6 +948,8 @@ supabaseClient.auth.onAuthStateChange(async (_event, session) => {
 
   setAuthUI(user);
   setSpaceUI(user);
+
+  if (user) await fetchProfiles();
 
   // One-time migration after first successful login
   if (user && !localStorage.getItem("doghouse:migrated:v1")) {
@@ -1770,6 +1794,10 @@ async function deleteDogEntrySupabase(id) {
           ? `${weightNote}${e.notes ? ` - ${esc(e.notes)}` : ""}`
           : `${esc(e.notes)}`;
         const trClass = e.type === "flea" ? "rowFlea" : (e.type === "vax" ? "rowVax" : (e.type === "vet" ? "rowVet" : ""));
+        const creator = creatorMap[e.created_by];
+        const creatorBadge = creator
+          ? `<div class="creatorAvatar" style="background:${creator.color}" title="${creator.initial}">${creator.initial}</div>`
+          : `<div class="creatorAvatar"></div>`;
         return `
           ${header}
           <div class="entryRow ${trClass}" data-entry="${e.id}">
@@ -1777,6 +1805,7 @@ async function deleteDogEntrySupabase(id) {
               <div class="muted entryDate">${dateText}</div>
               <div class="entryBadge">${badge}</div>
               <div class="entryNotes">${notesText || "—"}</div>
+              ${creatorBadge}
               <div class="entryHandle">›</div>
             </div>
             <div class="entryActions">
