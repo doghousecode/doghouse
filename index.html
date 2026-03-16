@@ -791,7 +791,7 @@ supabaseClient.auth.getSession().then(({ data }) => {
 // Toggle picker open/closed
 loginBtn.addEventListener("click", (e) => {
   e.stopPropagation();
-  loginPicker.style.display = loginPicker.style.display === "" ? "none" : "";
+  loginPicker.style.display = loginPicker.style.display === "block" ? "none" : "block";
 });
 document.addEventListener("click", () => { loginPicker.style.display = "none"; });
 loginPicker.addEventListener("click", (e) => e.stopPropagation());
