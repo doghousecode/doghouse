@@ -949,20 +949,18 @@ supabaseClient.auth.onAuthStateChange(async (_event, session) => {
   setAuthUI(user);
   setSpaceUI(user);
 
-  if (user) await fetchProfiles();
+  if (user) {
+    await fetchProfiles();
 
-  // One-time migration after first successful login
-  if (user && !localStorage.getItem("doghouse:migrated:v1")) {
-    await migrateLocalDataToSupabaseOnce();
-    localStorage.setItem("doghouse:migrated:v1", "1");
-    await render();
+    // One-time migration after first successful login
+    if (!localStorage.getItem("doghouse:migrated:v1")) {
+      await migrateLocalDataToSupabaseOnce();
+      localStorage.setItem("doghouse:migrated:v1", "1");
+    }
   }
 
-  // Optional: if logged in and no space yet, prompt once
-  if (user && !getSpaceId()) {
-    // comment out if annoying
-    // await joinSpaceFlow();
-  }
+  // Always re-render when auth state changes
+  if (typeof render === "function") await render();
 });
   const els = {
     pillWatson: document.getElementById("pill-watson"),
