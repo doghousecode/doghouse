@@ -378,6 +378,7 @@
     body.readOnly #quickWormBtn { display: none; }
     body.readOnly .entryActions { display: none !important; }
     body.readOnly .entryHandle { display: none !important; }
+    body:not(.admin) .adminOnly { display: none !important; }
 
     @media (max-width: 420px) {
       .entryMain {
@@ -586,7 +587,7 @@
 
 <main>
   <div class="card">
-    <div class="row" style="gap:10px; margin-bottom:10px;">
+    <div class="row adminOnly" style="gap:10px; margin-bottom:10px;">
       <button id="importJsonTop" class="smallbtn" type="button">Import JSON</button>
       <button id="exportJsonTop" class="smallbtn" type="button">Export JSON</button>
     </div>
@@ -683,7 +684,7 @@
       <div class="muted">No entries yet.</div>
     </div>
 
-    <div class="row actionsRow">
+    <div class="row actionsRow adminOnly">
       <button id="exportJson" class="smallbtn" type="button">Export JSON</button>
       <button id="exportCsv" class="smallbtn" type="button">Export CSV</button>
       <button id="importJson" class="smallbtn" type="button">Import JSON</button>
@@ -754,9 +755,9 @@ const loginPicker = document.getElementById("loginPicker");
 
 // Named user config — fill in real Supabase emails for Steve and Melissa
 const USERS = {
-  steve:   { label: "Steve",     email: "stephentinkler@mac.com", readOnly: false },
-  melissa: { label: "Melissa",   email: "melissatinkler@me.com",  readOnly: false },
-  tim:     { label: "Uncle Tim", email: "stephentinkler@me.com",  autoPassword: "dog", readOnly: true  },
+  steve:   { label: "Steve",     email: "stephentinkler@mac.com", readOnly: false, admin: true  },
+  melissa: { label: "Melissa",   email: "melissatinkler@me.com",  readOnly: false, admin: false },
+  tim:     { label: "Uncle Tim", email: "stephentinkler@me.com",  autoPassword: "dog", readOnly: true, admin: false },
 };
 
 let readOnly = false;
@@ -771,12 +772,14 @@ function setAuthUI(user) {
     logoutBtn.style.display = "";
     authStatus.textContent = readOnly ? `${name} (read only)` : name;
     document.body.classList.toggle("readOnly", readOnly);
+    document.body.classList.toggle("admin", cfg?.admin ?? false);
   } else {
     readOnly = false;
     loginBtn.style.display = "";
     logoutBtn.style.display = "none";
     authStatus.textContent = "Not signed in";
     document.body.classList.remove("readOnly");
+    document.body.classList.remove("admin");
   }
   if (typeof setSpaceUI === "function") setSpaceUI(user);
 }
