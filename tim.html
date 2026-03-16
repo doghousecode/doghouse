@@ -1,0 +1,2260 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>The Doghouse</title>
+  <style>
+    :root {
+      color-scheme: light dark;
+
+      --bg: #f6f6f7;
+      --card: #ffffff;
+      --text: #111111;
+      --muted: #666666;
+      --border: #e8e8ea;
+
+      --pill-bg: #ffffff;
+      --pill-text: #111111;
+      --pill-active-bg: #111111;
+      --pill-active-text: #ffffff;
+
+      --btn-bg: #111111;
+      --btn-text: #ffffff;
+
+      --field-bg: #ffffff;
+      --field-text: #111111;
+
+      --kpi-bg: #fafafa;
+      --danger: #b91c1c;
+
+      /* Chart + badges */
+      --active-line: #3b82f6;      /* mid-blue */
+      --inactive-line: rgba(0,0,0,0.22);
+      --event-flea: #f59e0b;       /* amber */
+      --event-vax: #22c55e;        /* green */
+      --event-vet: #ef4444;        /* red */
+      --badge-bg: rgba(0,0,0,0.06);
+      --grid-line: rgba(0,0,0,0.08);
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root:not([data-theme="light"]) {
+        --bg: #0b0b0c;
+        --card: #141416;
+        --text: #f2f2f3;
+        --muted: #a1a1a7;
+        --border: #2a2a2e;
+
+        --pill-bg: #1b1b1e;
+        --pill-text: #f2f2f3;
+        --pill-active-bg: #f2f2f3;
+        --pill-active-text: #111111;
+
+        --btn-bg: #f2f2f3;
+        --btn-text: #111111;
+
+        --field-bg: #1b1b1e;
+        --field-text: #f2f2f3;
+
+        --kpi-bg: #1a1a1d;
+        --danger: #ff6b6b;
+
+        --inactive-line: rgba(255,255,255,0.22);
+        --badge-bg: rgba(255,255,255,0.08);
+        --grid-line: rgba(255,255,255,0.12);
+      }
+    }
+
+    html[data-theme="dark"] {
+      color-scheme: dark;
+      --bg: #0b0b0c;
+      --card: #141416;
+      --text: #f2f2f3;
+      --muted: #a1a1a7;
+      --border: #2a2a2e;
+
+      --pill-bg: #1b1b1e;
+      --pill-text: #f2f2f3;
+      --pill-active-bg: #f2f2f3;
+      --pill-active-text: #111111;
+
+      --btn-bg: #f2f2f3;
+      --btn-text: #111111;
+
+      --field-bg: #1b1b1e;
+      --field-text: #f2f2f3;
+
+      --kpi-bg: #1a1a1d;
+      --danger: #ff6b6b;
+
+      --inactive-line: rgba(255,255,255,0.22);
+      --badge-bg: rgba(255,255,255,0.08);
+      --grid-line: rgba(255,255,255,0.12);
+    }
+
+    html[data-theme="light"] {
+      color-scheme: light;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      font-family: -apple-system, system-ui, Arial, sans-serif;
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    header {
+      padding: 16px 14px;
+      background: var(--card);
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    h1 { margin: 0; font-size: 18px; }
+    .sub { margin: 6px 0 0; color: var(--muted); font-size: 13px; }
+
+    main { padding: 14px; max-width: 900px; margin: 0 auto; }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 14px;
+      box-shadow: 0 1px 0 rgba(0,0,0,.03);
+      overflow: hidden;
+    }
+
+    .row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .row > * { flex: 1; min-width: 0; }
+
+    .pill {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 10px 12px;
+      text-align: center;
+      cursor: pointer;
+      background: var(--pill-bg);
+      color: var(--pill-text);
+      user-select: none;
+    }
+
+    .pillToggle {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 8px 10px;
+      text-align: center;
+      min-height: 200px;
+      box-shadow: 0 1px 0 rgba(0,0,0,.03);
+    }
+
+    .pillToggle .avatar {
+      width: 144px;
+      height: 180px;
+      border-radius: 14px;
+      object-fit: cover;
+      background: transparent;
+      border: none !important;
+      box-shadow: none !important;
+    }
+
+    .pillToggle:active { transform: scale(0.98); }
+
+    .pillToggle span {
+      font-weight: 600;
+      font-size: 14px;
+    }
+    .pillWeight {
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .pill.active {
+      background: var(--pill-active-bg);
+      color: var(--pill-active-text);
+      border-color: var(--pill-active-bg);
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root:not([data-theme="light"]) .pill.active .avatar { box-shadow: 0 0 0 4px rgba(0,0,0,0.35); }
+    }
+    html[data-theme="dark"] .pill.active .avatar { box-shadow: 0 0 0 4px rgba(0,0,0,0.35); }
+
+    label { display: block; margin: 12px 0 6px; font-size: 12px; color: var(--muted); }
+
+    input, select, textarea, button { width: 100%; font: inherit; }
+    input, select, textarea {
+      padding: 10px 12px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: var(--field-bg);
+      color: var(--field-text);
+      max-width: 100%;
+    }
+
+    input[type="date"] { width: 100%; min-width: 0; display: block; }
+
+    @supports (-webkit-touch-callout: none) {
+      input[type="date"] {
+        width: 100%;
+        max-width: 100%;
+        min-width: 0;
+        box-sizing: border-box;
+        display: block;
+        -webkit-appearance: none;
+        appearance: none;
+      }
+    }
+
+    textarea { min-height: 70px; resize: vertical; }
+
+    button.primary {
+      margin-top: 12px;
+      padding: 10px 12px;
+      border-radius: 12px;
+      border: 1px solid var(--btn-bg);
+      background: var(--btn-bg);
+      color: var(--btn-text);
+      cursor: pointer;
+    }
+
+    button.secondary {
+      margin-top: 12px;
+      padding: 10px 12px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: var(--card);
+      color: var(--text);
+      cursor: pointer;
+    }
+
+    .muted { color: var(--muted); font-size: 13px; }
+    .error { color: var(--danger); }
+
+    .kpiGrid {
+      display: grid;
+      gap: 8px;
+      margin-top: 12px;
+    }
+    .kpiButtons {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .kpiBtn {
+      border: 1px solid color-mix(in srgb, var(--border) 70%, transparent);
+      border-radius: 12px;
+      background: color-mix(in srgb, var(--card) 92%, var(--bg));
+      color: var(--text);
+      padding: 10px;
+      text-align: center;
+      min-height: 86px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 4px;
+      cursor: pointer;
+    }
+    .kpiSmall { font-size: 12px; color: var(--muted); }
+    .kpiBig { font-size: 24px; font-weight: 700; line-height: 1; }
+
+    .entryList { margin-top: 12px; display: flex; flex-direction: column; gap: 8px; }
+    .entryYear { margin-top: 8px; font-size: 12px; color: var(--muted); }
+    .entryRow {
+      position: relative;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: var(--card);
+      overflow: hidden;
+      cursor: pointer;
+    }
+    .entryMain {
+      display: grid;
+      grid-template-columns: 76px 120px 1fr 22px 16px;
+      grid-template-areas: "date badge notes creator handle";
+      gap: 8px;
+      padding: 10px;
+      align-items: center;
+      transition: transform 160ms ease;
+    }
+    .creatorAvatar {
+      grid-area: creator;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      font-size: 11px;
+      font-weight: 700;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .entryActions {
+      position: absolute;
+      top: 0;
+      right: 0;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 0 8px;
+      background: var(--card);
+      border-left: 1px solid var(--border);
+      transform: translateX(100%);
+      transition: transform 160ms ease;
+    }
+    .entryRow.showActions .entryMain { transform: translateX(-110px); }
+    .entryRow.showActions .entryActions { transform: translateX(0); }
+    .entryRow.showActions .entryHandle { opacity: 0; }
+    .entryDate { grid-area: date; }
+    .entryBadge { grid-area: badge; }
+    .entryNotes { grid-area: notes; color: var(--text); }
+    .entryHandle { grid-area: handle; color: var(--muted); text-align: right; }
+
+    .btnrow { display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap; }
+    .smallbtn {
+      width: auto;
+      padding: 6px 10px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: var(--card);
+      color: var(--text);
+      cursor: pointer;
+    }
+
+    .actionsRow { margin-top: 12px; gap: 10px; }
+
+    .themeToggle {
+      display: inline-flex;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    .themeToggle button {
+      width: auto;
+      padding: 5px 10px;
+      border: none;
+      border-radius: 0;
+      background: var(--card);
+      color: var(--muted);
+      cursor: pointer;
+      font-size: 12px;
+    }
+    .themeToggle button + button {
+      border-left: 1px solid var(--border);
+    }
+    .themeToggle button.active {
+      background: var(--pill-active-bg);
+      color: var(--pill-active-text);
+    }
+
+    .loginPickerWrap { position: relative; display: inline-block; }
+    .loginPicker {
+      display: none;
+      position: absolute;
+      top: calc(100% + 6px);
+      left: 0;
+      z-index: 100;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 6px;
+      min-width: 140px;
+      box-shadow: 0 4px 16px rgba(0,0,0,.15);
+    }
+    .pickerBtn {
+      display: block;
+      width: 100%;
+      text-align: left;
+      padding: 8px 10px;
+      border: none;
+      background: transparent;
+      border-radius: 8px;
+      cursor: pointer;
+      color: var(--text);
+      font-size: 14px;
+    }
+    .pickerBtn:hover { background: var(--badge-bg); }
+    .pickerPwForm { display: none; padding: 6px 4px 2px; }
+    .pickerPwForm label { font-size: 12px; color: var(--muted); display: block; margin-bottom: 4px; }
+    .pickerPwForm input { width: 140px; padding: 5px 8px; border: 1px solid var(--border); border-radius: 6px; background: var(--bg); color: var(--text); font-size: 14px; }
+    .pickerPwForm button { margin-top: 6px; width: 100%; }
+
+    body.readOnly .formCard { display: none; }
+    body.readOnly #quickWormBtn { display: none; }
+    body.readOnly .entryActions { display: none !important; }
+    body.readOnly .entryHandle { display: none !important; }
+    body:not(.admin) .adminOnly { display: none !important; }
+
+    @media (max-width: 420px) {
+      .entryMain {
+        grid-template-columns: 1fr 22px 16px;
+        grid-template-areas:
+          "badge creator handle"
+          "date  creator handle"
+          "notes creator handle";
+      }
+    }
+
+    /* FINAL authority for dog toggle colours */
+    .pill.pillToggle {
+      background: var(--pill-bg) !important;
+      color: var(--pill-text) !important;
+      border-color: var(--border) !important;
+    }
+    .pill.pillToggle.active {
+      background: var(--pill-active-bg) !important;
+      color: var(--pill-active-text) !important;
+      border-color: var(--active-line) !important;
+      box-shadow: 0 0 0 1px var(--active-line);
+    }
+
+    /* Entry type segmented control */
+    .segRow { margin-top: 12px; }
+    .seg {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+    }
+    .segBtn {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 10px 10px;
+      background: var(--card);
+      color: var(--text);
+      cursor: pointer;
+      user-select: none;
+      text-align: center;
+      font-weight: 600;
+      font-size: 13px;
+    }
+    .segBtn[aria-pressed="true"] {
+      background: var(--pill-active-bg);
+      color: var(--pill-active-text);
+      border-color: var(--pill-active-bg);
+    }
+    .hintRow { margin-top: 6px; font-size: 12px; color: var(--muted); }
+
+    /* Row badges */
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 999px;
+      background: var(--badge-bg);
+      border: 1px solid var(--border);
+      font-size: 12px;
+      line-height: 18px;
+      white-space: nowrap;
+    }
+    .badgeWeight { }
+    .badgeFlea { border-color: color-mix(in srgb, var(--event-flea) 40%, var(--border)); }
+    .badgeVax  { border-color: color-mix(in srgb, var(--event-vax) 40%, var(--border)); }
+    .badgeVet  { border-color: color-mix(in srgb, var(--event-vet) 40%, var(--border)); }
+
+    .rowFlea { background: color-mix(in srgb, var(--event-flea) 12%, transparent); }
+    .rowVax  { background: color-mix(in srgb, var(--event-vax)  12%, transparent); }
+    .rowVet  { background: color-mix(in srgb, var(--event-vet)  12%, transparent); }
+
+    #trend {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: color-mix(in srgb, var(--card) 85%, var(--bg));
+    }
+
+    .trendWrap {
+      position: relative;
+    }
+    .trendTooltip {
+      position: absolute;
+      left: 0;
+      top: 0;
+      padding: 6px 8px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--card);
+      color: var(--text);
+      font-size: 12px;
+      white-space: nowrap;
+      box-shadow: 0 6px 18px rgba(0,0,0,0.12);
+      pointer-events: none;
+      opacity: 0;
+      transform: translate(-9999px, -9999px);
+      transition: opacity 120ms ease;
+      z-index: 2;
+    }
+
+    .legend {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      align-items: flex-end;
+      text-align: right;
+      font-size: 12px;
+      color: var(--muted);
+      margin-left: auto;
+      margin-top: 6px;
+    }
+    .legendSwatch {
+      width: 10px;
+      height: 10px;
+      border-radius: 999px;
+      display: inline-block;
+      vertical-align: middle;
+      margin-right: 6px;
+      border: 1px solid var(--border);
+    }
+    .legendX {
+      font-weight: 900;
+      display: inline-block;
+      width: 12px;
+      text-align: center;
+      margin-right: 6px;
+    }
+
+    .rangeToggle {
+      display: inline-flex;
+      gap: 8px;
+    }
+    .rangeToggle .segBtn {
+      padding: 6px 10px;
+      font-size: 12px;
+    }
+
+    .trendRow {
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      margin-top: 8px;
+    }
+
+    @media (max-width: 520px) {
+      .trendRow { flex-direction: column; align-items: flex-start; }
+      .legend { width: 100%; }
+    }
+
+    .formCard {
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px solid var(--border);
+    }
+
+    .sectionLabel {
+      margin-top: 12px;
+      font-size: 12px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .srOnly {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0,0,0,0);
+      border: 0;
+    }
+  </style>
+  <script>
+    (function() {
+      var t = localStorage.getItem("doghouse:theme");
+      if (t === "light" || t === "dark") document.documentElement.setAttribute("data-theme", t);
+    })();
+  </script>
+</head>
+
+<body>
+<header>
+<h1>The Doghouse</h1>
+<p class="sub">He ain't heavy...he's my brother</p>
+
+<div style="margin-top:10px; display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+  <div class="loginPickerWrap">
+    <button id="loginBtn" class="smallbtn" type="button">Login</button>
+    <div id="loginPicker" class="loginPicker">
+      <button class="pickerBtn" data-user="steve" type="button">Steve</button>
+      <button class="pickerBtn" data-user="melissa" type="button">Melissa</button>
+      <button class="pickerBtn" data-user="tim" type="button">Uncle Tim</button>
+      <div id="pickerPwForm" class="pickerPwForm">
+        <label id="pickerPwLabel">Password</label>
+        <input id="pickerPwInput" type="password" autocapitalize="none" autocorrect="off" autocomplete="current-password" spellcheck="false" placeholder="password">
+        <button id="pickerPwGo" class="smallbtn" type="button">Sign in</button>
+      </div>
+    </div>
+  </div>
+  <button id="logoutBtn" class="smallbtn" type="button" style="display:none;">Logout</button>
+  <span id="authStatus" class="muted">Not signed in</span>
+  <div class="themeToggle" id="themeToggle" role="group" aria-label="Color scheme" style="margin-left:auto;">
+    <button type="button" data-theme-val="light">Light</button>
+    <button type="button" data-theme-val="auto">Auto</button>
+    <button type="button" data-theme-val="dark">Dark</button>
+  </div>
+</div>
+</header>
+
+<main>
+  <div class="card">
+    <div class="row adminOnly" style="gap:10px; margin-bottom:10px;">
+      <button id="importJsonTop" class="smallbtn" type="button">Import JSON</button>
+      <button id="exportJsonTop" class="smallbtn" type="button">Export JSON</button>
+    </div>
+    <div class="row" style="gap:8px; flex-wrap:wrap;">
+      <div id="pill-watson" class="pill pillToggle active" role="button" tabindex="0" aria-pressed="true">
+        <img class="avatar" src="assets/watson.png" alt="Dr Watson" />
+        <span>Dr Watson</span>
+        <span class="pillWeight" id="pillWeight-watson">—</span>
+      </div>
+
+      <div id="pill-eddie" class="pill pillToggle" role="button" tabindex="0" aria-pressed="false">
+        <img class="avatar" src="assets/eddie.png" alt="Eddie Spaghetti" />
+        <span>Eddie Spaghetti</span>
+        <span class="pillWeight" id="pillWeight-eddie">—</span>
+      </div>
+
+      <div id="pill-sully" class="pill pillToggle" role="button" tabindex="0" aria-pressed="false">
+        <img class="avatar" src="assets/sully.png" alt="Sully" />
+        <span>Sully</span>
+        <span class="pillWeight" id="pillWeight-sully">—</span>
+      </div>
+    </div>
+
+    <div class="trendWrap" style="margin-top:12px;">
+      <canvas id="trend" height="180" style="width:100%; height:180px; display:block;"></canvas>
+      <div id="trendTooltip" class="trendTooltip" role="status" aria-live="polite"></div>
+      <div class="trendRow">
+        <div class="rangeToggle" role="group" aria-label="Chart range">
+          <button id="range-all" class="segBtn" type="button" aria-pressed="true">All</button>
+          <button id="range-12" class="segBtn" type="button" aria-pressed="false">Last 12 months</button>
+        </div>
+        <div class="legend">
+          <span><span class="legendX" style="color:var(--event-flea);">×</span>Last flea/worm</span>
+          <span><span class="legendX" style="color:var(--event-vax);">×</span>Annual vax</span>
+          <span><span class="legendX" style="color:var(--event-vet);">×</span>Vet appt</span>
+        </div>
+      </div>
+      <div class="muted" id="trendLabel" style="margin-top:6px;">—</div>
+    </div>
+
+    <div class="kpiGrid kpiButtons">
+      <button id="nextVaxBtn" class="kpiBtn" type="button">
+        <span class="kpiSmall" id="nextVaxMonth">—</span>
+        <span class="kpiBig" id="nextVaxDay">—</span>
+        <span class="kpiSmall">Next vax</span>
+      </button>
+      <button id="nextWormBtn" class="kpiBtn" type="button">
+        <span class="kpiSmall" id="nextWormMonth">—</span>
+        <span class="kpiBig" id="nextWormDay">—</span>
+        <span class="kpiSmall">Next worm</span>
+      </button>
+      <button id="quickWormBtn" class="kpiBtn" type="button">
+        <span class="kpiBig">QW</span>
+        <span class="kpiSmall">Quickwormer ©</span>
+      </button>
+      <button id="callVetBtn" class="kpiBtn" type="button">
+        <span class="kpiBig">☎</span>
+        <span class="kpiSmall">Call Vet</span>
+      </button>
+    </div>
+
+    <div class="formCard">
+      <div class="sectionLabel">New record</div>
+      <label class="srOnly" for="date">Date</label>
+      <input id="date" type="date" />
+
+      <div class="segRow">
+        <div class="seg" role="group" aria-label="Entry type">
+          <button id="type-weight" class="segBtn" type="button" aria-pressed="true">Weigh-in</button>
+          <button id="type-flea" class="segBtn" type="button" aria-pressed="false">Flea &amp; worm</button>
+          <button id="type-vax" class="segBtn" type="button" aria-pressed="false">Annual vax</button>
+          <button id="type-vet" class="segBtn" type="button" aria-pressed="false">Vet appt</button>
+        </div>
+      </div>
+
+      <div id="weightBlock">
+        <label>Weight entry</label>
+        <div class="row">
+          <input id="weight" type="number" inputmode="decimal" step="0.1" placeholder="e.g., 18.4" />
+          <select id="unit">
+            <option value="kg">kg</option>
+            <option value="lb">lb</option>
+          </select>
+        </div>
+        <div class="muted" id="converted">—</div>
+      </div>
+
+      <label id="notesLabel">Notes (optional)</label>
+      <textarea id="notes" placeholder="e.g., annual checkup, on new food…"></textarea>
+
+      <div class="row" style="gap:10px;">
+        <button id="save" class="primary" type="button">Save entry</button>
+        <button id="cancelEdit" class="secondary" type="button" style="display:none;">Cancel edit</button>
+      </div>
+
+      <p class="muted" id="msg" style="margin: 10px 0 0;"></p>
+    </div>
+
+    <div id="rows" class="entryList">
+      <div class="muted">No entries yet.</div>
+    </div>
+
+    <div class="row actionsRow adminOnly">
+      <button id="exportJson" class="smallbtn" type="button">Export JSON</button>
+      <button id="exportCsv" class="smallbtn" type="button">Export CSV</button>
+      <button id="importJson" class="smallbtn" type="button">Import JSON</button>
+      <button id="clearDog" class="smallbtn" type="button">Clear dog data</button>
+    </div>
+  </div>
+</main>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+
+
+// ---- Core app globals (missing right now) ----
+let trendWidthPx = null;
+const TREND_HEIGHT = 180;
+
+const DOGS = { watson: "Dr Watson", eddie: "Eddie Spaghetti", sully: "Sully" };
+const DOG_KEYS = ["watson", "eddie", "sully"];
+
+  const KG_PER_LB = 1 / 2.2046226218;
+  const LB_PER_KG = 2.2046226218;
+  function kgToLb(kg) { return kg * LB_PER_KG; }
+  function lbToKg(lb) { return lb * KG_PER_LB; }
+// --- Supabase auth (Step 2: auth only) ---
+// --- Supabase auth (auth only) ---
+
+
+const SUPABASE_URL = "https://kalqcilwbcsomheqexto.supabase.co";
+const SUPABASE_KEY = "sb_publishable_UxMaR9SbV6fhKQiJ8DGK3A_L2sAAgEw";
+
+
+
+  
+
+
+
+
+  
+
+
+if (!window.supabase || !window.supabase.createClient) {
+  alert("Supabase JS failed to load. Check the CDN <script> tag is above this block.");
+}
+
+const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+let creatorMap = {}; // { [user_id]: { initial, color } }
+let currentUser = null; // cached from onAuthStateChange — avoids re-entering the auth lock
+
+async function fetchProfiles() {
+  const { data, error } = await supabaseClient.from("profiles").select("user_id, initial, color");
+  if (error || !data) return;
+  creatorMap = {};
+  for (const p of data) creatorMap[p.user_id] = { initial: p.initial, color: p.color };
+}
+
+async function fetchDogEntriesFromSupabase(dogKey) {
+  const { user, spaceId } = await getUserAndSpaceId();
+if (!user || !spaceId) return null;
+
+  const { data, error } = await supabaseClient
+    .from("dog_entries")
+    .select("*")
+    .eq("space_id", spaceId)
+    .eq("dog", dogKey)
+    .order("date", { ascending: false });
+
+  if (error) {
+    console.error("Supabase fetch error", error);
+    return null;
+  }
+  return data || [];
+}
+
+// auth UI elements
+const loginBtn = document.getElementById("loginBtn");
+const logoutBtn = document.getElementById("logoutBtn");
+const authStatus = document.getElementById("authStatus");
+const loginPicker = document.getElementById("loginPicker");
+
+// Named user config — fill in real Supabase emails for Steve and Melissa
+const USERS = {
+  steve:   { label: "Steve",     email: "stephentinkler@mac.com", readOnly: false, admin: true  },
+  melissa: { label: "Melissa",   email: "melissatinkler@me.com",  readOnly: false, admin: false },
+  tim:     { label: "Uncle Tim", email: "stephentinkler@me.com",  autoPassword: "dog", readOnly: true, admin: false },
+};
+
+let readOnly = false;
+
+function setAuthUI(user) {
+  if (user) {
+    const key = Object.keys(USERS).find(k => USERS[k].email === user.email);
+    const cfg = key ? USERS[key] : null;
+    readOnly = cfg?.readOnly ?? false;
+    const name = cfg?.label || user.email;
+    loginBtn.style.display = "none";
+    logoutBtn.style.display = "";
+    authStatus.textContent = readOnly ? `${name} (read only)` : name;
+    document.body.classList.toggle("readOnly", readOnly);
+    document.body.classList.toggle("admin", cfg?.admin ?? false);
+  } else {
+    readOnly = false;
+    loginBtn.style.display = "";
+    logoutBtn.style.display = "none";
+    authStatus.textContent = "Not signed in";
+    document.body.classList.remove("readOnly");
+    document.body.classList.remove("admin");
+  }
+  if (typeof setSpaceUI === "function") setSpaceUI(user);
+}
+
+// On load: show current session
+supabaseClient.auth.getSession().then(({ data }) => {
+  currentUser = data?.session?.user || null;
+  setAuthUI(currentUser);
+});
+
+
+
+// Toggle picker open/closed
+loginBtn.addEventListener("click", (e) => {
+  e.stopPropagation();
+  loginPicker.style.display = loginPicker.style.display === "block" ? "none" : "block";
+});
+document.addEventListener("click", () => { loginPicker.style.display = "none"; });
+loginPicker.addEventListener("click", (e) => e.stopPropagation());
+
+// Handle user selection
+const pickerPwForm = document.getElementById("pickerPwForm");
+const pickerPwLabel = document.getElementById("pickerPwLabel");
+const pickerPwInput = document.getElementById("pickerPwInput");
+const pickerPwGo = document.getElementById("pickerPwGo");
+let pickerPwCfg = null;
+
+async function doPickerSignIn() {
+  if (!pickerPwCfg) return;
+  const password = pickerPwCfg.autoPassword ?? pickerPwInput.value;
+  if (!password) return;
+  pickerPwGo.disabled = true;
+  const { error } = await supabaseClient.auth.signInWithPassword({ email: pickerPwCfg.email, password });
+  pickerPwGo.disabled = false;
+  if (error) {
+    setMsg(`Sign-in failed: ${error.message}`, true);
+    pickerPwInput.value = "";
+    pickerPwInput.focus();
+  } else {
+    loginPicker.style.display = "none";
+    pickerPwForm.style.display = "none";
+    pickerPwInput.value = "";
+  }
+}
+
+loginPicker.querySelectorAll(".pickerBtn").forEach(btn => {
+  btn.addEventListener("click", async () => {
+    const cfg = USERS[btn.dataset.user];
+    if (!cfg) return;
+    if (cfg.autoPassword) {
+      loginPicker.style.display = "none";
+      const { error } = await supabaseClient.auth.signInWithPassword({ email: cfg.email, password: cfg.autoPassword });
+      if (error) setMsg(`Sign-in failed: ${error.message}`, true);
+      return;
+    }
+    pickerPwCfg = cfg;
+    pickerPwLabel.textContent = `Password for ${cfg.label}`;
+    pickerPwInput.value = "";
+    pickerPwForm.style.display = "block";
+    pickerPwInput.focus();
+  });
+});
+pickerPwGo.addEventListener("click", doPickerSignIn);
+pickerPwInput.addEventListener("keydown", e => { if (e.key === "Enter") doPickerSignIn(); });
+
+// =====================
+// Space / household join
+// =====================
+const spaceBtn = document.getElementById("spaceBtn");
+const spaceStatus = document.getElementById("spaceStatus");
+
+const SPACE_KEY = "doghouse:space_id";
+
+function getSpaceId() {
+  return localStorage.getItem(SPACE_KEY);
+}
+
+function setSpaceId(id) {
+  if (id) localStorage.setItem(SPACE_KEY, id);
+  else localStorage.removeItem(SPACE_KEY);
+}
+
+function setSpaceUI(user) {
+  const sid = getSpaceId();
+  if (!user) {
+    if (spaceBtn) spaceBtn.style.display = "none";
+    if (spaceStatus) spaceStatus.style.display = "none";
+    return;
+  }
+
+  if (spaceBtn) spaceBtn.style.display = "";
+  if (spaceStatus) {
+    spaceStatus.style.display = "";
+    spaceStatus.textContent = sid ? `Space: ${sid.slice(0, 8)}…` : "Space: not set";
+  }
+}
+
+async function joinSpaceFlow() {
+  const { data: userData } = await supabaseClient.auth.getUser();
+  const user = userData?.user;
+  if (!user) {
+    alert("Please login first.");
+    return;
+  }
+
+  const codeDefault = "DOGHOUSE-001";
+  const code = prompt("Enter Doghouse invite code:", codeDefault);
+  if (!code) return;
+
+  const { data, error } = await supabaseClient.rpc("join_space", { invite_code_input: code.trim() });
+
+  if (error) {
+    alert(`Join failed: ${error.message}`);
+    return;
+  }
+
+  setSpaceId(data);
+  setSpaceUI(user);
+  alert("Joined space ✅");
+}
+
+if (spaceBtn) {
+  spaceBtn.addEventListener("click", joinSpaceFlow);
+}
+
+// ---------------------
+// Auth: logout handler
+// ---------------------
+logoutBtn.addEventListener("click", async () => {
+  try {
+    setMsg("Signing out…");
+    const { error } = await supabaseClient.auth.signOut();
+    if (error) {
+      console.error("Supabase signOut error:", error);
+      setMsg(`Logout failed: ${error.message}`, true);
+    }
+    // onAuthStateChange handles UI reset and re-render
+  } catch (e) {
+    console.error("Logout crashed:", e);
+    setMsg(`Logout crashed: ${e?.message || e}`, true);
+  }
+});
+
+// ---------------------
+// Auth: state changes
+// ---------------------
+supabaseClient.auth.onAuthStateChange((_event, session) => {
+  currentUser = session?.user || null;
+  console.log("[onAuthStateChange] event:", _event, "user:", currentUser?.email);
+
+  setAuthUI(currentUser);
+  setSpaceUI(currentUser);
+
+  // Defer all async work so the auth lock is released immediately
+  setTimeout(async () => {
+    if (currentUser) {
+      await fetchProfiles();
+
+      // One-time migration after first successful login
+      if (!localStorage.getItem("doghouse:migrated:v1")) {
+        await migrateLocalDataToSupabaseOnce();
+        localStorage.setItem("doghouse:migrated:v1", "1");
+      }
+    }
+
+    if (typeof render === "function") void render();
+  }, 0);
+});
+  const els = {
+    pillWatson: document.getElementById("pill-watson"),
+    pillEddie: document.getElementById("pill-eddie"),
+    pillSully: document.getElementById("pill-sully"),
+    date: document.getElementById("date"),
+    weight: document.getElementById("weight"),
+    unit: document.getElementById("unit"),
+    notes: document.getElementById("notes"),
+    notesLabel: document.getElementById("notesLabel"),
+    converted: document.getElementById("converted"),
+    save: document.getElementById("save"),
+    cancelEdit: document.getElementById("cancelEdit"),
+    rows: document.getElementById("rows"),
+    nextVaxMonth: document.getElementById("nextVaxMonth"),
+    nextVaxDay: document.getElementById("nextVaxDay"),
+    nextWormMonth: document.getElementById("nextWormMonth"),
+    nextWormDay: document.getElementById("nextWormDay"),
+    quickWormBtn: document.getElementById("quickWormBtn"),
+    callVetBtn: document.getElementById("callVetBtn"),
+    msg: document.getElementById("msg"),
+    exportJson: document.getElementById("exportJson"),
+    exportCsv: document.getElementById("exportCsv"),
+    importJson: document.getElementById("importJson"),
+    clearDog: document.getElementById("clearDog"),
+    trendCanvas: document.getElementById("trend"),
+    trendLabel: document.getElementById("trendLabel"),
+    trendTooltip: document.getElementById("trendTooltip"),
+    pillWeightWatson: document.getElementById("pillWeight-watson"),
+    pillWeightEddie: document.getElementById("pillWeight-eddie"),
+    pillWeightSully: document.getElementById("pillWeight-sully"),
+
+    typeWeight: document.getElementById("type-weight"),
+    typeFlea: document.getElementById("type-flea"),
+    typeVax: document.getElementById("type-vax"),
+    typeVet: document.getElementById("type-vet"),
+    weightBlock: document.getElementById("weightBlock"),
+
+    range12: document.getElementById("range-12"),
+    rangeAll: document.getElementById("range-all"),
+    exportJsonTop: document.getElementById("exportJsonTop"),
+    importJsonTop: document.getElementById("importJsonTop"),
+  };
+
+  let activeDog = "watson";
+  let editingId = null;
+  let entryType = "weight"; // "weight" | "flea" | "vax" | "vet"
+  let trendRange = "all"; // "12m" | "all"
+
+  function setMsg(text, isError=false) {
+    els.msg.textContent = text || "";
+    els.msg.classList.toggle("error", !!isError);
+  }
+
+  // Safe error reporter (won't crash if something is off)
+  window.addEventListener("error", (e) => {
+    try {
+      const msg = e?.message || "Unknown error";
+      setMsg(`JS error: ${msg}`, true);
+    } catch {}
+  });
+
+  function todayISO() {
+    const d = new Date();
+    const off = d.getTimezoneOffset();
+    const local = new Date(d.getTime() - off * 60000);
+    return local.toISOString().slice(0, 10);
+  }
+
+  function keyForDog(dogKey) { return `dogweights:v4:${dogKey}`; }
+  async function getUserAndSpaceId() {
+  // Use cached user — calling getSession() from inside render (triggered by onAuthStateChange)
+  // re-enters the Supabase auth lock and causes AbortError: Lock was stolen by another request
+  const user = currentUser;
+  if (!user) return { user: null, spaceId: null };
+
+  const { data: sm, error } = await supabaseClient
+    .from("space_members")
+    .select("space_id")
+    .eq("user_id", user.id)
+    .single();
+
+  console.log("[getUserAndSpaceId] user:", user?.email, "sm:", sm, "error:", error);
+  if (error || !sm?.space_id) return { user, spaceId: null };
+  return { user, spaceId: sm.space_id };
+}
+
+async function insertDogEntrySupabase(dogKey, entry) {
+  const { user, spaceId } = await getUserAndSpaceId();
+  if (!user || !spaceId) return null;
+
+  const payload = {
+    space_id: spaceId,
+    dog: dogKey,
+    dog_key: dogKey,
+    type: entry.type,
+    entry_type: entry.type,
+    date: entry.date,
+    entry_date: entry.date,
+    kg: entry.type === "weight" ? entry.kg : null,
+    notes: entry.notes || "",
+    created_by: user.id,
+  };
+
+  const { data, error } = await supabaseClient
+    .from("dog_entries")
+    .insert(payload)
+    .select("*")
+    .single();
+
+  if (error) {
+    console.error("Insert failed", error);
+    setMsg(`Supabase insert failed: ${error.message}`, true);
+    return null;
+  }
+
+  return data;
+}
+
+async function updateDogEntrySupabase(id, patch) {
+  const { user, spaceId } = await getUserAndSpaceId();
+  if (!user || !spaceId) return false;
+
+  const { error } = await supabaseClient
+    .from("dog_entries")
+    .update(patch)
+    .eq("id", id);
+
+  if (error) {
+    console.error("Update failed", error);
+    setMsg(`Supabase update failed: ${error.message}`, true);
+    return false;
+  }
+  return true;
+}
+
+async function deleteDogEntrySupabase(id) {
+  const { user, spaceId } = await getUserAndSpaceId();
+  if (!user || !spaceId) return false;
+
+  const { error } = await supabaseClient
+    .from("dog_entries")
+    .delete()
+    .eq("id", id);
+
+  if (error) {
+    console.error("Delete failed", error);
+    setMsg(`Supabase delete failed: ${error.message}`, true);
+    return false;
+  }
+  return true;
+}
+  async function migrateLocalDataToSupabaseOnce() {
+  const user = currentUser;
+  if (!user) return;
+
+  const { data: sm, error: smErr } = await supabaseClient
+    .from("space_members")
+    .select("space_id")
+    .eq("user_id", user.id)
+    .single();
+
+  if (smErr || !sm) return;
+
+  const householdId = sm.space_id;
+
+  for (const dog of DOG_KEYS) {
+    const raw = JSON.parse(localStorage.getItem(keyForDog(dog)) || "[]");
+    if (!Array.isArray(raw) || raw.length === 0) continue;
+
+    const normalized = raw.map(normalizeEntry).filter(Boolean);
+
+    if (!normalized.length) continue;
+
+    const payload = normalized.map(e => ({
+      space_id: householdId,
+      dog,
+      type: e.type,
+      date: e.date,
+      kg: e.type === "weight" ? e.kg : null,
+      notes: e.notes || "",
+      created_by: user.id
+    }));
+
+    const { error } = await supabaseClient
+      .from("dog_entries")
+      .insert(payload, { ignoreDuplicates: true });
+
+    if (error) {
+      console.error("Migration error for", dog, error);
+      setMsg("Migration failed — check console", true);
+      return;
+    }
+
+    // mark as migrated so we don’t re-run
+    localStorage.removeItem(keyForDog(dog));
+  }
+
+  localStorage.setItem("doghouse:migrated:v1", "yes");
+  setMsg("Local data migrated to Supabase ✅");
+}
+
+  function normalizeEntry(e) {
+    // v4 native:
+    if (e && typeof e === "object" && e.type) return e;
+
+    // v3/v2 legacy weight entry {id,date,kg,notes}
+    if (e && typeof e === "object" && typeof e.kg === "number" && e.date) {
+      return { id: e.id || String(Date.now()), date: e.date, type: "weight", kg: e.kg, notes: e.notes || "" };
+    }
+
+    // v1 legacy {weight,unit}
+    if (e && typeof e === "object" && typeof e.weight === "number" && typeof e.unit === "string" && e.date) {
+      const kg = (e.unit === "kg") ? e.weight : lbToKg(e.weight);
+      return { id: e.id || String(Date.now()), date: e.date, type: "weight", kg, notes: e.notes || "" };
+    }
+
+    return null;
+  }
+
+  async function loadEntries(dogKey) {
+  const supabaseData = await fetchDogEntriesFromSupabase(dogKey);
+
+  // Only use Supabase if it returned real entries
+  if (Array.isArray(supabaseData) && supabaseData.length > 0) {
+    return supabaseData.map(normalizeEntry).filter(Boolean);
+  }
+
+  // Otherwise fallback to localStorage
+  try {
+    const raw = JSON.parse(localStorage.getItem(keyForDog(dogKey)) || "[]");
+    const arr = Array.isArray(raw) ? raw : [];
+    return arr.map(normalizeEntry).filter(Boolean);
+  } catch {
+    return [];
+  }
+}
+
+  function saveEntries(dogKey, entries) {
+    localStorage.setItem(keyForDog(dogKey), JSON.stringify(entries));
+  }
+
+  function esc(s) {
+    return (s || "")
+      .replaceAll("&","&amp;")
+      .replaceAll("<","&lt;")
+      .replaceAll(">","&gt;");
+  }
+
+  function sortedEntriesDesc(entries) {
+    return [...entries].sort((a,b) => (b.date > a.date ? 1 : (b.date < a.date ? -1 : 0)));
+  }
+
+  function weightsOnly(entries) {
+    return entries.filter(e => e.type === "weight" && typeof e.kg === "number");
+  }
+
+  function eventsOnly(entries) {
+    return entries.filter(e => e.type === "flea" || e.type === "vax" || e.type === "vet");
+  }
+
+  function canonicalKgFromInput() {
+    const w = Number(els.weight.value);
+    if (!Number.isFinite(w) || w <= 0) return null;
+    return (els.unit.value === "kg") ? w : lbToKg(w);
+  }
+
+  function updateConverted() {
+    if (entryType !== "weight") { els.converted.textContent = "—"; return; }
+
+    const v = Number(els.weight.value);
+    if (!Number.isFinite(v) || v <= 0) { els.converted.textContent = "—"; return; }
+    if (els.unit.value === "kg") {
+      els.converted.textContent = `${kgToLb(v).toFixed(1)} lb (stored as ${v.toFixed(1)} kg)`;
+    } else {
+      const kg = lbToKg(v);
+      els.converted.textContent = `${kg.toFixed(1)} kg (stored as ${kg.toFixed(1)} kg)`;
+    }
+  }
+
+  function computeLatestAndDelta(entries) {
+    const w = sortedEntriesDesc(weightsOnly(entries));
+    if (w.length === 0) return { latestText: "—", deltaText: "—" };
+
+    const latest = w[0];
+    const latestText = `${latest.kg.toFixed(1)} kg on ${latest.date}`;
+
+    if (w.length < 2) return { latestText, deltaText: "—" };
+
+    const prev = w[1];
+    const deltaKg = latest.kg - prev.kg;
+    const sign = deltaKg > 0 ? "+" : (deltaKg < 0 ? "−" : "");
+    const deltaText = `${sign}${Math.abs(deltaKg).toFixed(1)} kg`;
+    return { latestText, deltaText };
+  }
+
+  function lastOfType(entries, type) {
+    const s = sortedEntriesDesc(entries.filter(e => e.type === type));
+    return s[0] || null;
+  }
+
+  function addDaysISO(iso, days) {
+    const [y,m,d] = iso.split("-").map(Number);
+    const dt = new Date(y, m-1, d, 12, 0, 0);
+    dt.setDate(dt.getDate() + days);
+    const off = dt.getTimezoneOffset();
+    const local = new Date(dt.getTime() - off * 60000);
+    return local.toISOString().slice(0, 10);
+  }
+
+  function addYearsISO(iso, years) {
+    const [y,m,d] = iso.split("-").map(Number);
+    const dt = new Date(y, m-1, d, 12, 0, 0);
+    dt.setFullYear(dt.getFullYear() + years);
+    const off = dt.getTimezoneOffset();
+    const local = new Date(dt.getTime() - off * 60000);
+    return local.toISOString().slice(0, 10);
+  }
+
+  function applyDefaultNotes() {
+    if (!editingId && entryType === "flea" && !els.notes.value.trim()) {
+      els.notes.value = "Simparica Trio";
+    }
+  }
+
+  function setEntryType(nextType) {
+    const prevType = entryType;
+    entryType = nextType;
+
+    els.typeWeight.setAttribute("aria-pressed", String(entryType === "weight"));
+    els.typeFlea.setAttribute("aria-pressed", String(entryType === "flea"));
+    els.typeVax.setAttribute("aria-pressed", String(entryType === "vax"));
+    els.typeVet.setAttribute("aria-pressed", String(entryType === "vet"));
+
+    if (!editingId && prevType === "flea" && entryType !== "flea" && els.notes.value.trim() === "Simparica Trio") {
+      els.notes.value = "";
+    }
+
+    // UI toggles
+    if (entryType === "weight") {
+      els.weightBlock.style.display = "";
+      els.notesLabel.textContent = "Notes (optional)";
+      els.notes.placeholder = "e.g., annual checkup, on new food…";
+      els.save.textContent = editingId ? "Save changes" : "Save entry";
+    } else if (entryType === "flea") {
+      els.weightBlock.style.display = "none";
+      els.notesLabel.textContent = "Notes (optional)";
+      els.notes.placeholder = "e.g., brand, dose, ‘ordered more’…";
+      els.save.textContent = editingId ? "Save changes" : "Save entry";
+    } else if (entryType === "vax") {
+      els.weightBlock.style.display = "none";
+      els.notesLabel.textContent = "Notes (optional)";
+      els.notes.placeholder = "e.g., clinic, batch number, due date…";
+      els.save.textContent = editingId ? "Save changes" : "Save entry";
+    } else {
+      els.weightBlock.style.display = "none";
+      els.notesLabel.textContent = "Notes (optional)";
+      els.notes.placeholder = "e.g., reason, name of vet, nails/glands…";
+      els.save.textContent = editingId ? "Save changes" : "Save entry";
+    }
+
+    applyDefaultNotes();
+    updateConverted();
+  }
+
+  function setTrendRange(nextRange) {
+    trendRange = nextRange;
+    els.range12.setAttribute("aria-pressed", String(trendRange === "12m"));
+    els.rangeAll.setAttribute("aria-pressed", String(trendRange === "all"));
+    if (window.__lastAllByDog) drawTrend(window.__lastAllByDog);
+  }
+
+  function showTrendTooltip(text, canvasX, canvasY) {
+    const tip = els.trendTooltip;
+    if (!tip) return;
+    const wrap = els.trendCanvas.parentElement;
+    const wrapRect = wrap.getBoundingClientRect();
+    const canvasRect = els.trendCanvas.getBoundingClientRect();
+    const left = (canvasRect.left - wrapRect.left) + canvasX;
+    const top = (canvasRect.top - wrapRect.top) + canvasY;
+    tip.textContent = text;
+    tip.style.opacity = "1";
+    tip.style.transform = "translate(-50%, -100%)";
+    tip.style.left = `${left}px`;
+    tip.style.top = `${top - 8}px`;
+  }
+
+  function hideTrendTooltip() {
+    const tip = els.trendTooltip;
+    if (!tip) return;
+    tip.style.opacity = "0";
+    tip.style.transform = "translate(-9999px, -9999px)";
+  }
+
+  function eventLabel(type) {
+    if (type === "flea") return "Flea/Worm";
+    if (type === "vax") return "Annual vax";
+    return "Vet Appt";
+  }
+
+  function setActiveDog(dogKey) {
+    activeDog = dogKey;
+
+    els.pillWatson.classList.toggle("active", dogKey === "watson");
+    els.pillEddie.classList.toggle("active", dogKey === "eddie");
+    els.pillSully.classList.toggle("active", dogKey === "sully");
+
+    els.pillWatson.setAttribute("aria-pressed", dogKey === "watson");
+    els.pillEddie.setAttribute("aria-pressed", dogKey === "eddie");
+    els.pillSully.setAttribute("aria-pressed", dogKey === "sully");
+
+    cancelEdit();
+    setMsg("");
+    void render();
+  }
+
+  async function startEdit(id) {
+    const entries = await loadEntries(activeDog);
+    const e = entries.find(x => x.id === id);
+    if (!e) return;
+
+    editingId = id;
+    els.date.value = e.date;
+
+    // Match type selector to entry being edited
+    setEntryType(e.type);
+
+    if (e.type === "weight") {
+      els.weight.value = Number(e.kg).toFixed(1);
+      els.unit.value = "kg";
+      updateConverted();
+    } else {
+      els.weight.value = "";
+      els.unit.value = "kg";
+      updateConverted();
+    }
+
+    els.notes.value = e.notes || "";
+
+    els.save.textContent = "Save changes";
+    els.cancelEdit.style.display = "";
+    setMsg(`Editing ${e.type} entry for ${DOGS[activeDog]}.`);
+  }
+
+  function cancelEdit() {
+    editingId = null;
+    els.cancelEdit.style.display = "none";
+    els.save.textContent = "Save entry";
+    els.date.value = todayISO();
+    els.weight.value = "";
+    els.unit.value = "kg";
+    els.notes.value = "";
+    setEntryType("weight");
+    updateConverted();
+  }
+
+  async function deleteEntry(id) {
+  // If logged in, delete from Supabase
+  const { user, spaceId } = await getUserAndSpaceId();
+  if (user && spaceId) {
+    const ok = await deleteDogEntrySupabase(id);
+    if (ok) {
+      setMsg("Deleted ✅");
+      await render();
+    }
+    return;
+  }
+
+  // Fallback: localStorage
+  const entries = await loadEntries(activeDog);
+  const next = entries.filter(x => x.id !== id);
+  saveEntries(activeDog, next);
+  if (editingId === id) cancelEdit();
+  void render();
+}
+
+  function initTrendCanvas() {
+    if (!els.trendCanvas || trendWidthPx !== null) return;
+
+    const rect = els.trendCanvas.parentElement.getBoundingClientRect();
+    trendWidthPx = Math.floor(rect.width);
+
+    const dpr = window.devicePixelRatio || 1;
+    els.trendCanvas.style.width = trendWidthPx + "px";
+    els.trendCanvas.style.height = TREND_HEIGHT + "px";
+    els.trendCanvas.width  = Math.floor(trendWidthPx * dpr);
+    els.trendCanvas.height = Math.floor(TREND_HEIGHT * dpr);
+
+    const ctx = els.trendCanvas.getContext("2d");
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+
+  function toTime(iso) { return new Date(iso + "T12:00:00").getTime(); }
+
+  function weightAtTime(dataWeightsSortedAsc, t) {
+    if (!dataWeightsSortedAsc.length) return null;
+    if (t <= dataWeightsSortedAsc[0].t) return dataWeightsSortedAsc[0].kg;
+    for (let i = 1; i < dataWeightsSortedAsc.length; i++) {
+      const cur = dataWeightsSortedAsc[i];
+      if (t <= cur.t) {
+        const prev = dataWeightsSortedAsc[i - 1];
+        const span = cur.t - prev.t;
+        const ratio = span ? (t - prev.t) / span : 0;
+        return prev.kg + (cur.kg - prev.kg) * ratio;
+      }
+    }
+    return dataWeightsSortedAsc[dataWeightsSortedAsc.length - 1].kg;
+  }
+
+  function drawX(ctx, x, y, size, color) {
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(x - size, y - size);
+    ctx.lineTo(x + size, y + size);
+    ctx.moveTo(x - size, y + size);
+    ctx.lineTo(x + size, y - size);
+    ctx.stroke();
+  }
+
+  function drawTrend(allByDog) {
+    if (!els.trendCanvas) return;
+    initTrendCanvas();
+
+    const ctx = els.trendCanvas.getContext("2d");
+    ctx.clearRect(0, 0, trendWidthPx, TREND_HEIGHT);
+
+    const root = getComputedStyle(document.documentElement);
+    const text = root.getPropertyValue("--text").trim() || "#111";
+    const muted = root.getPropertyValue("--muted").trim() || "#666";
+    const border = root.getPropertyValue("--border").trim() || "#ddd";
+    const activeLine = root.getPropertyValue("--active-line").trim() || "#3b82f6";
+    const inactiveLine = root.getPropertyValue("--inactive-line").trim() || "rgba(0,0,0,0.22)";
+    const gridLine = root.getPropertyValue("--grid-line").trim() || "rgba(0,0,0,0.08)";
+    const fleaC = root.getPropertyValue("--event-flea").trim() || "#f59e0b";
+    const vaxC  = root.getPropertyValue("--event-vax").trim()  || "#22c55e";
+    const vetC  = root.getPropertyValue("--event-vet").trim()  || "#ef4444";
+
+    // Collect weight points for both dogs
+    const weightsByDog = {};
+    let allWeights = [];
+    for (const dog of DOG_KEYS) {
+      const w = weightsOnly(allByDog[dog] || []);
+      const pts = w
+        .filter(e => e.date && typeof e.kg === "number")
+        .map(e => ({ t: toTime(e.date), kg: e.kg, date: e.date }))
+        .sort((a,b) => a.t - b.t);
+      weightsByDog[dog] = pts;
+      allWeights = allWeights.concat(pts.map(p => ({...p, dog})));
+    }
+
+    const dayMs = 24 * 60 * 60 * 1000;
+    let weightsByDogPlot = weightsByDog;
+    let allWeightsPlot = allWeights;
+    let rangeTMin = null;
+    let rangeTMax = null;
+
+    if (trendRange === "12m" && allWeights.length) {
+      const tMaxAll = Math.max(...allWeights.map(p => p.t));
+      const tMinRange = tMaxAll - (365 * dayMs);
+      const tMaxRange = tMaxAll;
+      const weightsByDogRange = {};
+      let allWeightsRange = [];
+      for (const dog of DOG_KEYS) {
+        const fullPts = (weightsByDog[dog] || []);
+        const pts = fullPts.filter(p => p.t >= tMinRange);
+        if (fullPts.length) {
+          const startKg = weightAtTime(fullPts, tMinRange);
+          const endKg = weightAtTime(fullPts, tMaxRange);
+          if (startKg !== null && !pts.some(p => p.t === tMinRange)) {
+            pts.unshift({ t: tMinRange, kg: startKg, date: "", synthetic: true });
+          }
+          if (endKg !== null && !pts.some(p => p.t === tMaxRange)) {
+            pts.push({ t: tMaxRange, kg: endKg, date: "", synthetic: true });
+          }
+        }
+        weightsByDogRange[dog] = pts;
+        allWeightsRange = allWeightsRange.concat(pts);
+      }
+      if (allWeightsRange.length >= 2) {
+        weightsByDogPlot = weightsByDogRange;
+        allWeightsPlot = allWeightsRange;
+        rangeTMin = tMinRange;
+        rangeTMax = tMaxRange;
+      }
+    }
+
+    // Need at least 2 total points to draw meaningful axes
+    if (allWeightsPlot.length < 2) {
+      els.trendLabel.textContent = allWeights.length === 1 ? "Add one more weigh-in (either dog) to see trends." : "No trend yet.";
+      els.trendLabel.style.display = "";
+      return;
+    }
+
+    // plot padding (left bigger for kg labels, bottom smaller for years)
+    const padL = 38;
+    const padR = 14;
+    const padT = 14;
+    const padB = 22;
+
+    const left = padL;
+    const right = trendWidthPx - padR;
+    const top = padT;
+    const bottom = TREND_HEIGHT - padB;
+
+    // X domain
+    const tMin = rangeTMin ?? Math.min(...allWeightsPlot.map(p => p.t));
+    const tMax = rangeTMax ?? Math.max(...allWeightsPlot.map(p => p.t));
+
+    // Y domain (include forced context ticks 25 and 30 always)
+    let yMin = Math.min(...allWeightsPlot.map(p => p.kg));
+    let yMax = Math.max(...allWeightsPlot.map(p => p.kg));
+    const forcedTicks = [25, 30];
+    for (const t of forcedTicks) {
+      yMin = Math.min(yMin, t);
+      yMax = Math.max(yMax, t);
+    }
+
+    // pad y range a bit
+    const yPad = Math.max(0.2, (yMax - yMin) * 0.12);
+    yMin -= yPad;
+    yMax += yPad;
+
+    const xFor = t => left + (t - tMin) / (tMax - tMin) * (right - left);
+    const yFor = kg => bottom - (kg - yMin) / (yMax - yMin) * (bottom - top);
+
+    const hoverPoints = { weights: [], events: [] };
+
+    // choose tick step (avoid clutter)
+    const range = (yMax - yMin);
+    let step = 5;
+    const approxTicks = Math.floor(range / step);
+    if (approxTicks > 9) step = 10;
+
+    // grid + Y labels
+    ctx.fillStyle = muted;
+    ctx.font = "11px system-ui";
+    ctx.textAlign = "right";
+    ctx.textBaseline = "middle";
+
+    const startKg = Math.ceil(yMin / step) * step;
+    const endKg   = Math.floor(yMax / step) * step;
+
+    ctx.strokeStyle = gridLine;
+    ctx.lineWidth = 1;
+
+    for (let kg = startKg; kg <= endKg; kg += step) {
+      const y = yFor(kg);
+      ctx.fillText(`${kg}kg`, left - 6, y);
+      ctx.beginPath();
+      ctx.moveTo(left, y);
+      ctx.lineTo(right, y);
+      ctx.stroke();
+    }
+
+    // X labels (whole years)
+    ctx.textAlign = "center";
+    ctx.textBaseline = "top";
+    ctx.fillStyle = muted;
+
+    const startYear = new Date(tMin).getFullYear();
+    const endYear = new Date(tMax).getFullYear();
+
+    for (let year = startYear; year <= endYear; year++) {
+      const tt = new Date(year, 0, 1, 12).getTime();
+      if (tt < tMin || tt > tMax) continue;
+
+      const x = xFor(tt);
+      ctx.fillText(String(year), x, bottom + 6);
+
+      ctx.strokeStyle = gridLine;
+      ctx.beginPath();
+      ctx.moveTo(x, top);
+      ctx.lineTo(x, bottom);
+      ctx.stroke();
+    }
+
+    // Draw lines: active dog in blue, other dog in inactive gray
+    function drawLineForDog(dogKey) {
+      const pts = weightsByDogPlot[dogKey] || [];
+      if (pts.length < 2) return;
+
+      const isActive = dogKey === activeDog;
+      ctx.strokeStyle = isActive ? activeLine : inactiveLine;
+      ctx.lineWidth = isActive ? 2.6 : 2;
+      ctx.lineJoin = "round";
+      ctx.lineCap = "round";
+
+      ctx.beginPath();
+      pts.forEach((p, i) => {
+        const x = xFor(p.t);
+        const y = yFor(p.kg);
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      });
+      ctx.stroke();
+
+      // Points
+      ctx.fillStyle = isActive ? activeLine : inactiveLine;
+      pts.forEach(p => {
+        if (p.synthetic) return;
+        const x = xFor(p.t);
+        const y = yFor(p.kg);
+        ctx.beginPath();
+        ctx.arc(x, y, isActive ? 2.8 : 2.2, 0, Math.PI * 2);
+        ctx.fill();
+        hoverPoints.weights.push({
+          x,
+          y,
+          label: `${p.date} • ${p.kg.toFixed(1)} kg`,
+          priority: 1
+        });
+      });
+    }
+
+    // Draw inactive first, then active on top
+    DOG_KEYS.filter(k => k !== activeDog).forEach(drawLineForDog);
+    drawLineForDog(activeDog);
+
+    // Draw event X markers for both dogs
+    function drawEventsForDog(dogKey) {
+      let rawEvents = eventsOnly(allByDog[dogKey] || [])
+        .filter(e => e.date)
+        .map(e => ({ t: toTime(e.date), type: e.type, date: e.date }))
+        .filter(e => (rangeTMin === null ? true : (e.t >= tMin && e.t <= tMax)));
+
+      if (!rawEvents.length) return;
+
+      const fleaEvents = rawEvents.filter(e => e.type === "flea");
+      const latestFleaT = fleaEvents.length ? Math.max(...fleaEvents.map(e => e.t)) : null;
+      if (latestFleaT !== null) {
+        rawEvents = rawEvents.filter(e => e.type !== "flea" || e.t === latestFleaT);
+      }
+
+      const pts = (weightsByDogPlot[dogKey] || []);
+
+      const byDate = new Map();
+      for (const ev of rawEvents) {
+        const key = ev.date;
+        if (!byDate.has(key)) byDate.set(key, new Set());
+        byDate.get(key).add(ev.type);
+      }
+
+      for (const [date, typeSet] of byDate.entries()) {
+        const t = toTime(date);
+        const kgAt = weightAtTime(pts, t);
+        if (kgAt === null) continue; // no weight line to anchor to
+        const x = xFor(t);
+        const y = yFor(kgAt);
+
+        const types = new Set(typeSet);
+        if (types.has("vax") && types.has("flea")) types.delete("flea");
+
+        const order = ["vax", "vet", "flea"].filter(tn => types.has(tn));
+        const offsets = order.length === 2 ? [-8, 8] : (order.length === 3 ? [-10, 0, 10] : [0]);
+
+        order.forEach((type, idx) => {
+          const color = (type === "flea") ? fleaC : (type === "vax" ? vaxC : vetC);
+          const yy = y + offsets[idx];
+          drawX(ctx, x, yy, 3, color);
+          hoverPoints.events.push({
+            x,
+            y: yy,
+            label: `${date} • ${eventLabel(type)}`,
+            priority: 2
+          });
+        });
+      }
+    }
+
+    drawEventsForDog(otherDog);
+    drawEventsForDog(activeDog);
+
+    // Summary label
+    els.trendLabel.textContent = "";
+    els.trendLabel.style.display = "none";
+
+    window.__trendHoverPoints = hoverPoints;
+    hideTrendTooltip();
+  }
+
+  window.addEventListener("resize", () => {
+    trendWidthPx = null;
+    initTrendCanvas();
+    if (window.__lastAllByDog) drawTrend(window.__lastAllByDog);
+  });
+
+  function typeLabel(t) {
+    if (t === "weight") return "Weigh-in";
+    if (t === "flea") return "Flea/Worm";
+    if (t === "vax") return "Annual vax";
+    return "Vet appt";
+  }
+
+  function typeBadgeClass(t) {
+    if (t === "flea") return "badge badgeFlea";
+    if (t === "vax") return "badge badgeVax";
+    if (t === "vet") return "badge badgeVet";
+    return "badge badgeWeight";
+  }
+
+  async function render() {
+    const allByDog = {
+  watson: await loadEntries("watson"),
+  eddie: await loadEntries("eddie"),
+  sully: await loadEntries("sully"),
+};
+    const activeEntries = allByDog[activeDog];
+
+    // Reminders for active dog
+    const fleaLast = lastOfType(activeEntries, "flea");
+    const vaxLast = lastOfType(activeEntries, "vax");
+
+    const fleaNext = fleaLast ? addDaysISO(fleaLast.date, 30) : null;
+    const vaxNext  = vaxLast ? addYearsISO(vaxLast.date, 1) : null;
+
+    // Table: show ALL entry types for active dog
+    const s = sortedEntriesDesc(activeEntries);
+    if (s.length === 0) {
+      els.rows.innerHTML = `<div class="muted">No entries yet.</div>`;
+    } else {
+      let currentYear = null;
+      const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+      const listHtml = s.map(e => {
+        const year = e.date ? new Date(e.date + "T12:00:00").getFullYear() : "—";
+        let header = "";
+        if (year !== currentYear) {
+          currentYear = year;
+          header = `<div class="entryYear">${year}</div>`;
+        }
+        const d = e.date ? new Date(e.date + "T12:00:00") : null;
+        const dateText = d ? `${months[d.getMonth()]} ${d.getDate()}` : "—";
+        const badge = `<span class="${typeBadgeClass(e.type)}">${typeLabel(e.type)}</span>`;
+        const weightNote = e.type === "weight" ? `${Number(e.kg).toFixed(1)} kg` : "";
+        const notesText = weightNote
+          ? `${weightNote}${e.notes ? ` - ${esc(e.notes)}` : ""}`
+          : `${esc(e.notes)}`;
+        const trClass = e.type === "flea" ? "rowFlea" : (e.type === "vax" ? "rowVax" : (e.type === "vet" ? "rowVet" : ""));
+        const creator = creatorMap[e.created_by];
+        const creatorBadge = creator
+          ? `<div class="creatorAvatar" style="background:${creator.color}" title="${creator.initial}">${creator.initial}</div>`
+          : `<div class="creatorAvatar"></div>`;
+        return `
+          ${header}
+          <div class="entryRow ${trClass}" data-entry="${e.id}">
+            <div class="entryMain">
+              <div class="muted entryDate">${dateText}</div>
+              <div class="entryBadge">${badge}</div>
+              <div class="entryNotes">${notesText || "—"}</div>
+              ${creatorBadge}
+              <div class="entryHandle">›</div>
+            </div>
+            <div class="entryActions">
+              <button class="smallbtn" data-edit="${e.id}">Edit</button>
+              <button class="smallbtn" data-del="${e.id}">Delete</button>
+            </div>
+          </div>
+        `;
+      }).join("");
+      els.rows.innerHTML = listHtml;
+
+      els.rows.querySelectorAll("[data-entry]").forEach(row => {
+        const id = row.getAttribute("data-entry");
+        row.addEventListener("click", (e) => {
+          if (e.target.closest("button")) return;
+          void startEdit(id);
+        });
+        let startX = null;
+        row.addEventListener("touchstart", (e) => {
+          startX = e.touches[0].clientX;
+        }, { passive: true });
+        row.addEventListener("touchmove", (e) => {
+          if (startX === null) return;
+          const dx = e.touches[0].clientX - startX;
+          if (dx < -30) row.classList.add("showActions");
+          if (dx > 30) row.classList.remove("showActions");
+        }, { passive: true });
+        row.addEventListener("touchend", () => { startX = null; }, { passive: true });
+      });
+
+      els.rows.querySelectorAll("button[data-edit]").forEach(btn => {
+        btn.addEventListener("click", (e) => {
+          e.stopPropagation();
+          void startEdit(btn.getAttribute("data-edit"));
+        });
+      });
+      els.rows.querySelectorAll("button[data-del]").forEach(btn => {
+        btn.addEventListener("click", (e) => {
+          e.stopPropagation();
+          void deleteEntry(btn.getAttribute("data-del"));
+        });
+      });
+    }
+
+    const watsonLatest = sortedEntriesDesc(weightsOnly(allByDog.watson))[0];
+    const eddieLatest = sortedEntriesDesc(weightsOnly(allByDog.eddie))[0];
+    const sullyLatest = sortedEntriesDesc(weightsOnly(allByDog.sully || []))[0];
+    els.pillWeightWatson.textContent = watsonLatest ? `${watsonLatest.kg.toFixed(1)} kg (${kgToLb(watsonLatest.kg).toFixed(1)} lb)` : "—";
+    els.pillWeightEddie.textContent = eddieLatest ? `${eddieLatest.kg.toFixed(1)} kg (${kgToLb(eddieLatest.kg).toFixed(1)} lb)` : "—";
+    els.pillWeightSully.textContent = sullyLatest ? `${sullyLatest.kg.toFixed(1)} kg (${kgToLb(sullyLatest.kg).toFixed(1)} lb)` : "—";
+
+    const nextVaxParts = vaxNext ? new Date(vaxNext + "T12:00:00") : null;
+    const nextWormParts = fleaNext ? new Date(fleaNext + "T12:00:00") : null;
+    const monthShort = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+    els.nextVaxMonth.textContent = nextVaxParts ? monthShort[nextVaxParts.getMonth()] : "—";
+    els.nextVaxDay.textContent = nextVaxParts ? String(nextVaxParts.getDate()) : "—";
+    els.nextWormMonth.textContent = nextWormParts ? monthShort[nextWormParts.getMonth()] : "—";
+    els.nextWormDay.textContent = nextWormParts ? String(nextWormParts.getDate()) : "—";
+
+    // Chart uses both dogs data
+    window.__lastAllByDog = allByDog;
+    drawTrend(allByDog);
+  }
+
+  function findNearestHoverPoint(x, y) {
+    const points = window.__trendHoverPoints;
+    if (!points) return null;
+    const all = [...points.events, ...points.weights];
+    let best = null;
+    let bestDist = 10 * 10;
+    for (const p of all) {
+      const dx = x - p.x;
+      const dy = y - p.y;
+      const d = (dx * dx) + (dy * dy);
+      if (d <= bestDist && (!best || d < bestDist || (d === bestDist && p.priority > best.priority))) {
+        best = p;
+        bestDist = d;
+      }
+    }
+    return best;
+  }
+
+  function downloadText(filename, text, mime) {
+    const blob = new Blob([text], { type: mime });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  }
+
+  function toCSVRow(fields) {
+    return fields.map(v => {
+      const s = String(v ?? "");
+      const needs = /[",\n]/.test(s);
+      return needs ? `"${s.replaceAll('"', '""')}"` : s;
+    }).join(",");
+  }
+
+  // Wire UI
+  els.pillWatson.addEventListener("click", () => setActiveDog("watson"));
+  els.pillEddie.addEventListener("click", () => setActiveDog("eddie"));
+  els.pillSully.addEventListener("click", () => setActiveDog("sully"));
+  els.weight.addEventListener("input", updateConverted);
+  els.unit.addEventListener("change", updateConverted);
+  els.cancelEdit.addEventListener("click", () => { setMsg(""); cancelEdit(); void render(); });
+
+  els.typeWeight.addEventListener("click", () => { if (!editingId) setEntryType("weight"); });
+  els.typeFlea.addEventListener("click", () => { if (!editingId) setEntryType("flea"); });
+  els.typeVax.addEventListener("click", () => { if (!editingId) setEntryType("vax"); });
+  els.typeVet.addEventListener("click", () => { if (!editingId) setEntryType("vet"); });
+
+  els.range12.addEventListener("click", () => setTrendRange("12m"));
+  els.rangeAll.addEventListener("click", () => setTrendRange("all"));
+  els.trendCanvas.addEventListener("pointermove", (e) => {
+    const rect = els.trendCanvas.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    const hit = findNearestHoverPoint(x, y);
+    if (hit) showTrendTooltip(hit.label, hit.x, hit.y);
+    else hideTrendTooltip();
+  });
+  els.trendCanvas.addEventListener("pointerleave", hideTrendTooltip);
+  els.quickWormBtn.addEventListener("click", async () => {
+  const entries = await loadEntries(activeDog);
+
+  const entry = {
+    id: (crypto?.randomUUID ? crypto.randomUUID() : String(Date.now())),
+    date: todayISO(),
+    type: "flea",
+    notes: "Simparica Trio"
+  };
+
+  // If logged in, write to Supabase
+  const { user: sbUser, spaceId: sbSpaceId } = await getUserAndSpaceId();
+  if (sbUser && sbSpaceId) {
+    const row = await insertDogEntrySupabase(activeDog, entry);
+    if (!row) return; // insertDogEntrySupabase already setMsg()'d the error
+    setMsg(`Saved flea/worm to Supabase ✅`);
+    await render();
+    return;
+  }
+
+  // Fallback: localStorage (if logged out)
+  entries.push(entry);
+  saveEntries(activeDog, entries);
+  setMsg(`Saved flea/worm for ${DOGS[activeDog]}.`);
+  void render();
+});
+  els.callVetBtn.addEventListener("click", () => {
+    window.location.href = "tel:+441732452344";
+  });
+
+  async function handleExportJson() {
+    const payload = {
+      version: 4,
+      exportedAt: new Date().toISOString(),
+      data: {
+        watson: await loadEntries("watson"),
+        eddie: await loadEntries("eddie"),
+        sully: await loadEntries("sully"),
+      }
+    };
+    downloadText("doghouse-backup.json", JSON.stringify(payload, null, 2), "application/json");
+    setMsg("Exported JSON backup.");
+  }
+
+  function isValidUUID(str) {
+    return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(str);
+  }
+
+  async function handleImportJson() {
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = "application/json";
+
+    input.onchange = async () => {
+      const file = input.files?.[0];
+      if (!file) return;
+
+      try {
+        const text = await file.text();
+        const parsed = JSON.parse(text);
+
+        if (parsed?.data?.watson && parsed?.data?.eddie) {
+          const watson = (Array.isArray(parsed.data.watson) ? parsed.data.watson : []).map(normalizeEntry).filter(Boolean);
+          const eddie  = (Array.isArray(parsed.data.eddie) ? parsed.data.eddie : []).map(normalizeEntry).filter(Boolean);
+
+          const { user, spaceId } = await getUserAndSpaceId();
+          if (user && spaceId) {
+            setMsg("Importing to Supabase…");
+            for (const [dogKey, entries] of [["watson", watson], ["eddie", eddie]]) {
+              if (!entries.length) continue;
+              const payload = entries.map(e => ({
+                id: isValidUUID(e.id) ? e.id : crypto.randomUUID(),
+                space_id: spaceId,
+                dog: dogKey,
+                dog_key: dogKey,
+                type: e.type,
+                entry_type: e.type,
+                date: e.date,
+                entry_date: e.date,
+                kg: e.type === "weight" ? e.kg : null,
+                notes: e.notes || "",
+                created_by: user.id,
+              }));
+              const { error } = await supabaseClient
+                .from("dog_entries")
+                .upsert(payload, { onConflict: "id" });
+              if (error) { setMsg(`Import failed: ${error.message}`, true); return; }
+            }
+            setMsg("Imported to Supabase ✅");
+            cancelEdit();
+            await render();
+            return;
+          }
+
+          // Fallback: localStorage
+          saveEntries("watson", watson);
+          saveEntries("eddie", eddie);
+          setMsg("Imported successfully.");
+          cancelEdit();
+          render();
+          return;
+        }
+
+        setMsg("Import failed — not a valid Doghouse backup.", true);
+      } catch {
+        setMsg("Import failed — invalid JSON file.", true);
+      }
+    };
+
+    input.click();
+  }
+
+  els.save.addEventListener("click", async () => {
+    const date = els.date.value || todayISO();
+    const notes = els.notes.value.trim();
+
+    const entries = await loadEntries(activeDog);
+
+    // Editing flow
+    if (editingId) {
+      const idx = entries.findIndex(x => x.id === editingId);
+      if (idx < 0) { setMsg("Couldn’t find entry to edit (it may have been deleted).", true); cancelEdit(); render(); return; }
+
+      const original = entries[idx];
+      const nextType = entryType;
+
+      if (nextType === "weight") {
+        const kg = canonicalKgFromInput();
+        if (kg === null) { setMsg("Enter a valid weight first.", true); return; }
+        entries[idx] = { ...original, date, type: "weight", kg, notes };
+      } else {
+        entries[idx] = { ...original, date, type: nextType, notes, kg: undefined };
+        delete entries[idx].kg;
+      }
+
+      const { user, spaceId } = await getUserAndSpaceId();
+      if (user && spaceId) {
+        const patch = {
+          date,
+          type: nextType,
+          kg: nextType === "weight" ? entries[idx].kg : null,
+          notes: notes || null,
+        };
+        const ok = await updateDogEntrySupabase(editingId, patch);
+        if (!ok) return;
+        setMsg(`Updated entry for ${DOGS[activeDog]} ✅`);
+        cancelEdit();
+        await render();
+        return;
+      }
+
+      // Fallback: localStorage
+      saveEntries(activeDog, entries);
+      setMsg(`Updated entry for ${DOGS[activeDog]}.`);
+      cancelEdit();
+      void render();
+      return;
+  }
+
+    // New entry flow
+    if (entryType === "weight") {
+      const kg = canonicalKgFromInput();
+      if (kg === null) { setMsg("Enter a valid weight first.", true); return; }
+
+      // sanity check vs last weigh-in
+      const latestW = sortedEntriesDesc(weightsOnly(entries))[0];
+      if (latestW) {
+        const pct = Math.abs((kg - latestW.kg) / latestW.kg) * 100;
+        if (pct >= 20) setMsg(`Heads-up: that’s a ${pct.toFixed(0)}% change vs last weigh-in. Double-check? (Saving anyway)`);
+        else setMsg("");
+      } else {
+        setMsg("");
+      }
+
+      const entry = {
+        id: (crypto?.randomUUID ? crypto.randomUUID() : String(Date.now())),
+        date,
+        type: "weight",
+        kg,
+        notes
+      };
+      const { user, spaceId } = await getUserAndSpaceId();
+      if (user && spaceId) {
+        const row = await insertDogEntrySupabase(activeDog, entry);
+        if (!row) return;
+        setMsg(`Saved to Supabase ✅`);
+        await render();
+        return;
+      }
+
+      // Fallback: localStorage
+      entries.push(entry);
+      saveEntries(activeDog, entries);
+
+      els.weight.value = "";
+      els.notes.value = "";
+      els.unit.value = "kg";
+      updateConverted();
+
+      setMsg(`Saved weigh-in for ${DOGS[activeDog]}.`);
+    void render();
+    return;
+  }
+
+    // flea / vax / vet
+    const entry = {
+      id: (crypto?.randomUUID ? crypto.randomUUID() : String(Date.now())),
+      date,
+      type: entryType, // "flea" | "vax" | "vet"
+      notes
+    };
+    entries.push(entry);
+    saveEntries(activeDog, entries);
+
+    els.notes.value = "";
+    applyDefaultNotes();
+    setMsg(`Saved ${entryType === "flea" ? "flea/worm" : (entryType === "vax" ? "vax" : "vet appt")} for ${DOGS[activeDog]}.`);
+    void render();
+  });
+
+  els.exportJson.addEventListener("click", handleExportJson);
+  els.exportJsonTop.addEventListener("click", handleExportJson);
+
+  els.exportCsv.addEventListener("click", async () => {
+    const all = [];
+    for (const dog of DOG_KEYS) {
+      const entries = (await loadEntries(dog)).map(e => ({ dog: DOGS[dog], ...e }));
+      all.push(...entries);
+    }
+    all.sort((a,b) => (a.date > b.date ? 1 : (a.date < b.date ? -1 : 0)));
+
+    const header = toCSVRow(["dog", "date", "type", "weight_kg", "weight_lb", "notes"]);
+    const rows = all.map(e => toCSVRow([
+      e.dog,
+      e.date,
+      e.type,
+      (e.type === "weight" && typeof e.kg === "number") ? Number(e.kg).toFixed(1) : "",
+      (e.type === "weight" && typeof e.kg === "number") ? kgToLb(Number(e.kg)).toFixed(1) : "",
+      e.notes || ""
+    ]));
+
+    downloadText("doghouse.csv", [header, ...rows].join("\n"), "text/csv");
+    setMsg("Exported CSV.");
+  });
+
+  els.importJson.addEventListener("click", handleImportJson);
+  els.importJsonTop.addEventListener("click", handleImportJson);
+
+  els.clearDog.addEventListener("click", async () => {
+    const name = DOGS[activeDog];
+    if (!confirm(`Clear all entries for ${name}?`)) return;
+    const { user, spaceId } = await getUserAndSpaceId();
+    if (user && spaceId) {
+      const { error } = await supabaseClient
+        .from("dog_entries")
+        .delete()
+        .eq("space_id", spaceId)
+        .eq("dog", activeDog);
+      if (error) { setMsg(`Clear failed: ${error.message}`, true); return; }
+    }
+    saveEntries(activeDog, []);
+    cancelEdit();
+    setMsg(`Cleared ${name}.`);
+    void render();
+  });
+
+  // Theme toggle
+  const themeToggle = document.getElementById("themeToggle");
+  function applyTheme(val) {
+    if (val === "light" || val === "dark") {
+      document.documentElement.setAttribute("data-theme", val);
+      localStorage.setItem("doghouse:theme", val);
+    } else {
+      document.documentElement.removeAttribute("data-theme");
+      localStorage.removeItem("doghouse:theme");
+    }
+    themeToggle.querySelectorAll("button").forEach(btn => {
+      btn.classList.toggle("active", btn.dataset.themeVal === val);
+    });
+  }
+  themeToggle.addEventListener("click", e => {
+    const btn = e.target.closest("[data-theme-val]");
+    if (btn) { applyTheme(btn.dataset.themeVal); void render(); }
+  });
+  applyTheme(localStorage.getItem("doghouse:theme") || "auto");
+
+  // Init
+  els.date.value = todayISO();
+  setEntryType("weight");
+  setTrendRange("all");
+  updateConverted();
+  void render();
+
+  
+</script>
+</body>
+</html>
