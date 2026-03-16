@@ -959,8 +959,8 @@ supabaseClient.auth.onAuthStateChange(async (_event, session) => {
     }
   }
 
-  // Always re-render when auth state changes
-  if (typeof render === "function") await render();
+  // Always re-render when auth state changes (void = don't block the auth callback)
+  if (typeof render === "function") void render();
 });
   const els = {
     pillWatson: document.getElementById("pill-watson"),
