@@ -1038,15 +1038,15 @@ supabaseClient.auth.onAuthStateChange(async (_event, session) => {
   const user = currentUser;
   if (!user) return { user: null, spaceId: null };
 
-  const { data: hm, error } = await supabaseClient
-    .from("household_members")
-    .select("household_id")
+  const { data: sm, error } = await supabaseClient
+    .from("space_members")
+    .select("space_id")
     .eq("user_id", user.id)
     .single();
 
-  console.log("[getUserAndSpaceId] user:", user?.email, "hm:", hm, "error:", error);
-  if (error || !hm?.household_id) return { user, spaceId: null };
-  return { user, spaceId: hm.household_id };
+  console.log("[getUserAndSpaceId] user:", user?.email, "sm:", sm, "error:", error);
+  if (error || !sm?.space_id) return { user, spaceId: null };
+  return { user, spaceId: sm.space_id };
 }
 
 async function insertDogEntrySupabase(dogKey, entry) {
@@ -1116,16 +1116,15 @@ async function deleteDogEntrySupabase(id) {
   const user = sessionData?.session?.user;
   if (!user) return;
 
-  // find household
-  const { data: hm, error: hmErr } = await supabaseClient
-    .from("household_members")
-    .select("household_id")
+  const { data: sm, error: smErr } = await supabaseClient
+    .from("space_members")
+    .select("space_id")
     .eq("user_id", user.id)
     .single();
 
-  if (hmErr || !hm) return;
+  if (smErr || !sm) return;
 
-  const householdId = hm.household_id;
+  const householdId = sm.space_id;
 
   for (const dog of ["watson", "eddie"]) {
     const raw = JSON.parse(localStorage.getItem(keyForDog(dog)) || "[]");
