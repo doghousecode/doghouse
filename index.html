@@ -346,6 +346,39 @@
       color: var(--pill-active-text);
     }
 
+    .loginPickerWrap { position: relative; display: inline-block; }
+    .loginPicker {
+      display: none;
+      position: absolute;
+      top: calc(100% + 6px);
+      left: 0;
+      z-index: 100;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 6px;
+      min-width: 140px;
+      box-shadow: 0 4px 16px rgba(0,0,0,.15);
+    }
+    .pickerBtn {
+      display: block;
+      width: 100%;
+      text-align: left;
+      padding: 8px 10px;
+      border: none;
+      background: transparent;
+      border-radius: 8px;
+      cursor: pointer;
+      color: var(--text);
+      font-size: 14px;
+    }
+    .pickerBtn:hover { background: var(--badge-bg); }
+
+    body.readOnly .formCard { display: none; }
+    body.readOnly #quickWormBtn { display: none; }
+    body.readOnly .entryActions { display: none !important; }
+    body.readOnly .entryHandle { display: none !important; }
+
     @media (max-width: 420px) {
       .entryMain {
         grid-template-columns: 1fr 16px;
@@ -533,7 +566,14 @@
 <p class="sub">He ain't heavy...he's my brother</p>
 
 <div style="margin-top:10px; display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
-  <button id="loginBtn" class="smallbtn" type="button">Login</button>
+  <div class="loginPickerWrap">
+    <button id="loginBtn" class="smallbtn" type="button">Login</button>
+    <div id="loginPicker" class="loginPicker">
+      <button class="pickerBtn" data-user="steve" type="button">Steve</button>
+      <button class="pickerBtn" data-user="melissa" type="button">Melissa</button>
+      <button class="pickerBtn" data-user="tim" type="button">Uncle Tim</button>
+    </div>
+  </div>
   <button id="logoutBtn" class="smallbtn" type="button" style="display:none;">Logout</button>
   <span id="authStatus" class="muted">Not signed in</span>
   <div class="themeToggle" id="themeToggle" role="group" aria-label="Color scheme" style="margin-left:auto;">
@@ -710,21 +750,35 @@ if (!user || !spaceId) return null;
 const loginBtn = document.getElementById("loginBtn");
 const logoutBtn = document.getElementById("logoutBtn");
 const authStatus = document.getElementById("authStatus");
+const loginPicker = document.getElementById("loginPicker");
 
-// 🔐 Auth mode switch (pro tip)
-const AUTH_MODE = "password"; // change to "magic" later if you want
+// Named user config — fill in real Supabase emails for Steve and Melissa
+const USERS = {
+  steve:   { label: "Steve",     email: "stephentinkler@mac.com", readOnly: false },
+  melissa: { label: "Melissa",   email: "melissatinkler@me.com",  readOnly: false },
+  tim:     { label: "Uncle Tim", email: "stephentinkler@me.com",  autoPassword: "dog", readOnly: true  },
+};
+
+let readOnly = false;
 
 function setAuthUI(user) {
   if (user) {
+    const key = Object.keys(USERS).find(k => USERS[k].email === user.email);
+    const cfg = key ? USERS[key] : null;
+    readOnly = cfg?.readOnly ?? false;
+    const name = cfg?.label || user.email;
     loginBtn.style.display = "none";
     logoutBtn.style.display = "";
-    authStatus.textContent = `Signed in: ${user.email || user.id}`;
+    authStatus.textContent = readOnly ? `${name} (read only)` : name;
+    document.body.classList.toggle("readOnly", readOnly);
   } else {
+    readOnly = false;
     loginBtn.style.display = "";
     logoutBtn.style.display = "none";
     authStatus.textContent = "Not signed in";
+    document.body.classList.remove("readOnly");
   }
-    if (typeof setSpaceUI === "function") setSpaceUI(user);
+  if (typeof setSpaceUI === "function") setSpaceUI(user);
 }
 
 // On load: show current session
@@ -734,45 +788,32 @@ supabaseClient.auth.getSession().then(({ data }) => {
 
 
 
-function loginWithMagicLink() {
-  loginBtn.addEventListener("click", async () => {
-    const email = prompt("Email for magic link:");
-    if (!email) return;
+// Toggle picker open/closed
+loginBtn.addEventListener("click", (e) => {
+  e.stopPropagation();
+  loginPicker.style.display = loginPicker.style.display === "" ? "none" : "";
+});
+document.addEventListener("click", () => { loginPicker.style.display = "none"; });
+loginPicker.addEventListener("click", (e) => e.stopPropagation());
 
-    const { error } = await supabaseClient.auth.signInWithOtp({
-      email,
-      options: { emailRedirectTo: "https://doghousecode.github.io/doghouse/" }
-    });
+// Handle user selection
+loginPicker.querySelectorAll(".pickerBtn").forEach(btn => {
+  btn.addEventListener("click", async () => {
+    loginPicker.style.display = "none";
+    const cfg = USERS[btn.dataset.user];
+    if (!cfg) return;
 
-    if (error) alert(error.message);
-    else alert("Magic link sent 📬");
-  });
-}
-
-function loginWithPassword() {
-  loginBtn.addEventListener("click", async () => {
-    const email = prompt("Email:");
-    if (!email) return;
-
-    const password = prompt("Password:");
+    const password = cfg.autoPassword ?? prompt(`Password for ${cfg.label}:`);
     if (!password) return;
 
     const { error } = await supabaseClient.auth.signInWithPassword({
-      email,
-      password
+      email: cfg.email,
+      password,
     });
-
-    if (error) alert(error.message);
-    else alert("Signed in ✅");
+    if (error) alert(`Sign-in failed: ${error.message}`);
+    // setAuthUI called via onAuthStateChange on success
   });
-}
-
-// ✅ ONE line decides everything
-if (AUTH_MODE === "magic") {
-  loginWithMagicLink();
-} else {
-  loginWithPassword();
-}
+});
 
 // =====================
 // Space / household join
