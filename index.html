@@ -1014,12 +1014,12 @@ supabaseClient.auth.onAuthStateChange(async (_event, session) => {
 
   const { data: hm, error } = await supabaseClient
     .from("household_members")
-    .select("space_id")
+    .select("household_id")
     .eq("user_id", user.id)
     .single();
 
-  if (error || !hm?.space_id) return { user, spaceId: null };
-  return { user, spaceId: hm.space_id };
+  if (error || !hm?.household_id) return { user, spaceId: null };
+  return { user, spaceId: hm.household_id };
 }
 
 async function insertDogEntrySupabase(dogKey, entry) {
@@ -1109,7 +1109,7 @@ async function deleteDogEntrySupabase(id) {
     if (!normalized.length) continue;
 
     const payload = normalized.map(e => ({
-      household_id: householdId,
+      space_id: householdId,
       dog,
       type: e.type,
       date: e.date,
@@ -1943,6 +1943,10 @@ async function deleteDogEntrySupabase(id) {
     setMsg("Exported JSON backup.");
   }
 
+  function isValidUUID(str) {
+    return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(str);
+  }
+
   async function handleImportJson() {
     const input = document.createElement("input");
     input.type = "file";
@@ -1956,10 +1960,37 @@ async function deleteDogEntrySupabase(id) {
         const text = await file.text();
         const parsed = JSON.parse(text);
 
-        // v4 format
         if (parsed?.data?.watson && parsed?.data?.eddie) {
           const watson = (Array.isArray(parsed.data.watson) ? parsed.data.watson : []).map(normalizeEntry).filter(Boolean);
           const eddie  = (Array.isArray(parsed.data.eddie) ? parsed.data.eddie : []).map(normalizeEntry).filter(Boolean);
+
+          const { user, spaceId } = await getUserAndSpaceId();
+          if (user && spaceId) {
+            setMsg("Importing to Supabase…");
+            for (const [dogKey, entries] of [["watson", watson], ["eddie", eddie]]) {
+              if (!entries.length) continue;
+              const payload = entries.map(e => ({
+                id: isValidUUID(e.id) ? e.id : crypto.randomUUID(),
+                space_id: spaceId,
+                dog: dogKey,
+                type: e.type,
+                date: e.date,
+                kg: e.type === "weight" ? e.kg : null,
+                notes: e.notes || null,
+                created_by: user.id,
+              }));
+              const { error } = await supabaseClient
+                .from("dog_entries")
+                .upsert(payload, { onConflict: "id" });
+              if (error) { setMsg(`Import failed: ${error.message}`, true); return; }
+            }
+            setMsg("Imported to Supabase ✅");
+            cancelEdit();
+            await render();
+            return;
+          }
+
+          // Fallback: localStorage
           saveEntries("watson", watson);
           saveEntries("eddie", eddie);
           setMsg("Imported successfully.");
