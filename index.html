@@ -1062,7 +1062,7 @@ async function insertDogEntrySupabase(dogKey, entry) {
     date: entry.date,
     entry_date: entry.date,
     kg: entry.type === "weight" ? entry.kg : null,
-    notes: entry.notes || null,
+    notes: entry.notes || "",
     created_by: user.id,
   };
 
@@ -2013,7 +2013,7 @@ async function deleteDogEntrySupabase(id) {
                 date: e.date,
                 entry_date: e.date,
                 kg: e.type === "weight" ? e.kg : null,
-                notes: e.notes || null,
+                notes: e.notes || "",
                 created_by: user.id,
               }));
               const { error } = await supabaseClient
