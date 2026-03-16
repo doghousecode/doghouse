@@ -941,8 +941,8 @@ async function insertDogEntrySupabase(dogKey, entry) {
 }
 
 async function updateDogEntrySupabase(id, patch) {
-  const { user, householdId } = await getUserAndHouseholdId();
-  if (!user || !householdId) return false;
+  const { user, spaceId } = await getUserAndSpaceId();
+  if (!user || !spaceId) return false;
 
   const { error } = await supabaseClient
     .from("dog_entries")
@@ -958,8 +958,8 @@ async function updateDogEntrySupabase(id, patch) {
 }
 
 async function deleteDogEntrySupabase(id) {
-  const { user, householdId } = await getUserAndHouseholdId();
-  if (!user || !householdId) return false;
+  const { user, spaceId } = await getUserAndSpaceId();
+  if (!user || !spaceId) return false;
 
   const { error } = await supabaseClient
     .from("dog_entries")
@@ -1279,8 +1279,8 @@ async function deleteDogEntrySupabase(id) {
 
   async function deleteEntry(id) {
   // If logged in, delete from Supabase
-  const { user, householdId } = await getUserAndHouseholdId();
-  if (user && householdId) {
+  const { user, spaceId } = await getUserAndSpaceId();
+  if (user && spaceId) {
     const ok = await deleteDogEntrySupabase(id);
     if (ok) {
       setMsg("Deleted ✅");
@@ -1800,8 +1800,8 @@ async function deleteDogEntrySupabase(id) {
   };
 
   // If logged in, write to Supabase
-  const { user: sbUser, householdId: sbHouseholdId } = await getUserAndHouseholdId();
-  if (sbUser && sbHouseholdId) {
+  const { user: sbUser, spaceId: sbSpaceId } = await getUserAndSpaceId();
+  if (sbUser && sbSpaceId) {
     const row = await insertDogEntrySupabase(activeDog, entry);
     if (!row) return; // insertDogEntrySupabase already setMsg()'d the error
     setMsg(`Saved flea/worm to Supabase ✅`);
@@ -1889,34 +1889,28 @@ async function deleteDogEntrySupabase(id) {
         delete entries[idx].kg;
       }
 
-      const { user, householdId } = await getUserAndHouseholdId();
-if (user && householdId) {
-  const patch = {
-    date,
-    type: nextType,
-    kg: nextType === "weight" ? entries[idx].kg : null,
-    notes: notes || null,
-  };
-  const ok = await updateDogEntrySupabase(editingId, patch);
-  if (!ok) return;
-  setMsg(`Updated entry for ${DOGS[activeDog]} ✅`);
-  cancelEdit();
-  await render();
-  return;
-}
+      const { user, spaceId } = await getUserAndSpaceId();
+      if (user && spaceId) {
+        const patch = {
+          date,
+          type: nextType,
+          kg: nextType === "weight" ? entries[idx].kg : null,
+          notes: notes || null,
+        };
+        const ok = await updateDogEntrySupabase(editingId, patch);
+        if (!ok) return;
+        setMsg(`Updated entry for ${DOGS[activeDog]} ✅`);
+        cancelEdit();
+        await render();
+        return;
+      }
 
-// Fallback: localStorage
-const { user: sbUser, householdId: sbHouseholdId } = await getUserAndHouseholdId();
-if (sbUser && sbHouseholdId) {
-  const ok = await updateDogEntrySupabase(activeDog, entries[idx]); // entries[idx] is the updated entry
-  if (!ok) return;
-} else {
-  saveEntries(activeDog, entries);
-}
-setMsg(`Updated entry for ${DOGS[activeDog]}.`);
-cancelEdit();
-void render();
-return;
+      // Fallback: localStorage
+      saveEntries(activeDog, entries);
+      setMsg(`Updated entry for ${DOGS[activeDog]}.`);
+      cancelEdit();
+      void render();
+      return;
   }
 
     // New entry flow
@@ -1941,24 +1935,18 @@ return;
         kg,
         notes
       };
-      const { user, SpaceId } = await getUserAndSpaceId();
-if (user && SpaceId) {
-  const row = await insertDogEntrySupabase(activeDog, entry);
-  if (!row) return;
-  setMsg(`Saved to Supabase ✅`);
-  await render();
-  return;
-}
+      const { user, spaceId } = await getUserAndSpaceId();
+      if (user && spaceId) {
+        const row = await insertDogEntrySupabase(activeDog, entry);
+        if (!row) return;
+        setMsg(`Saved to Supabase ✅`);
+        await render();
+        return;
+      }
 
-// Fallback: localStorage
-entries.push(entry);
-const { user: sbUser, spaceId: sbspaceId } = await getUserAndspaceId();
-if (sbUser && sbspaceId) {
-  const row = await insertDogEntrySupabase(activeDog, entry);
-  if (!row) return;
-} else {
-  saveEntries(activeDog, entries);
-}
+      // Fallback: localStorage
+      entries.push(entry);
+      saveEntries(activeDog, entries);
 
       els.weight.value = "";
       els.notes.value = "";
