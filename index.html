@@ -908,34 +908,12 @@ if (spaceBtn) {
 logoutBtn.addEventListener("click", async () => {
   try {
     setMsg("Signing out…");
-
     const { error } = await supabaseClient.auth.signOut();
     if (error) {
       console.error("Supabase signOut error:", error);
       setMsg(`Logout failed: ${error.message}`, true);
-      return;
     }
-
-    // Optional: clear space selection when logging out
-    setSpaceId(null);
-
-    // Force UI to reflect logged-out state immediately
-    setAuthUI(null);
-    setSpaceUI(null);
-
-    // Verify session is actually gone
-const { data } = await supabaseClient.auth.getSession();
-const stillUser = data?.session?.user;
-
-if (stillUser) {
-  // If Supabase didn't fully clear, force a hard reset
-  setMsg("Sign out didn’t fully clear session — refreshing…", true);
-  location.reload();
-  return;
-}
-
-setMsg("Signed out ✅");
-await render();
+    // onAuthStateChange handles UI reset and re-render
   } catch (e) {
     console.error("Logout crashed:", e);
     setMsg(`Logout crashed: ${e?.message || e}`, true);
