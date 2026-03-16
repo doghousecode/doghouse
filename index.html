@@ -1115,8 +1115,7 @@ async function deleteDogEntrySupabase(id) {
   return true;
 }
   async function migrateLocalDataToSupabaseOnce() {
-  const { data: sessionData } = await supabaseClient.auth.getSession();
-  const user = sessionData?.session?.user;
+  const user = currentUser;
   if (!user) return;
 
   const { data: sm, error: smErr } = await supabaseClient
@@ -1143,7 +1142,7 @@ async function deleteDogEntrySupabase(id) {
       type: e.type,
       date: e.date,
       kg: e.type === "weight" ? e.kg : null,
-      notes: e.notes || null,
+      notes: e.notes || "",
       created_by: user.id
     }));
 
