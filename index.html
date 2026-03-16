@@ -743,6 +743,7 @@ if (!window.supabase || !window.supabase.createClient) {
 
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 let creatorMap = {}; // { [user_id]: { initial, color } }
+let currentUser = null; // cached from onAuthStateChange — avoids re-entering the auth lock
 
 async function fetchProfiles() {
   const { data, error } = await supabaseClient.from("profiles").select("user_id, initial, color");
@@ -808,7 +809,8 @@ function setAuthUI(user) {
 
 // On load: show current session
 supabaseClient.auth.getSession().then(({ data }) => {
-  setAuthUI(data?.session?.user || null);
+  currentUser = data?.session?.user || null;
+  setAuthUI(currentUser);
 });
 
 
@@ -944,13 +946,13 @@ await render();
 // Auth: state changes
 // ---------------------
 supabaseClient.auth.onAuthStateChange(async (_event, session) => {
-  const user = session?.user || null;
-  console.log("[onAuthStateChange] event:", _event, "user:", user?.email);
+  currentUser = session?.user || null;
+  console.log("[onAuthStateChange] event:", _event, "user:", currentUser?.email);
 
-  setAuthUI(user);
-  setSpaceUI(user);
+  setAuthUI(currentUser);
+  setSpaceUI(currentUser);
 
-  if (user) {
+  if (currentUser) {
     await fetchProfiles();
 
     // One-time migration after first successful login
@@ -1031,8 +1033,9 @@ supabaseClient.auth.onAuthStateChange(async (_event, session) => {
 
   function keyForDog(dogKey) { return `dogweights:v4:${dogKey}`; }
   async function getUserAndSpaceId() {
-  const { data: sessionData } = await supabaseClient.auth.getSession();
-  const user = sessionData?.session?.user;
+  // Use cached user — calling getSession() from inside render (triggered by onAuthStateChange)
+  // re-enters the Supabase auth lock and causes AbortError: Lock was stolen by another request
+  const user = currentUser;
   if (!user) return { user: null, spaceId: null };
 
   const { data: hm, error } = await supabaseClient
