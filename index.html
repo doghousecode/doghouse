@@ -923,25 +923,27 @@ logoutBtn.addEventListener("click", async () => {
 // ---------------------
 // Auth: state changes
 // ---------------------
-supabaseClient.auth.onAuthStateChange(async (_event, session) => {
+supabaseClient.auth.onAuthStateChange((_event, session) => {
   currentUser = session?.user || null;
   console.log("[onAuthStateChange] event:", _event, "user:", currentUser?.email);
 
   setAuthUI(currentUser);
   setSpaceUI(currentUser);
 
-  if (currentUser) {
-    await fetchProfiles();
+  // Defer all async work so the auth lock is released immediately
+  setTimeout(async () => {
+    if (currentUser) {
+      await fetchProfiles();
 
-    // One-time migration after first successful login
-    if (!localStorage.getItem("doghouse:migrated:v1")) {
-      await migrateLocalDataToSupabaseOnce();
-      localStorage.setItem("doghouse:migrated:v1", "1");
+      // One-time migration after first successful login
+      if (!localStorage.getItem("doghouse:migrated:v1")) {
+        await migrateLocalDataToSupabaseOnce();
+        localStorage.setItem("doghouse:migrated:v1", "1");
+      }
     }
-  }
 
-  // Always re-render when auth state changes (void = don't block the auth callback)
-  if (typeof render === "function") void render();
+    if (typeof render === "function") void render();
+  }, 0);
 });
   const els = {
     pillWatson: document.getElementById("pill-watson"),
