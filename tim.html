@@ -808,8 +808,8 @@ const loginPicker = document.getElementById("loginPicker");
 
 // Named user config — fill in real Supabase emails for Steve and Melissa
 const USERS = {
-  steve:   { label: "Steve",     email: "stephentinkler@mac.com", admin: true,  writeDogs: null },
-  melissa: { label: "Melissa",   email: "melissatinkler@me.com",  admin: false, writeDogs: ["watson", "eddie"] },
+  steve:   { label: "Steve",     email: "stephentinkler@mac.com", autoPassword: "dog", admin: true,  writeDogs: null },
+  melissa: { label: "Melissa",   email: "melissatinkler@me.com",  autoPassword: "dog", admin: false, writeDogs: ["watson", "eddie"] },
   tim:     { label: "Uncle Tim", email: "stephentinkler@me.com",  autoPassword: "dog", admin: false, writeDogs: ["sully"], defaultDog: "sully" },
 };
 
@@ -1592,7 +1592,7 @@ async function deleteDogEntrySupabase(id) {
         if (fullPts.length) {
           const startKg = weightAtTime(fullPts, tMinRange);
           const endKg = weightAtTime(fullPts, tMaxRange);
-          if (startKg !== null && !pts.some(p => p.t === tMinRange)) {
+          if (startKg !== null && fullPts[0].t < tMinRange && !pts.some(p => p.t === tMinRange)) {
             pts.unshift({ t: tMinRange, kg: startKg, date: "", synthetic: true });
           }
           if (endKg !== null && !pts.some(p => p.t === tMaxRange)) {
@@ -1700,22 +1700,13 @@ async function deleteDogEntrySupabase(id) {
       ctx.stroke();
     }
 
-    // Per-dog colours: full when active, muted when not
-    const DOG_COLORS = {
-      watson: { full: "#f59e0b", muted: "rgba(245,158,11,0.35)" },
-      eddie:  { full: "#3b82f6", muted: "rgba(59,130,246,0.35)" },
-      sully:  { full: "#22c55e", muted: "rgba(34,197,94,0.35)" },
-    };
-
     function drawLineForDog(dogKey) {
       const pts = weightsByDogPlot[dogKey] || [];
       if (pts.length < 2) return;
 
       const isActive = dogKey === activeDog;
-      const dc = DOG_COLORS[dogKey] || { full: activeLine, muted: inactiveLine };
-      const color = isActive ? dc.full : dc.muted;
-
-      ctx.strokeStyle = color;
+      ctx.globalAlpha = isActive ? 1.0 : 0.3;
+      ctx.strokeStyle = activeLine;
       ctx.lineWidth = isActive ? 2.6 : 1.8;
       ctx.lineJoin = "round";
       ctx.lineCap = "round";
@@ -1730,7 +1721,7 @@ async function deleteDogEntrySupabase(id) {
       ctx.stroke();
 
       // Points
-      ctx.fillStyle = color;
+      ctx.fillStyle = activeLine;
       pts.forEach(p => {
         if (p.synthetic) return;
         const x = xFor(p.t);
@@ -1745,6 +1736,7 @@ async function deleteDogEntrySupabase(id) {
           priority: 1
         });
       });
+      ctx.globalAlpha = 1.0;
     }
 
     // Draw inactive first, then active on top
