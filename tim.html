@@ -161,8 +161,8 @@
     }
 
     .pillToggle .avatar {
-      width: 144px;
-      height: 180px;
+      width: 120px;
+      height: 150px;
       border-radius: 14px;
       object-fit: cover;
       background: transparent;
@@ -170,6 +170,7 @@
       box-shadow: none !important;
     }
 
+    #pill-sully .avatar { width: 80px; height: 100px; }
     .pillToggle:active { transform: scale(0.98); }
 
     .pillToggle span {
@@ -599,6 +600,10 @@
   </div>
   <button id="logoutBtn" class="smallbtn" type="button" style="display:none;">Logout</button>
   <span id="authStatus" class="muted">Not signed in</span>
+  <div class="themeToggle" id="unitToggle" role="group" aria-label="Weight unit">
+    <button type="button" data-unit-val="kg">kg</button>
+    <button type="button" data-unit-val="lb">lb</button>
+  </div>
   <div class="themeToggle" id="themeToggle" role="group" aria-label="Color scheme" style="margin-left:auto;">
     <button type="button" data-theme-val="light">Light</button>
     <button type="button" data-theme-val="auto">Auto</button>
@@ -621,8 +626,8 @@
       </div>
 
       <div id="pill-eddie" class="pill pillToggle" role="button" tabindex="0" aria-pressed="false">
-        <img class="avatar" src="assets/eddie.png" alt="Eddie Spaghetti" />
-        <span>Eddie Spaghetti</span>
+        <img class="avatar" src="assets/eddie.png" alt="Eddie Legs" />
+        <span>Eddie Legs</span>
         <span class="pillWeight" id="pillWeight-eddie">—</span>
       </div>
 
@@ -728,13 +733,20 @@
 let trendWidthPx = null;
 const TREND_HEIGHT = 180;
 
-const DOGS = { watson: "Dr Watson", eddie: "Eddie Spaghetti", sully: "Sully" };
+const DOGS = { watson: "Dr Watson", eddie: "Eddie Legs", sully: "Sully" };
 const DOG_KEYS = ["watson", "eddie", "sully"];
 
   const KG_PER_LB = 1 / 2.2046226218;
   const LB_PER_KG = 2.2046226218;
   function kgToLb(kg) { return kg * LB_PER_KG; }
   function lbToKg(lb) { return lb * KG_PER_LB; }
+
+let displayUnit = localStorage.getItem("doghouse:unit") || "kg";
+function kgToDisplay(kg) { return displayUnit === "lb" ? kg * LB_PER_KG : kg; }
+function displayWeight(kg) {
+  if (typeof kg !== "number") return "—";
+  return `${kgToDisplay(kg).toFixed(1)} ${displayUnit}`;
+}
 // --- Supabase auth (Step 2: auth only) ---
 // --- Supabase auth (auth only) ---
 
@@ -1270,14 +1282,14 @@ async function deleteDogEntrySupabase(id) {
     if (w.length === 0) return { latestText: "—", deltaText: "—" };
 
     const latest = w[0];
-    const latestText = `${latest.kg.toFixed(1)} kg on ${latest.date}`;
+    const latestText = `${displayWeight(latest.kg)} on ${latest.date}`;
 
     if (w.length < 2) return { latestText, deltaText: "—" };
 
     const prev = w[1];
     const deltaKg = latest.kg - prev.kg;
     const sign = deltaKg > 0 ? "+" : (deltaKg < 0 ? "−" : "");
-    const deltaText = `${sign}${Math.abs(deltaKg).toFixed(1)} kg`;
+    const deltaText = `${sign}${displayWeight(Math.abs(deltaKg))}`;
     return { latestText, deltaText };
   }
 
@@ -1633,7 +1645,7 @@ async function deleteDogEntrySupabase(id) {
 
     for (let kg = startKg; kg <= endKg; kg += step) {
       const y = yFor(kg);
-      ctx.fillText(`${kg}kg`, left - 6, y);
+      ctx.fillText(`${kgToDisplay(kg).toFixed(displayUnit === "lb" ? 0 : 0)}${displayUnit}`, left - 6, y);
       ctx.beginPath();
       ctx.moveTo(left, y);
       ctx.lineTo(right, y);
@@ -1694,7 +1706,7 @@ async function deleteDogEntrySupabase(id) {
         hoverPoints.weights.push({
           x,
           y,
-          label: `${p.date} • ${p.kg.toFixed(1)} kg`,
+          label: `${p.date} • ${displayWeight(p.kg)}`,
           priority: 1
         });
       });
@@ -1818,7 +1830,7 @@ async function deleteDogEntrySupabase(id) {
         const d = e.date ? new Date(e.date + "T12:00:00") : null;
         const dateText = d ? `${months[d.getMonth()]} ${d.getDate()}` : "—";
         const badge = `<span class="${typeBadgeClass(e.type)}">${typeLabel(e.type)}</span>`;
-        const weightNote = e.type === "weight" ? `${Number(e.kg).toFixed(1)} kg` : "";
+        const weightNote = e.type === "weight" ? displayWeight(Number(e.kg)) : "";
         const notesText = weightNote
           ? `${weightNote}${e.notes ? ` - ${esc(e.notes)}` : ""}`
           : `${esc(e.notes)}`;
@@ -1882,9 +1894,9 @@ async function deleteDogEntrySupabase(id) {
     const watsonLatest = sortedEntriesDesc(weightsOnly(allByDog.watson))[0];
     const eddieLatest = sortedEntriesDesc(weightsOnly(allByDog.eddie))[0];
     const sullyLatest = sortedEntriesDesc(weightsOnly(allByDog.sully || []))[0];
-    els.pillWeightWatson.textContent = watsonLatest ? `${watsonLatest.kg.toFixed(1)} kg (${kgToLb(watsonLatest.kg).toFixed(1)} lb)` : "—";
-    els.pillWeightEddie.textContent = eddieLatest ? `${eddieLatest.kg.toFixed(1)} kg (${kgToLb(eddieLatest.kg).toFixed(1)} lb)` : "—";
-    els.pillWeightSully.textContent = sullyLatest ? `${sullyLatest.kg.toFixed(1)} kg (${kgToLb(sullyLatest.kg).toFixed(1)} lb)` : "—";
+    els.pillWeightWatson.textContent = watsonLatest ? displayWeight(watsonLatest.kg) : "—";
+    els.pillWeightEddie.textContent = eddieLatest ? displayWeight(eddieLatest.kg) : "—";
+    els.pillWeightSully.textContent = sullyLatest ? displayWeight(sullyLatest.kg) : "—";
 
     const nextVaxParts = vaxNext ? new Date(vaxNext + "T12:00:00") : null;
     const nextWormParts = fleaNext ? new Date(fleaNext + "T12:00:00") : null;
@@ -2228,6 +2240,20 @@ async function deleteDogEntrySupabase(id) {
   });
 
   // Theme toggle
+  const unitToggle = document.getElementById("unitToggle");
+  function applyUnit(val) {
+    displayUnit = val;
+    localStorage.setItem("doghouse:unit", val);
+    unitToggle.querySelectorAll("button").forEach(btn => {
+      btn.classList.toggle("active", btn.dataset.unitVal === val);
+    });
+  }
+  unitToggle.addEventListener("click", e => {
+    const btn = e.target.closest("[data-unit-val]");
+    if (btn) { applyUnit(btn.dataset.unitVal); void render(); }
+  });
+  applyUnit(displayUnit);
+
   const themeToggle = document.getElementById("themeToggle");
   function applyTheme(val) {
     if (val === "light" || val === "dark") {
