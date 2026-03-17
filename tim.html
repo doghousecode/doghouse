@@ -1678,7 +1678,7 @@ async function deleteDogEntrySupabase(id) {
       ctx.stroke();
     }
 
-    // X labels (whole years)
+    // X labels
     ctx.textAlign = "center";
     ctx.textBaseline = "top";
     ctx.fillStyle = muted;
@@ -1686,18 +1686,40 @@ async function deleteDogEntrySupabase(id) {
     const startYear = new Date(tMin).getFullYear();
     const endYear = new Date(tMax).getFullYear();
 
-    for (let year = startYear; year <= endYear; year++) {
-      const tt = new Date(year, 0, 1, 12).getTime();
-      if (tt < tMin || tt > tMax) continue;
+    if (trendRange === "12m") {
+      // Quarterly labels: Jan/Apr/Jul/Oct; show year only on Jan
+      const quarterMonths = [0, 3, 6, 9];
+      const monthNames = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+      for (let year = startYear; year <= endYear; year++) {
+        for (const month of quarterMonths) {
+          const tt = new Date(year, month, 1, 12).getTime();
+          if (tt < tMin || tt > tMax) continue;
+          const x = xFor(tt);
+          const label = month === 0 ? `Jan ${year}` : monthNames[month];
+          ctx.fillStyle = muted;
+          ctx.fillText(label, x, bottom + 6);
+          ctx.strokeStyle = gridLine;
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.moveTo(x, top);
+          ctx.lineTo(x, bottom);
+          ctx.stroke();
+        }
+      }
+    } else {
+      for (let year = startYear; year <= endYear; year++) {
+        const tt = new Date(year, 0, 1, 12).getTime();
+        if (tt < tMin || tt > tMax) continue;
 
-      const x = xFor(tt);
-      ctx.fillText(String(year), x, bottom + 6);
+        const x = xFor(tt);
+        ctx.fillText(String(year), x, bottom + 6);
 
-      ctx.strokeStyle = gridLine;
-      ctx.beginPath();
-      ctx.moveTo(x, top);
-      ctx.lineTo(x, bottom);
-      ctx.stroke();
+        ctx.strokeStyle = gridLine;
+        ctx.beginPath();
+        ctx.moveTo(x, top);
+        ctx.lineTo(x, bottom);
+        ctx.stroke();
+      }
     }
 
     function drawLineForDog(dogKey) {
