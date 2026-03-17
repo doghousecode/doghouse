@@ -1700,14 +1700,23 @@ async function deleteDogEntrySupabase(id) {
       ctx.stroke();
     }
 
-    // Draw lines: active dog in blue, other dog in inactive gray
+    // Per-dog colours: full when active, muted when not
+    const DOG_COLORS = {
+      watson: { full: "#f59e0b", muted: "rgba(245,158,11,0.35)" },
+      eddie:  { full: "#3b82f6", muted: "rgba(59,130,246,0.35)" },
+      sully:  { full: "#22c55e", muted: "rgba(34,197,94,0.35)" },
+    };
+
     function drawLineForDog(dogKey) {
       const pts = weightsByDogPlot[dogKey] || [];
       if (pts.length < 2) return;
 
       const isActive = dogKey === activeDog;
-      ctx.strokeStyle = isActive ? activeLine : inactiveLine;
-      ctx.lineWidth = isActive ? 2.6 : 2;
+      const dc = DOG_COLORS[dogKey] || { full: activeLine, muted: inactiveLine };
+      const color = isActive ? dc.full : dc.muted;
+
+      ctx.strokeStyle = color;
+      ctx.lineWidth = isActive ? 2.6 : 1.8;
       ctx.lineJoin = "round";
       ctx.lineCap = "round";
 
@@ -1721,7 +1730,7 @@ async function deleteDogEntrySupabase(id) {
       ctx.stroke();
 
       // Points
-      ctx.fillStyle = isActive ? activeLine : inactiveLine;
+      ctx.fillStyle = color;
       pts.forEach(p => {
         if (p.synthetic) return;
         const x = xFor(p.t);
@@ -1732,7 +1741,7 @@ async function deleteDogEntrySupabase(id) {
         hoverPoints.weights.push({
           x,
           y,
-          label: `${p.date} • ${displayWeight(p.kg)}`,
+          label: `${DOGS[dogKey]} • ${p.date} • ${displayWeight(p.kg)}`,
           priority: 1
         });
       });
