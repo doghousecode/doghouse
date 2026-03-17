@@ -170,7 +170,7 @@
       box-shadow: none !important;
     }
 
-    #pill-sully .avatar { width: 80px; height: 100px; }
+    #pill-sully .avatar { width: 96px; height: 120px; }
     .pillToggle:active { transform: scale(0.98); }
 
     .pillToggle span {
@@ -600,14 +600,16 @@
   </div>
   <button id="logoutBtn" class="smallbtn" type="button" style="display:none;">Logout</button>
   <span id="authStatus" class="muted">Not signed in</span>
-  <div class="themeToggle" id="unitToggle" role="group" aria-label="Weight unit">
-    <button type="button" data-unit-val="kg">kg</button>
-    <button type="button" data-unit-val="lb">lb</button>
-  </div>
-  <div class="themeToggle" id="themeToggle" role="group" aria-label="Color scheme" style="margin-left:auto;">
-    <button type="button" data-theme-val="light">Light</button>
-    <button type="button" data-theme-val="auto">Auto</button>
-    <button type="button" data-theme-val="dark">Dark</button>
+  <div style="margin-left:auto; display:flex; flex-direction:column; gap:4px; align-items:stretch;">
+    <div class="themeToggle" id="unitToggle" role="group" aria-label="Weight unit" style="width:100%;">
+      <button type="button" data-unit-val="kg" style="flex:1;">kg</button>
+      <button type="button" data-unit-val="lb" style="flex:1;">lb</button>
+    </div>
+    <div class="themeToggle" id="themeToggle" role="group" aria-label="Color scheme">
+      <button type="button" data-theme-val="light">Light</button>
+      <button type="button" data-theme-val="auto">Auto</button>
+      <button type="button" data-theme-val="dark">Dark</button>
+    </div>
   </div>
 </div>
 </header>
@@ -618,7 +620,7 @@
       <button id="importJsonTop" class="smallbtn" type="button">Import JSON</button>
       <button id="exportJsonTop" class="smallbtn" type="button">Export JSON</button>
     </div>
-    <div class="row" style="gap:8px; flex-wrap:wrap;">
+    <div class="row" style="gap:8px; flex-wrap:wrap; align-items:stretch;">
       <div id="pill-watson" class="pill pillToggle active" role="button" tabindex="0" aria-pressed="true">
         <img class="avatar" src="assets/watson.png" alt="Dr Watson" />
         <span>Dr Watson</span>
