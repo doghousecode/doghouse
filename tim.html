@@ -1802,7 +1802,7 @@ async function deleteDogEntrySupabase(id) {
       }
     }
 
-    drawEventsForDog(otherDog);
+    DOG_KEYS.filter(k => k !== activeDog).forEach(drawEventsForDog);
     drawEventsForDog(activeDog);
 
     // Summary label
