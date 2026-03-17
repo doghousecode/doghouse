@@ -171,6 +171,7 @@
     }
 
     #pill-sully .avatar { width: 96px; height: 120px; }
+    .pillToggle .avatarWrap { height: 150px; display:flex; align-items:center; justify-content:center; }
     .pillToggle:active { transform: scale(0.98); }
 
     .pillToggle span {
@@ -622,19 +623,19 @@
     </div>
     <div class="row" style="gap:8px; flex-wrap:wrap; align-items:stretch;">
       <div id="pill-watson" class="pill pillToggle active" role="button" tabindex="0" aria-pressed="true">
-        <img class="avatar" src="assets/watson.png" alt="Dr Watson" />
+        <div class="avatarWrap"><img class="avatar" src="assets/watson.png" alt="Dr Watson" /></div>
         <span>Dr Watson</span>
         <span class="pillWeight" id="pillWeight-watson">—</span>
       </div>
 
       <div id="pill-eddie" class="pill pillToggle" role="button" tabindex="0" aria-pressed="false">
-        <img class="avatar" src="assets/eddie.png" alt="Eddie Legs" />
+        <div class="avatarWrap"><img class="avatar" src="assets/eddie.png" alt="Eddie Legs" /></div>
         <span>Eddie Legs</span>
         <span class="pillWeight" id="pillWeight-eddie">—</span>
       </div>
 
       <div id="pill-sully" class="pill pillToggle" role="button" tabindex="0" aria-pressed="false">
-        <img class="avatar" src="assets/sully.png" alt="Sully" />
+        <div class="avatarWrap"><img class="avatar" src="assets/sully.png" alt="Sully" /></div>
         <span>Sully</span>
         <span class="pillWeight" id="pillWeight-sully">—</span>
       </div>
@@ -645,8 +646,8 @@
       <div id="trendTooltip" class="trendTooltip" role="status" aria-live="polite"></div>
       <div class="trendRow">
         <div class="rangeToggle" role="group" aria-label="Chart range">
-          <button id="range-all" class="segBtn" type="button" aria-pressed="true">All</button>
-          <button id="range-12" class="segBtn" type="button" aria-pressed="false">Last 12 months</button>
+          <button id="range-12" class="segBtn" type="button" aria-pressed="true">Last 12 months</button>
+          <button id="range-all" class="segBtn" type="button" aria-pressed="false">All</button>
         </div>
         <div class="legend">
           <span><span class="legendX" style="color:var(--event-flea);">×</span>Last flea/worm</span>
@@ -807,24 +808,35 @@ const loginPicker = document.getElementById("loginPicker");
 
 // Named user config — fill in real Supabase emails for Steve and Melissa
 const USERS = {
-  steve:   { label: "Steve",     email: "stephentinkler@mac.com", readOnly: false, admin: true  },
-  melissa: { label: "Melissa",   email: "melissatinkler@me.com",  readOnly: false, admin: false },
-  tim:     { label: "Uncle Tim", email: "stephentinkler@me.com",  autoPassword: "dog", readOnly: true, admin: false },
+  steve:   { label: "Steve",     email: "stephentinkler@mac.com", admin: true,  writeDogs: null },
+  melissa: { label: "Melissa",   email: "melissatinkler@me.com",  admin: false, writeDogs: ["watson", "eddie"] },
+  tim:     { label: "Uncle Tim", email: "stephentinkler@me.com",  autoPassword: "dog", admin: false, writeDogs: ["sully"], defaultDog: "sully" },
 };
 
 let readOnly = false;
 
+function currentUserCfg() {
+  if (!currentUser) return null;
+  const key = Object.keys(USERS).find(k => USERS[k].email === currentUser.email);
+  return key ? USERS[key] : null;
+}
+
+function getEffectiveReadOnly(dogKey) {
+  const cfg = currentUserCfg();
+  if (!cfg) return true;
+  if (cfg.writeDogs === null || cfg.writeDogs === undefined) return false; // all dogs
+  return !cfg.writeDogs.includes(dogKey);
+}
+
 function setAuthUI(user) {
   if (user) {
-    const key = Object.keys(USERS).find(k => USERS[k].email === user.email);
-    const cfg = key ? USERS[key] : null;
-    readOnly = cfg?.readOnly ?? false;
+    const cfg = currentUserCfg();
     const name = cfg?.label || user.email;
     loginBtn.style.display = "none";
     logoutBtn.style.display = "";
-    authStatus.textContent = readOnly ? `${name} (read only)` : name;
-    document.body.classList.toggle("readOnly", readOnly);
+    authStatus.textContent = name;
     document.body.classList.toggle("admin", cfg?.admin ?? false);
+    // readOnly is now set per-dog in setActiveDog
   } else {
     readOnly = false;
     loginBtn.style.display = "";
@@ -990,6 +1002,15 @@ supabaseClient.auth.onAuthStateChange((_event, session) => {
     if (currentUser) {
       await fetchProfiles();
 
+      // Set default dog for this user
+      const cfg = currentUserCfg();
+      if (cfg?.defaultDog && typeof setActiveDog === "function") {
+        setActiveDog(cfg.defaultDog);
+      } else if (typeof setActiveDog === "function") {
+        // Re-apply readOnly for current dog after login
+        setActiveDog(activeDog);
+      }
+
       // One-time migration after first successful login
       if (!localStorage.getItem("doghouse:migrated:v1")) {
         await migrateLocalDataToSupabaseOnce();
@@ -1046,7 +1067,7 @@ supabaseClient.auth.onAuthStateChange((_event, session) => {
   let activeDog = "watson";
   let editingId = null;
   let entryType = "weight"; // "weight" | "flea" | "vax" | "vet"
-  let trendRange = "all"; // "12m" | "all"
+  let trendRange = "12m"; // "12m" | "all"
 
   function setMsg(text, isError=false) {
     els.msg.textContent = text || "";
@@ -1409,6 +1430,9 @@ async function deleteDogEntrySupabase(id) {
     els.pillWatson.setAttribute("aria-pressed", dogKey === "watson");
     els.pillEddie.setAttribute("aria-pressed", dogKey === "eddie");
     els.pillSully.setAttribute("aria-pressed", dogKey === "sully");
+
+    readOnly = getEffectiveReadOnly(dogKey);
+    document.body.classList.toggle("readOnly", readOnly);
 
     cancelEdit();
     setMsg("");
@@ -2278,7 +2302,7 @@ async function deleteDogEntrySupabase(id) {
   // Init
   els.date.value = todayISO();
   setEntryType("weight");
-  setTrendRange("all");
+  setTrendRange("12m");
   updateConverted();
   void render();
 
