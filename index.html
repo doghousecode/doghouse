@@ -364,11 +364,26 @@
     }
 
     .loginPickerWrap { position: relative; display: inline-block; }
+    .headerAvatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      font-size: 11px;
+      font-weight: 700;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      border: none;
+      flex-shrink: 0;
+      background: var(--muted);
+    }
     .loginPicker {
       display: none;
       position: absolute;
       top: calc(100% + 6px);
-      left: 0;
+      right: 0;
       z-index: 100;
       background: var(--card);
       border: 1px solid var(--border);
@@ -578,25 +593,14 @@
 
 <body>
 <header>
-<h1>The Doghouse</h1>
-<p class="sub">He ain't heavy...he's my brother</p>
-
-<div style="margin-top:10px; display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
-  <div class="themeToggle" id="unitToggle" role="group" aria-label="Weight unit">
-    <button type="button" data-unit-val="kg">kg</button>
-    <button type="button" data-unit-val="lb">lb</button>
+<div style="display:flex; align-items:flex-start; justify-content:space-between; gap:12px;">
+  <div>
+    <h1>The Doghouse</h1>
+    <p class="sub">He ain't heavy...he's my brother</p>
   </div>
-  <div class="themeToggle" id="themeToggle" role="group" aria-label="Color scheme">
-    <button type="button" data-theme-val="light">Light</button>
-    <button type="button" data-theme-val="auto">Auto</button>
-    <button type="button" data-theme-val="dark">Dark</button>
-  </div>
-  <div class="loginPickerWrap" style="margin-left:auto;">
-    <div class="themeToggle">
-      <button id="loginBtn" type="button" style="display:none;">Login ▾</button>
-      <button id="authStatus" type="button" class="active" style="display:none; cursor:default; pointer-events:none;"></button>
-      <button id="logoutBtn" type="button" style="display:none;">Logout</button>
-    </div>
+  <div class="loginPickerWrap" style="padding-top:6px; flex-shrink:0;">
+    <button id="loginBtn" class="smallbtn" type="button" style="display:none;">Login ▾</button>
+    <button id="logoutBtn" class="headerAvatar" type="button" style="display:none;" title="Logout"></button>
     <div id="loginPicker" class="loginPicker">
       <button class="pickerBtn" data-user="steve" type="button">Steve</button>
       <button class="pickerBtn" data-user="melissa" type="button">Melissa</button>
@@ -607,6 +611,17 @@
         <button id="pickerPwGo" class="smallbtn" type="button">Sign in</button>
       </div>
     </div>
+  </div>
+</div>
+<div style="margin-top:8px; display:flex; gap:8px;">
+  <div class="themeToggle" id="unitToggle" role="group" aria-label="Weight unit">
+    <button type="button" data-unit-val="kg">kg</button>
+    <button type="button" data-unit-val="lb">lb</button>
+  </div>
+  <div class="themeToggle" id="themeToggle" role="group" aria-label="Color scheme">
+    <button type="button" data-theme-val="light">Light</button>
+    <button type="button" data-theme-val="auto">Auto</button>
+    <button type="button" data-theme-val="dark">Dark</button>
   </div>
 </div>
 </header>
@@ -803,7 +818,6 @@ if (!user || !spaceId) return null;
 // auth UI elements
 const loginBtn = document.getElementById("loginBtn");
 const logoutBtn = document.getElementById("logoutBtn");
-const authStatus = document.getElementById("authStatus");
 const loginPicker = document.getElementById("loginPicker");
 
 // Named user config — fill in real Supabase emails for Steve and Melissa
@@ -828,22 +842,27 @@ function getEffectiveReadOnly(dogKey) {
   return !cfg.writeDogs.includes(dogKey);
 }
 
+function updateAuthAvatar() {
+  if (!currentUser) return;
+  const profile = creatorMap[currentUser.id];
+  if (profile) {
+    logoutBtn.textContent = profile.initial;
+    logoutBtn.style.background = profile.color;
+  }
+}
+
 function setAuthUI(user) {
   if (user) {
     const cfg = currentUserCfg();
-    const name = cfg?.label || user.email;
     loginBtn.style.display = "none";
     logoutBtn.style.display = "";
-    authStatus.style.display = "";
-    authStatus.textContent = name;
+    updateAuthAvatar();
     document.body.classList.toggle("admin", cfg?.admin ?? false);
     // readOnly is now set per-dog in setActiveDog
   } else {
     readOnly = false;
     loginBtn.style.display = sessionPending ? "none" : "";
     logoutBtn.style.display = "none";
-    authStatus.style.display = "none";
-    authStatus.textContent = "";
     document.body.classList.remove("readOnly");
     document.body.classList.remove("admin");
   }
@@ -1003,6 +1022,7 @@ supabaseClient.auth.onAuthStateChange((_event, session) => {
   setTimeout(async () => {
     if (currentUser) {
       await fetchProfiles();
+      updateAuthAvatar();
 
       // Set default dog for this user
       const cfg = currentUserCfg();
