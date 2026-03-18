@@ -14,12 +14,15 @@
       --card: #ffffff;
       --text: #111111;
       --muted: #666666;
-      --border: #e8e8ea;
+      --border: #d0d0d4;
 
       --pill-bg: #ffffff;
       --pill-text: #111111;
       --pill-active-bg: #111111;
       --pill-active-text: #ffffff;
+
+      --toggle-active-bg: #e0e0e3;
+      --toggle-active-text: #1a1a1a;
 
       --btn-bg: #111111;
       --btn-text: #ffffff;
@@ -36,8 +39,8 @@
       --event-flea: #f59e0b;       /* amber */
       --event-vax: #22c55e;        /* green */
       --event-vet: #ef4444;        /* red */
-      --badge-bg: rgba(0,0,0,0.06);
-      --grid-line: rgba(0,0,0,0.08);
+      --badge-bg: rgba(0,0,0,0.07);
+      --grid-line: rgba(0,0,0,0.10);
     }
 
     @media (prefers-color-scheme: dark) {
@@ -52,6 +55,9 @@
         --pill-text: #f2f2f3;
         --pill-active-bg: #f2f2f3;
         --pill-active-text: #111111;
+
+        --toggle-active-bg: #3c3c41;
+        --toggle-active-text: #e4e4e8;
 
         --btn-bg: #f2f2f3;
         --btn-text: #111111;
@@ -80,6 +86,9 @@
       --pill-text: #f2f2f3;
       --pill-active-bg: #f2f2f3;
       --pill-active-text: #111111;
+
+      --toggle-active-bg: #3c3c41;
+      --toggle-active-text: #e4e4e8;
 
       --btn-bg: #f2f2f3;
       --btn-text: #111111;
@@ -126,7 +135,7 @@
       border: 1px solid var(--border);
       border-radius: 14px;
       padding: 14px;
-      box-shadow: 0 1px 0 rgba(0,0,0,.03);
+      box-shadow: 0 1px 5px rgba(0,0,0,.07);
       overflow: hidden;
     }
 
@@ -344,10 +353,11 @@
       border: 1px solid var(--border);
       border-radius: 10px;
       overflow: hidden;
+      width: 136px;
     }
     .themeToggle button {
-      width: auto;
-      padding: 5px 10px;
+      flex: 1;
+      padding: 5px 4px;
       border: none;
       border-radius: 0;
       background: var(--card);
@@ -359,8 +369,8 @@
       border-left: 1px solid var(--border);
     }
     .themeToggle button.active {
-      background: var(--pill-active-bg);
-      color: var(--pill-active-text);
+      background: var(--toggle-active-bg);
+      color: var(--toggle-active-text);
     }
 
     .loginPickerWrap { position: relative; display: inline-block; }
@@ -613,7 +623,7 @@
     </div>
   </div>
 </div>
-<div style="margin-top:8px; display:flex; gap:8px;">
+<div style="margin-top:14px; display:flex; gap:8px;">
   <div class="themeToggle" id="unitToggle" role="group" aria-label="Weight unit">
     <button type="button" data-unit-val="kg">kg</button>
     <button type="button" data-unit-val="lb">lb</button>
