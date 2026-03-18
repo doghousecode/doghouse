@@ -117,7 +117,7 @@
     }
 
     h1 { margin: 0; font-size: 52px; font-family: 'Bebas Neue', sans-serif; letter-spacing: 0.03em; line-height: 1; }
-    .sub { margin: 4px 0 0; color: var(--muted); font-size: 19px; white-space: nowrap; display: inline-block; }
+    .sub { margin: 4px 0 0; color: var(--muted); font-size: 17px; }
 
     main { padding: 14px; max-width: 900px; margin: 0 auto; }
 
@@ -2321,19 +2321,6 @@ async function deleteDogEntrySupabase(id) {
     if (btn) { applyTheme(btn.dataset.themeVal); void render(); }
   });
   applyTheme(localStorage.getItem("doghouse:theme") || "auto");
-
-  // Fit subtitle width to h1
-  function fitSubToH1() {
-    const h1 = document.querySelector("h1");
-    const sub = document.querySelector(".sub");
-    if (!h1 || !sub) return;
-    let size = 19;
-    sub.style.fontSize = size + "px";
-    while (sub.offsetWidth > h1.offsetWidth && size > 6) { size -= 0.5; sub.style.fontSize = size + "px"; }
-    while (sub.offsetWidth < h1.offsetWidth && size < 60) { size += 0.5; sub.style.fontSize = size + "px"; }
-  }
-  fitSubToH1();
-  window.addEventListener("resize", fitSubToH1);
 
   // Init
   els.date.value = todayISO();
