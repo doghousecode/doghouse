@@ -116,8 +116,8 @@
       z-index: 10;
     }
 
-    h1 { margin: 0; font-size: 52px; font-family: 'Bebas Neue', sans-serif; letter-spacing: 0.03em; line-height: 1; }
-    .sub { margin: 4px 0 0; color: var(--muted); font-size: 17px; }
+    h1 { margin: 0; font-size: 53px; font-family: 'Bebas Neue', sans-serif; letter-spacing: 0.03em; line-height: 1; }
+    .sub { margin: 4px 0 0; color: var(--muted); font-size: 18px; }
 
     main { padding: 14px; max-width: 900px; margin: 0 auto; }
 
@@ -581,9 +581,22 @@
 <h1>The Doghouse</h1>
 <p class="sub">He ain't heavy...he's my brother</p>
 
-<div style="margin-top:10px; display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
-  <div class="loginPickerWrap">
-    <button id="loginBtn" class="smallbtn" type="button" style="display:none;">Login</button>
+<div style="margin-top:10px; display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+  <div class="themeToggle" id="unitToggle" role="group" aria-label="Weight unit">
+    <button type="button" data-unit-val="kg">kg</button>
+    <button type="button" data-unit-val="lb">lb</button>
+  </div>
+  <div class="themeToggle" id="themeToggle" role="group" aria-label="Color scheme">
+    <button type="button" data-theme-val="light">Light</button>
+    <button type="button" data-theme-val="auto">Auto</button>
+    <button type="button" data-theme-val="dark">Dark</button>
+  </div>
+  <div class="loginPickerWrap" style="margin-left:auto;">
+    <div class="themeToggle">
+      <button id="loginBtn" type="button" style="display:none;">Login ▾</button>
+      <button id="authStatus" type="button" class="active" style="display:none; cursor:default; pointer-events:none;"></button>
+      <button id="logoutBtn" type="button" style="display:none;">Logout</button>
+    </div>
     <div id="loginPicker" class="loginPicker">
       <button class="pickerBtn" data-user="steve" type="button">Steve</button>
       <button class="pickerBtn" data-user="melissa" type="button">Melissa</button>
@@ -593,19 +606,6 @@
         <input id="pickerPwInput" type="password" autocapitalize="none" autocorrect="off" autocomplete="current-password" spellcheck="false" placeholder="password">
         <button id="pickerPwGo" class="smallbtn" type="button">Sign in</button>
       </div>
-    </div>
-  </div>
-  <button id="logoutBtn" class="smallbtn" type="button" style="display:none;">Logout</button>
-  <span id="authStatus" class="muted">Not signed in</span>
-  <div style="margin-left:auto; display:flex; flex-direction:column; gap:4px; align-items:stretch;">
-    <div class="themeToggle" id="unitToggle" role="group" aria-label="Weight unit" style="width:100%;">
-      <button type="button" data-unit-val="kg" style="flex:1;">kg</button>
-      <button type="button" data-unit-val="lb" style="flex:1;">lb</button>
-    </div>
-    <div class="themeToggle" id="themeToggle" role="group" aria-label="Color scheme">
-      <button type="button" data-theme-val="light">Light</button>
-      <button type="button" data-theme-val="auto">Auto</button>
-      <button type="button" data-theme-val="dark">Dark</button>
     </div>
   </div>
 </div>
@@ -834,14 +834,16 @@ function setAuthUI(user) {
     const name = cfg?.label || user.email;
     loginBtn.style.display = "none";
     logoutBtn.style.display = "";
+    authStatus.style.display = "";
     authStatus.textContent = name;
     document.body.classList.toggle("admin", cfg?.admin ?? false);
     // readOnly is now set per-dog in setActiveDog
   } else {
     readOnly = false;
-    loginBtn.style.display = "";
+    loginBtn.style.display = sessionPending ? "none" : "";
     logoutBtn.style.display = "none";
-    authStatus.textContent = sessionPending ? "" : "Not signed in";
+    authStatus.style.display = "none";
+    authStatus.textContent = "";
     document.body.classList.remove("readOnly");
     document.body.classList.remove("admin");
   }
