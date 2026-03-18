@@ -374,6 +374,12 @@
     }
 
     .loginPickerWrap { position: relative; display: inline-block; }
+    #userMenu { min-width: 200px; padding-bottom: 4px; }
+    #userMenu .themeToggle { width: 100%; }
+    .userMenuName { padding: 8px 10px 10px; font-size: 13px; font-weight: 600; border-bottom: 1px solid var(--border); margin-bottom: 4px; }
+    .userMenuSection { padding: 6px 8px 4px; }
+    .userMenuLabel { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 5px; }
+    .signOutBtn { border-top: 1px solid var(--border); margin-top: 6px; color: var(--danger); }
     .headerAvatar {
       width: 36px;
       height: 36px;
@@ -610,7 +616,7 @@
   </div>
   <div class="loginPickerWrap" style="padding-top:6px; flex-shrink:0;">
     <button id="loginBtn" class="smallbtn" type="button" style="display:none;">Login ▾</button>
-    <button id="logoutBtn" class="headerAvatar" type="button" style="display:none;" title="Logout"></button>
+    <button id="logoutBtn" class="headerAvatar" type="button" style="display:none;"></button>
     <div id="loginPicker" class="loginPicker">
       <button class="pickerBtn" data-user="steve" type="button">Steve</button>
       <button class="pickerBtn" data-user="melissa" type="button">Melissa</button>
@@ -621,17 +627,25 @@
         <button id="pickerPwGo" class="smallbtn" type="button">Sign in</button>
       </div>
     </div>
-  </div>
-</div>
-<div style="margin-top:14px; display:flex; gap:8px;">
-  <div class="themeToggle" id="unitToggle" role="group" aria-label="Weight unit">
-    <button type="button" data-unit-val="kg">kg</button>
-    <button type="button" data-unit-val="lb">lb</button>
-  </div>
-  <div class="themeToggle" id="themeToggle" role="group" aria-label="Color scheme">
-    <button type="button" data-theme-val="light">Light</button>
-    <button type="button" data-theme-val="auto">Auto</button>
-    <button type="button" data-theme-val="dark">Dark</button>
+    <div id="userMenu" class="loginPicker">
+      <div id="userMenuName" class="userMenuName"></div>
+      <div class="userMenuSection">
+        <div class="userMenuLabel">Units</div>
+        <div class="themeToggle" id="unitToggle" role="group" aria-label="Weight unit">
+          <button type="button" data-unit-val="kg">kg</button>
+          <button type="button" data-unit-val="lb">lb</button>
+        </div>
+      </div>
+      <div class="userMenuSection">
+        <div class="userMenuLabel">Appearance</div>
+        <div class="themeToggle" id="themeToggle" role="group" aria-label="Color scheme">
+          <button type="button" data-theme-val="light">Light</button>
+          <button type="button" data-theme-val="auto">Auto</button>
+          <button type="button" data-theme-val="dark">Dark</button>
+        </div>
+      </div>
+      <button id="signOutBtn" class="pickerBtn signOutBtn" type="button">Sign out</button>
+    </div>
   </div>
 </div>
 </header>
@@ -691,7 +705,7 @@
         <span class="kpiSmall">Next worm</span>
       </button>
       <button id="quickWormBtn" class="kpiBtn" type="button">
-        <span class="kpiBig">QW</span>
+        <span class="kpiBig">💊</span>
         <span class="kpiSmall">Quickwormer ©</span>
       </button>
       <button id="callVetBtn" class="kpiBtn" type="button">
@@ -829,6 +843,9 @@ if (!user || !spaceId) return null;
 const loginBtn = document.getElementById("loginBtn");
 const logoutBtn = document.getElementById("logoutBtn");
 const loginPicker = document.getElementById("loginPicker");
+const userMenu = document.getElementById("userMenu");
+const userMenuName = document.getElementById("userMenuName");
+const signOutBtn = document.getElementById("signOutBtn");
 
 // Named user config — fill in real Supabase emails for Steve and Melissa
 const USERS = {
@@ -864,8 +881,10 @@ function updateAuthAvatar() {
 function setAuthUI(user) {
   if (user) {
     const cfg = currentUserCfg();
+    const name = cfg?.label || user.email;
     loginBtn.style.display = "none";
     logoutBtn.style.display = "";
+    userMenuName.textContent = name;
     updateAuthAvatar();
     document.body.classList.toggle("admin", cfg?.admin ?? false);
     // readOnly is now set per-dog in setActiveDog
@@ -892,8 +911,16 @@ loginBtn.addEventListener("click", (e) => {
   e.stopPropagation();
   loginPicker.style.display = loginPicker.style.display === "block" ? "none" : "block";
 });
-document.addEventListener("click", () => { loginPicker.style.display = "none"; });
+logoutBtn.addEventListener("click", (e) => {
+  e.stopPropagation();
+  userMenu.style.display = userMenu.style.display === "block" ? "none" : "block";
+});
+document.addEventListener("click", () => {
+  loginPicker.style.display = "none";
+  userMenu.style.display = "none";
+});
 loginPicker.addEventListener("click", (e) => e.stopPropagation());
+userMenu.addEventListener("click", (e) => e.stopPropagation());
 
 // Handle user selection
 const pickerPwForm = document.getElementById("pickerPwForm");
@@ -1003,7 +1030,8 @@ if (spaceBtn) {
 // ---------------------
 // Auth: logout handler
 // ---------------------
-logoutBtn.addEventListener("click", async () => {
+signOutBtn.addEventListener("click", async () => {
+  userMenu.style.display = "none";
   try {
     setMsg("Signing out…");
     const { error } = await supabaseClient.auth.signOut();
