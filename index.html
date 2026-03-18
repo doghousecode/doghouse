@@ -4,6 +4,8 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>The Doghouse</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap" rel="stylesheet">
   <style>
     :root {
       color-scheme: light dark;
@@ -114,7 +116,7 @@
       z-index: 10;
     }
 
-    h1 { margin: 0; font-size: 18px; }
+    h1 { margin: 0; font-size: 52px; font-family: 'Bebas Neue', sans-serif; letter-spacing: 0.03em; line-height: 1; }
     .sub { margin: 6px 0 0; color: var(--muted); font-size: 13px; }
 
     main { padding: 14px; max-width: 900px; margin: 0 auto; }
@@ -153,10 +155,10 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      gap: 6px;
-      padding: 8px 10px;
+      gap: 4px;
+      padding: 6px 10px;
       text-align: center;
-      min-height: 200px;
+      min-height: 0;
       box-shadow: 0 1px 0 rgba(0,0,0,.03);
     }
 
@@ -171,7 +173,7 @@
     }
 
     #pill-sully .avatar { width: 96px; height: 120px; }
-    .pillToggle .avatarWrap { height: 150px; display:flex; align-items:center; justify-content:center; }
+    .pillToggle .avatarWrap { height: 120px; display:flex; align-items:center; justify-content:center; }
     .pillToggle:active { transform: scale(0.98); }
 
     .pillToggle span {
