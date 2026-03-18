@@ -581,7 +581,7 @@
 
 <div style="margin-top:10px; display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
   <div class="loginPickerWrap">
-    <button id="loginBtn" class="smallbtn" type="button">Login</button>
+    <button id="loginBtn" class="smallbtn" type="button" style="display:none;">Login</button>
     <div id="loginPicker" class="loginPicker">
       <button class="pickerBtn" data-user="steve" type="button">Steve</button>
       <button class="pickerBtn" data-user="melissa" type="button">Melissa</button>
@@ -765,9 +765,13 @@ if (!window.supabase || !window.supabase.createClient) {
   alert("Supabase JS failed to load. Check the CDN <script> tag is above this block.");
 }
 
-const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
+  auth: { persistSession: true, autoRefreshToken: true }
+});
 let creatorMap = {}; // { [user_id]: { initial, color } }
 let currentUser = null; // cached from onAuthStateChange — avoids re-entering the auth lock
+const SUPABASE_STORAGE_KEY = `sb-${SUPABASE_URL.split('.')[0].split('//')[1]}-auth-token`;
+let sessionPending = !!localStorage.getItem(SUPABASE_STORAGE_KEY);
 
 async function fetchProfiles() {
   const { data, error } = await supabaseClient.from("profiles").select("user_id, initial, color");
@@ -835,7 +839,7 @@ function setAuthUI(user) {
     readOnly = false;
     loginBtn.style.display = "";
     logoutBtn.style.display = "none";
-    authStatus.textContent = "Not signed in";
+    authStatus.textContent = sessionPending ? "" : "Not signed in";
     document.body.classList.remove("readOnly");
     document.body.classList.remove("admin");
   }
@@ -986,7 +990,7 @@ logoutBtn.addEventListener("click", async () => {
 // ---------------------
 supabaseClient.auth.onAuthStateChange((_event, session) => {
   currentUser = session?.user || null;
-  console.log("[onAuthStateChange] event:", _event, "user:", currentUser?.email);
+  sessionPending = false;
 
   setAuthUI(currentUser);
   setSpaceUI(currentUser);
