@@ -2363,7 +2363,10 @@ async function deleteDogEntrySupabase(id) {
     else hideTrendTooltip();
   });
   els.trendCanvas.addEventListener("pointerleave", hideTrendTooltip);
+  function haptic() { if (navigator.vibrate) navigator.vibrate(10); }
+
   els.quickWormBtn.addEventListener("click", async () => {
+  haptic();
   const entries = await loadEntries(activeDog);
 
   const entry = {
@@ -2390,6 +2393,7 @@ async function deleteDogEntrySupabase(id) {
   void render();
 });
   els.callVetBtn.addEventListener("click", () => {
+    haptic();
     window.location.href = "tel:+441732452344";
   });
 
