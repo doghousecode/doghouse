@@ -293,7 +293,7 @@
     }
     .entryMain {
       display: grid;
-      grid-template-columns: 72px 1fr 28px 16px;
+      grid-template-columns: auto 1fr 28px 16px;
       grid-template-areas: "date meta creator handle";
       gap: 8px;
       padding: 10px;
@@ -330,7 +330,7 @@
     .entryRow.showActions .entryMain { transform: translateX(-110px); }
     .entryRow.showActions .entryActions { transform: translateX(0); }
     .entryRow.showActions .entryHandle { opacity: 0; }
-    .entryDate { grid-area: date; }
+    .entryDate { grid-area: date; color: var(--text); font-weight: 600; white-space: nowrap; }
     .entryMeta { grid-area: meta; display: flex; gap: 7px; align-items: center; min-width: 0; }
     .entryNotes { color: var(--text); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .entryHandle { grid-area: handle; color: var(--muted); text-align: right; }
@@ -2231,7 +2231,7 @@ async function deleteDogEntrySupabase(id) {
           ${header}
           <div class="entryRow ${trClass}" data-entry="${e.id}">
             <div class="entryMain">
-              <div class="muted entryDate">${dateText}</div>
+              <div class="entryDate">${dateText}</div>
               <div class="entryMeta">
                 <div class="entryBadge">${badge}</div>
                 <div class="entryNotes">${notesText || "—"}</div>
