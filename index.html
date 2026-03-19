@@ -660,6 +660,7 @@ body.readOnly .addRecordBtn { display: none; }
 .sheet.open .sheetBackdrop { background: rgba(0,0,0,0.45); }
 .sheetPanel {
   position: absolute;
+  top: 12vh;
   bottom: 0;
   left: 0;
   right: 0;
@@ -668,9 +669,8 @@ body.readOnly .addRecordBtn { display: none; }
   background: var(--card);
   border-radius: 20px 20px 0 0;
   padding: 0 16px calc(env(safe-area-inset-bottom, 0px) + 24px);
-  max-height: 92vh;
   overflow-y: auto;
-  transform: translateY(100%);
+  transform: translateY(110%);
   transition: transform 280ms ease;
 }
 .sheet.open .sheetPanel { transform: translateY(0); }
@@ -728,6 +728,20 @@ body.readOnly .addRecordBtn { display: none; }
   text-transform: uppercase;
   letter-spacing: 0.04em;
 }
+.aiBetaBadgeComingSoon { background: #8b5cf6; }
+
+.headerBadge {
+  display: inline-block;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-top: 5px;
+}
+.headerBadgeBeta { background: var(--active-line); }
 .aiBetaTitle { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
 .aiBetaDesc { font-size: 13px; color: var(--muted); margin: 0 0 12px; }
 .aiBetaRow { display: flex; gap: 8px; }
@@ -804,6 +818,7 @@ body.readOnly .addRecordBtn { display: none; }
   <div>
     <h1>The Doghouse</h1>
     <p class="sub">He ain't heavy...he's my brother</p>
+    <span class="headerBadge headerBadgeBeta">Beta</span>
   </div>
   <div class="loginPickerWrap" style="padding-top:6px; flex-shrink:0;">
     <button id="loginBtn" class="smallbtn" type="button" style="display:none;">Login ▾</button>
@@ -936,7 +951,7 @@ body.readOnly .addRecordBtn { display: none; }
 
     <!-- AI beta -->
     <div class="aiBetaCard">
-      <div class="aiBetaBadge">Beta</div>
+      <div class="aiBetaBadge aiBetaBadgeComingSoon">Coming Soon</div>
       <div class="aiBetaTitle">Let Doghouse create records for you</div>
       <p class="aiBetaDesc">Upload a photo of a vet receipt or health document — AI will extract the details and create draft records for your approval.</p>
       <div class="aiBetaRow">
