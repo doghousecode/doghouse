@@ -437,15 +437,25 @@
         grid-template-areas:
           "date    creator handle"
           "meta    creator handle";
-        row-gap: 4px;
+        row-gap: 2px;
+        padding: 8px 10px;
+        align-items: start;
       }
       .entryDate {
         color: var(--text);
         font-weight: 600;
+        padding-top: 1px;
       }
       .entryMeta {
         flex-wrap: wrap;
         gap: 5px;
+        padding-bottom: 1px;
+      }
+      .creatorAvatar {
+        margin-top: 2px;
+      }
+      .entryHandle {
+        padding-top: 2px;
       }
     }
 
