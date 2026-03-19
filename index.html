@@ -898,8 +898,12 @@ body.readOnly .addRecordBtn { display: none; }
     </div>
 
     <div style="margin-top:12px; display:flex; gap:16px;">
-      <span class="muted" style="font-size:12px;">Next vax: <span id="nextVaxMonth">—</span> <strong id="nextVaxDay">—</strong></span>
-      <span class="muted" style="font-size:12px;">Next worm: <span id="nextWormMonth">—</span> <strong id="nextWormDay">—</strong></span>
+      <button id="nextVaxStatBtn" type="button" style="background:none;border:none;padding:0;cursor:pointer;text-align:left;">
+        <span class="muted" style="font-size:12px;">Next vax: <span id="nextVaxMonth">—</span> <strong id="nextVaxDay">—</strong></span>
+      </button>
+      <button id="nextWormStatBtn" type="button" style="background:none;border:none;padding:0;cursor:pointer;text-align:left;">
+        <span class="muted" style="font-size:12px;">Next worm: <span id="nextWormMonth">—</span> <strong id="nextWormDay">—</strong></span>
+      </button>
     </div>
 
     <div style="display:flex; gap:8px; margin-top:14px;">
@@ -2295,6 +2299,9 @@ async function deleteDogEntrySupabase(id) {
     els.nextVaxDay.textContent = nextVaxParts ? String(nextVaxParts.getDate()) : "—";
     els.nextWormMonth.textContent = nextWormParts ? monthShort[nextWormParts.getMonth()] : "—";
     els.nextWormDay.textContent = nextWormParts ? String(nextWormParts.getDate()) : "—";
+    _nextWormDate = nextWormParts;
+    _nextVaxDate  = nextVaxParts;
+    checkDateNotifications();
 
     // Chart uses both dogs data
     window.__lastAllByDog = allByDog;
@@ -2364,6 +2371,55 @@ async function deleteDogEntrySupabase(id) {
   });
   els.trendCanvas.addEventListener("pointerleave", hideTrendTooltip);
   function haptic() { if (navigator.vibrate) navigator.vibrate(10); }
+
+  // ── Notifications ──────────────────────────────────────────────
+  let _nextWormDate = null;
+  let _nextVaxDate  = null;
+
+  function notifDogName() { return DOGS[activeDog] || "Your dog"; }
+
+  async function showNotif(title, body) {
+    if (!("Notification" in window)) return;
+    if (Notification.permission === "default") {
+      await Notification.requestPermission();
+    }
+    if (Notification.permission !== "granted") return;
+    new Notification(title, { body, icon: "https://doghousecode.github.io/doghouse/favicon.ico" });
+  }
+
+  function scheduleAt9am(fn) {
+    const now    = new Date();
+    const nineAm = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 9, 0, 0);
+    const delay  = nineAm - now;
+    delay <= 0 ? fn() : setTimeout(fn, delay);
+  }
+
+  function checkDateNotifications() {
+    if (!("Notification" in window) || Notification.permission !== "granted") return;
+    const todayStr = new Date().toISOString().slice(0, 10);
+    if (_nextWormDate) {
+      const wormStr = _nextWormDate.toISOString().slice(0, 10);
+      if (wormStr === todayStr) scheduleAt9am(() =>
+        showNotif(`${notifDogName()} treatment reminder 💊`,
+                  `${notifDogName()} is due their flea and worm treatment today! 💊`));
+    }
+    if (_nextVaxDate) {
+      const oneMonthBefore = new Date(_nextVaxDate);
+      oneMonthBefore.setMonth(oneMonthBefore.getMonth() - 1);
+      if (oneMonthBefore.toISOString().slice(0, 10) === todayStr) scheduleAt9am(() =>
+        showNotif(`${notifDogName()} vaccination reminder 💉`,
+                  `${notifDogName()}'s annual vaccination is due in one month! 💉`));
+    }
+  }
+
+  document.getElementById("nextWormStatBtn").addEventListener("click", () =>
+    showNotif(`${notifDogName()} treatment reminder 💊`,
+              `${notifDogName()} is due their flea and worm treatment today! 💊`));
+
+  document.getElementById("nextVaxStatBtn").addEventListener("click", () =>
+    showNotif(`${notifDogName()} vaccination reminder 💉`,
+              `${notifDogName()}'s annual vaccination is due in one month! 💉`));
+  // ───────────────────────────────────────────────────────────────
 
   els.quickWormBtn.addEventListener("click", async () => {
   haptic();
