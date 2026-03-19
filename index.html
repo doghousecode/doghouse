@@ -871,9 +871,9 @@ body.readOnly .addRecordBtn { display: none; }
       <canvas id="trend" height="180" style="width:100%; height:180px; display:block;"></canvas>
       <div id="trendTooltip" class="trendTooltip" role="status" aria-live="polite"></div>
       <div class="trendRow">
-        <div class="rangeToggle" role="group" aria-label="Chart range">
-          <button id="range-12" class="segBtn" type="button" aria-pressed="true">Last 12 months</button>
-          <button id="range-all" class="segBtn" type="button" aria-pressed="false">All</button>
+        <div class="themeToggle" role="group" aria-label="Chart range">
+          <button id="range-12" type="button" aria-pressed="true" class="active">12m</button>
+          <button id="range-all" type="button" aria-pressed="false">All</button>
         </div>
         <div class="legend">
           <span><span class="legendX" style="color:var(--event-flea);">×</span>Last flea/worm</span>
@@ -887,13 +887,6 @@ body.readOnly .addRecordBtn { display: none; }
     <div style="margin-top:12px; display:flex; gap:16px;">
       <span class="muted" style="font-size:12px;">Next vax: <span id="nextVaxMonth">—</span> <strong id="nextVaxDay">—</strong></span>
       <span class="muted" style="font-size:12px;">Next worm: <span id="nextWormMonth">—</span> <strong id="nextWormDay">—</strong></span>
-    </div>
-    <div class="filterStrip" role="group" aria-label="Filter entries">
-      <button class="filterBtn active" data-filter="all" type="button">All</button>
-      <button class="filterBtn" data-filter="weight" type="button">Weight</button>
-      <button class="filterBtn" data-filter="flea" type="button">Flea/Worm</button>
-      <button class="filterBtn" data-filter="vax" type="button">Vax</button>
-      <button class="filterBtn" data-filter="vet" type="button">Vet</button>
     </div>
 
     <div style="display:flex; gap:8px; margin-top:14px;">
@@ -909,6 +902,14 @@ body.readOnly .addRecordBtn { display: none; }
 
     <button id="addRecordBtn" class="addRecordBtn" type="button">＋ Add record</button>
     <p class="muted" id="msg" style="margin: 8px 0 0; min-height: 1em;"></p>
+
+    <div class="filterStrip" role="group" aria-label="Filter entries">
+      <button class="filterBtn active" data-filter="all" type="button">All</button>
+      <button class="filterBtn" data-filter="weight" type="button">Weight</button>
+      <button class="filterBtn" data-filter="flea" type="button">Flea/Worm</button>
+      <button class="filterBtn" data-filter="vax" type="button">Vax</button>
+      <button class="filterBtn" data-filter="vet" type="button">Vet</button>
+    </div>
 
     <div id="rows" class="entryList">
       <div class="muted">No entries yet.</div>
@@ -1670,6 +1671,8 @@ async function deleteDogEntrySupabase(id) {
     trendRange = nextRange;
     els.range12.setAttribute("aria-pressed", String(trendRange === "12m"));
     els.rangeAll.setAttribute("aria-pressed", String(trendRange === "all"));
+    els.range12.classList.toggle("active", trendRange === "12m");
+    els.rangeAll.classList.toggle("active", trendRange === "all");
     if (window.__lastAllByDog) drawTrend(window.__lastAllByDog);
   }
 
