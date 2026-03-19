@@ -649,8 +649,12 @@ body.readOnly .addRecordBtn { display: none; }
   inset: 0;
   z-index: 200;
   pointer-events: none;
+  visibility: hidden;
 }
-.sheet.open { pointer-events: all; }
+.sheet.open {
+  pointer-events: all;
+  visibility: visible;
+}
 .sheetBackdrop {
   position: absolute;
   inset: 0;
