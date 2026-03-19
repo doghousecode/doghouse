@@ -426,8 +426,6 @@
     .pickerPwForm input { width: 140px; padding: 5px 8px; border: 1px solid var(--border); border-radius: 6px; background: var(--bg); color: var(--text); font-size: 14px; }
     .pickerPwForm button { margin-top: 6px; width: 100%; }
 
-    body.readOnly .formCard { display: none; }
-    body.readOnly #quickWormBtn { display: none; }
     body.readOnly .entryActions { display: none !important; }
     body.readOnly .entryHandle { display: none !important; }
     body:not(.admin) .adminOnly { display: none !important; }
@@ -598,6 +596,199 @@
       clip: rect(0,0,0,0);
       border: 0;
     }
+
+/* ── Filter strip ───────────────────────────────────────── */
+.filterStrip {
+  display: flex;
+  gap: 6px;
+  margin-top: 14px;
+}
+.filterBtn {
+  flex: 1;
+  padding: 7px 6px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--card);
+  color: var(--muted);
+  cursor: pointer;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+  text-align: center;
+}
+.filterBtn.active {
+  background: var(--toggle-active-bg);
+  color: var(--toggle-active-text);
+}
+
+/* ── Add-record button ──────────────────────────────────── */
+.addRecordBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  margin-top: 14px;
+  padding: 11px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: var(--card);
+  color: var(--text);
+  cursor: pointer;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+}
+.addRecordBtn:active { opacity: 0.7; }
+body.readOnly .addRecordBtn { display: none; }
+
+/* ── Sheet overlay ──────────────────────────────────────── */
+.sheet {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  pointer-events: none;
+}
+.sheet.open { pointer-events: all; }
+.sheetBackdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0);
+  transition: background 280ms ease;
+}
+.sheet.open .sheetBackdrop { background: rgba(0,0,0,0.45); }
+.sheetPanel {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  max-width: 900px;
+  margin: 0 auto;
+  background: var(--card);
+  border-radius: 20px 20px 0 0;
+  padding: 0 16px calc(env(safe-area-inset-bottom, 0px) + 24px);
+  max-height: 92vh;
+  overflow-y: auto;
+  transform: translateY(100%);
+  transition: transform 280ms ease;
+}
+.sheet.open .sheetPanel { transform: translateY(0); }
+.sheetHandleRow {
+  display: flex;
+  justify-content: center;
+  padding: 12px 0 4px;
+}
+.sheetHandle {
+  width: 36px;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--border);
+}
+.sheetHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 0 14px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 16px;
+}
+.sheetTitle { font-size: 17px; font-weight: 700; }
+.sheetClose {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: none;
+  background: var(--badge-bg);
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ── AI beta card ───────────────────────────────────────── */
+.aiBetaCard {
+  background: color-mix(in srgb, var(--active-line) 7%, var(--card));
+  border: 1px solid color-mix(in srgb, var(--active-line) 22%, var(--border));
+  border-radius: 14px;
+  padding: 14px;
+  margin-bottom: 16px;
+}
+.aiBetaBadge {
+  display: inline-block;
+  background: var(--active-line);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 4px;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.aiBetaTitle { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
+.aiBetaDesc { font-size: 13px; color: var(--muted); margin: 0 0 12px; }
+.aiBetaRow { display: flex; gap: 8px; }
+.aiBetaBtn {
+  flex: 1;
+  padding: 8px 10px;
+  border-radius: 10px;
+  border: 1px solid color-mix(in srgb, var(--active-line) 28%, var(--border));
+  background: var(--card);
+  color: var(--text);
+  cursor: pointer;
+  font: inherit;
+  font-size: 13px;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+}
+
+/* ── Sheet divider ──────────────────────────────────────── */
+.sheetDivider {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 12px;
+  color: var(--muted);
+  margin: 4px 0 16px;
+}
+.sheetDivider::before, .sheetDivider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+/* ── Sheet quick actions ────────────────────────────────── */
+.sheetActions {
+  display: flex;
+  gap: 8px;
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+}
+.sheetActionBtn {
+  flex: 1;
+  padding: 10px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--card) 92%, var(--bg));
+  color: var(--text);
+  cursor: pointer;
+  font: inherit;
+  font-size: 13px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+.sheetActionIcon { font-size: 20px; }
+.sheetActionLabel { font-size: 11px; color: var(--muted); }
   </style>
   <script>
     (function() {
@@ -693,63 +884,20 @@
       <div class="muted" id="trendLabel" style="margin-top:6px;">—</div>
     </div>
 
-    <div class="kpiGrid kpiButtons">
-      <button id="nextVaxBtn" class="kpiBtn" type="button">
-        <span class="kpiSmall" id="nextVaxMonth">—</span>
-        <span class="kpiBig" id="nextVaxDay">—</span>
-        <span class="kpiSmall">Next vax</span>
-      </button>
-      <button id="nextWormBtn" class="kpiBtn" type="button">
-        <span class="kpiSmall" id="nextWormMonth">—</span>
-        <span class="kpiBig" id="nextWormDay">—</span>
-        <span class="kpiSmall">Next worm</span>
-      </button>
-      <button id="quickWormBtn" class="kpiBtn" type="button">
-        <span class="kpiBig">💊</span>
-        <span class="kpiSmall">Quickwormer ©</span>
-      </button>
-      <button id="callVetBtn" class="kpiBtn" type="button">
-        <span class="kpiBig">☎</span>
-        <span class="kpiSmall">Call Vet</span>
-      </button>
+    <div style="margin-top:12px; display:flex; gap:16px;">
+      <span class="muted" style="font-size:12px;">Next vax: <span id="nextVaxMonth">—</span> <strong id="nextVaxDay">—</strong></span>
+      <span class="muted" style="font-size:12px;">Next worm: <span id="nextWormMonth">—</span> <strong id="nextWormDay">—</strong></span>
+    </div>
+    <div class="filterStrip" role="group" aria-label="Filter entries">
+      <button class="filterBtn active" data-filter="all" type="button">All</button>
+      <button class="filterBtn" data-filter="weight" type="button">Weight</button>
+      <button class="filterBtn" data-filter="flea" type="button">Flea/Worm</button>
+      <button class="filterBtn" data-filter="vax" type="button">Vax</button>
+      <button class="filterBtn" data-filter="vet" type="button">Vet</button>
     </div>
 
-    <div class="formCard">
-      <div class="sectionLabel">New record</div>
-      <label class="srOnly" for="date">Date</label>
-      <input id="date" type="date" />
-
-      <div class="segRow">
-        <div class="seg" role="group" aria-label="Entry type">
-          <button id="type-weight" class="segBtn" type="button" aria-pressed="true">Weigh-in</button>
-          <button id="type-flea" class="segBtn" type="button" aria-pressed="false">Flea &amp; worm</button>
-          <button id="type-vax" class="segBtn" type="button" aria-pressed="false">Annual vax</button>
-          <button id="type-vet" class="segBtn" type="button" aria-pressed="false">Vet appt</button>
-        </div>
-      </div>
-
-      <div id="weightBlock">
-        <label>Weight entry</label>
-        <div class="row">
-          <input id="weight" type="number" inputmode="decimal" step="0.1" placeholder="e.g., 18.4" />
-          <select id="unit">
-            <option value="kg">kg</option>
-            <option value="lb">lb</option>
-          </select>
-        </div>
-        <div class="muted" id="converted">—</div>
-      </div>
-
-      <label id="notesLabel">Notes (optional)</label>
-      <textarea id="notes" placeholder="e.g., annual checkup, on new food…"></textarea>
-
-      <div class="row" style="gap:10px;">
-        <button id="save" class="primary" type="button">Save entry</button>
-        <button id="cancelEdit" class="secondary" type="button" style="display:none;">Cancel edit</button>
-      </div>
-
-      <p class="muted" id="msg" style="margin: 10px 0 0;"></p>
-    </div>
+    <button id="addRecordBtn" class="addRecordBtn" type="button">＋ Add record</button>
+    <p class="muted" id="msg" style="margin: 8px 0 0; min-height: 1em;"></p>
 
     <div id="rows" class="entryList">
       <div class="muted">No entries yet.</div>
@@ -763,6 +911,78 @@
     </div>
   </div>
 </main>
+
+<!-- ── Add Record Sheet ─────────────────────────────────── -->
+<div id="recordSheet" class="sheet" role="dialog" aria-modal="true" aria-label="Add Record">
+  <div class="sheetBackdrop" id="sheetBackdrop"></div>
+  <div class="sheetPanel">
+    <div class="sheetHandleRow"><div class="sheetHandle"></div></div>
+    <div class="sheetHeader">
+      <span class="sheetTitle">Add Record</span>
+      <button class="sheetClose" id="sheetClose" type="button" aria-label="Close">✕</button>
+    </div>
+
+    <!-- AI beta -->
+    <div class="aiBetaCard">
+      <div class="aiBetaBadge">Beta</div>
+      <div class="aiBetaTitle">Let Doghouse create records for you</div>
+      <p class="aiBetaDesc">Upload a photo of a vet receipt or health document — AI will extract the details and create draft records for your approval.</p>
+      <div class="aiBetaRow">
+        <label class="aiBetaBtn" for="aiPhotoInput" style="cursor:pointer;">📷 Take / Upload Photo</label>
+        <input id="aiPhotoInput" type="file" accept="image/*,application/pdf" capture="environment" style="display:none;" aria-label="Upload photo or file">
+        <button class="aiBetaBtn" id="aiUploadFileBtn" type="button">📄 Upload File</button>
+      </div>
+    </div>
+
+    <div class="sheetDivider">or add manually</div>
+
+    <!-- Manual form (same IDs as before — JS unchanged) -->
+    <label class="srOnly" for="date">Date</label>
+    <input id="date" type="date" />
+
+    <div class="segRow">
+      <div class="seg" role="group" aria-label="Entry type">
+        <button id="type-weight" class="segBtn" type="button" aria-pressed="true">Weigh-in</button>
+        <button id="type-flea" class="segBtn" type="button" aria-pressed="false">Flea &amp; worm</button>
+        <button id="type-vax" class="segBtn" type="button" aria-pressed="false">Annual vax</button>
+        <button id="type-vet" class="segBtn" type="button" aria-pressed="false">Vet appt</button>
+      </div>
+    </div>
+
+    <div id="weightBlock">
+      <label>Weight entry</label>
+      <div class="row">
+        <input id="weight" type="number" inputmode="decimal" step="0.1" placeholder="e.g., 18.4" />
+        <select id="unit">
+          <option value="kg">kg</option>
+          <option value="lb">lb</option>
+        </select>
+      </div>
+      <div class="muted" id="converted">—</div>
+    </div>
+
+    <label id="notesLabel">Notes (optional)</label>
+    <textarea id="notes" placeholder="e.g., annual checkup, on new food…"></textarea>
+
+    <div class="row" style="gap:10px; margin-top:12px;">
+      <button id="save" class="primary" type="button">Save entry</button>
+      <button id="cancelEdit" class="secondary" type="button" style="display:none;">Cancel edit</button>
+    </div>
+
+    <!-- Quick actions -->
+    <div class="sheetActions">
+      <button id="quickWormBtn" class="sheetActionBtn" type="button">
+        <span class="sheetActionIcon">💊</span>
+        <span class="sheetActionLabel">Quickwormer ©</span>
+      </button>
+      <button id="callVetBtn" class="sheetActionBtn" type="button">
+        <span class="sheetActionIcon">☎</span>
+        <span class="sheetActionLabel">Call Vet</span>
+      </button>
+    </div>
+  </div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 
@@ -779,6 +999,7 @@ const DOG_KEYS = ["watson", "eddie", "sully"];
   function kgToLb(kg) { return kg * LB_PER_KG; }
   function lbToKg(lb) { return lb * KG_PER_LB; }
 
+let activeFilter = "all";
 let displayUnit = localStorage.getItem("doghouse:unit") || "kg";
 function kgToDisplay(kg) { return displayUnit === "lb" ? kg * LB_PER_KG : kg; }
 function displayWeight(kg) {
@@ -1499,6 +1720,43 @@ async function deleteDogEntrySupabase(id) {
     void render();
   }
 
+  const recordSheet = document.getElementById("recordSheet");
+  const sheetBackdrop = document.getElementById("sheetBackdrop");
+  const sheetClose = document.getElementById("sheetClose");
+  const addRecordBtn = document.getElementById("addRecordBtn");
+
+  function openSheet() {
+    recordSheet.classList.add("open");
+    document.body.style.overflow = "hidden";
+  }
+  function closeSheet() {
+    recordSheet.classList.remove("open");
+    document.body.style.overflow = "";
+  }
+
+  addRecordBtn.addEventListener("click", openSheet);
+  sheetClose.addEventListener("click", closeSheet);
+  sheetBackdrop.addEventListener("click", closeSheet);
+
+  // AI beta stubs
+  document.getElementById("aiPhotoInput").addEventListener("change", (e) => {
+    if (e.target.files?.length) {
+      setMsg("AI import coming soon — file received but not yet processed.", false);
+    }
+  });
+  document.getElementById("aiUploadFileBtn").addEventListener("click", () => {
+    document.getElementById("aiPhotoInput").click();
+  });
+
+  // Filter buttons
+  document.querySelectorAll(".filterBtn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      activeFilter = btn.dataset.filter;
+      document.querySelectorAll(".filterBtn").forEach(b => b.classList.toggle("active", b === btn));
+      void render();
+    });
+  });
+
   async function startEdit(id) {
     const entries = await loadEntries(activeDog);
     const e = entries.find(x => x.id === id);
@@ -1525,6 +1783,7 @@ async function deleteDogEntrySupabase(id) {
     els.save.textContent = "Save changes";
     els.cancelEdit.style.display = "";
     setMsg(`Editing ${e.type} entry for ${DOGS[activeDog]}.`);
+    openSheet();
   }
 
   function cancelEdit() {
@@ -1537,6 +1796,7 @@ async function deleteDogEntrySupabase(id) {
     els.notes.value = "";
     setEntryType("weight");
     updateConverted();
+    closeSheet();
   }
 
   async function deleteEntry(id) {
@@ -1922,10 +2182,12 @@ async function deleteDogEntrySupabase(id) {
     const fleaNext = fleaLast ? addDaysISO(fleaLast.date, 30) : null;
     const vaxNext  = vaxLast ? addYearsISO(vaxLast.date, 1) : null;
 
-    // Table: show ALL entry types for active dog
-    const s = sortedEntriesDesc(activeEntries);
+    // Table: filter by activeFilter, then sort
+    const all = sortedEntriesDesc(activeEntries);
+    const s = activeFilter === "all" ? all : all.filter(e => e.type === activeFilter);
     if (s.length === 0) {
-      els.rows.innerHTML = `<div class="muted">No entries yet.</div>`;
+      const filterLabel = { weight: "weight", flea: "flea/worm", vax: "vax", vet: "vet" };
+      els.rows.innerHTML = `<div class="muted">${activeFilter !== "all" ? `No ${filterLabel[activeFilter] || activeFilter} entries.` : "No entries yet."}</div>`;
     } else {
       let currentYear = null;
       const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
