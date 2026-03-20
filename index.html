@@ -126,7 +126,7 @@
     }
 
     h1 { margin: 0; font-size: 53px; font-family: 'Bebas Neue', sans-serif; letter-spacing: 0.03em; line-height: 1; }
-    .sub { margin: 4px 0 0; color: var(--muted); font-size: 18px; font-family: 'DM Sans', sans-serif; letter-spacing: 0.028em; }
+    .sub { margin: 4px 0 0; color: var(--muted); font-size: 18px; font-family: 'DM Sans', sans-serif; }
 
     main { padding: 14px; max-width: 900px; margin: 0 auto; }
 
@@ -2841,7 +2841,25 @@ async function deleteDogEntrySupabase(id) {
   updateConverted();
   void render();
 
-  
+  // Match subtitle width to h1 by calculating exact letter-spacing at runtime.
+  // This adapts to each browser's font rendering so it's always consistent.
+  function matchSubToH1() {
+    const h1  = document.querySelector("h1");
+    const sub = document.querySelector(".sub");
+    if (!h1 || !sub) return;
+    sub.style.letterSpacing = "0";
+    sub.style.display = "inline-block";
+    const h1W  = h1.getBoundingClientRect().width;
+    const subW = sub.getBoundingClientRect().width;
+    sub.style.display = "";
+    if (subW >= h1W) return;
+    const chars = sub.textContent.trim().length;
+    const fs    = parseFloat(getComputedStyle(sub).fontSize);
+    sub.style.letterSpacing = ((h1W - subW) / chars / fs) + "em";
+  }
+  document.fonts.ready.then(matchSubToH1);
+  window.addEventListener("resize", matchSubToH1);
+
 </script>
 </body>
 </html>
