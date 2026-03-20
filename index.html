@@ -1721,10 +1721,8 @@ async function deleteDogEntrySupabase(id) {
     let left = anchorX - tipW / 2;
     let top  = anchorY - tipH - GAP;
 
-    // Flip below if top would be clipped
-    if (top < 0) {
-      top = anchorY + GAP;
-    }
+    // Clamp to top edge instead of flipping below (below = under thumb)
+    if (top < 0) top = 0;
 
     // Clamp horizontally within the wrapper
     const maxLeft = wrapRect.width - tipW;
