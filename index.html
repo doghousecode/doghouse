@@ -4,6 +4,14 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>The Doghouse</title>
+  <!-- Home screen / PWA icons -->
+  <link rel="apple-touch-icon" sizes="180x180" href="/icon.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="/icon.png">
+  <link rel="icon" type="image/png" sizes="512x512" href="/icon.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Doghouse">
+  <meta name="theme-color" content="#111111">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400&display=swap" rel="stylesheet">
   <style>
@@ -344,6 +352,8 @@
     .entryRow.showActions .entryMain { transform: translateX(-110px); }
     .entryRow.showActions .entryActions { transform: translateX(0); }
     .entryRow.showActions .entryHandle { opacity: 0; }
+    .entryMain { will-change: transform; }
+    .entryActions { will-change: transform; }
     .entryDate { grid-area: date; color: var(--text); font-weight: 600; white-space: nowrap; }
     .entryMeta { grid-area: meta; display: flex; gap: 7px; align-items: center; min-width: 0; }
     .entryNotes { color: var(--text); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -942,18 +952,18 @@ body.readOnly .addRecordBtn { display: none; }
     </div>
 
     <div style="display:flex; gap:8px; margin-top:10px;">
-      <button id="nextVaxStatBtn" class="nextDateChip" type="button">
-        <span style="font-size:20px;line-height:1;">💉</span>
-        <span class="nextDateInfo">
-          <span class="nextDateLabel">Next vax</span>
-          <span class="nextDateVal"><span id="nextVaxMonth">—</span> <span id="nextVaxDay">—</span></span>
-        </span>
-      </button>
       <button id="nextWormStatBtn" class="nextDateChip" type="button">
         <span style="font-size:20px;line-height:1;">🗓️</span>
         <span class="nextDateInfo">
           <span class="nextDateLabel">Next worm</span>
           <span class="nextDateVal"><span id="nextWormMonth">—</span> <span id="nextWormDay">—</span></span>
+        </span>
+      </button>
+      <button id="nextVaxStatBtn" class="nextDateChip" type="button">
+        <span style="font-size:20px;line-height:1;">💉</span>
+        <span class="nextDateInfo">
+          <span class="nextDateLabel">Next vax</span>
+          <span class="nextDateVal"><span id="nextVaxMonth">—</span> <span id="nextVaxDay">—</span></span>
         </span>
       </button>
     </div>
@@ -1070,7 +1080,8 @@ body.readOnly .addRecordBtn { display: none; }
       <button id="cancelEdit" class="secondary" type="button" style="display:none;">Cancel edit</button>
     </div>
 
-    <div id="saveConfirm" style="display:none; text-align:center; padding:16px 0 4px;">
+    <div id="saveConfirmOverlay" style="display:none; position:absolute; inset:0; background:var(--card); opacity:0.7; border-radius:20px 20px 0 0; z-index:1;"></div>
+    <div id="saveConfirm" style="display:none; text-align:center; padding:16px 0 4px; position:relative; z-index:2;">
       <div style="font-size:28px; margin-bottom:8px;">✅</div>
       <div id="saveConfirmMsg" style="font-weight:600; margin-bottom:16px; font-size:15px;"></div>
       <div style="display:flex; gap:10px;">
@@ -1899,12 +1910,16 @@ async function deleteDogEntrySupabase(id) {
   const saveConfirmMsg = document.getElementById("saveConfirmMsg");
   const saveRow        = els.save.closest(".row");
 
+  const saveConfirmOverlay = document.getElementById("saveConfirmOverlay");
+
   function showSaveConfirm(typeName, dogName) {
+    saveConfirmOverlay.style.display = "block";
     saveRow.style.display = "none";
     saveConfirm.style.display = "block";
     saveConfirmMsg.textContent = `${typeName} record added for ${dogName}`;
   }
   function hideSaveConfirm() {
+    saveConfirmOverlay.style.display = "none";
     saveConfirm.style.display = "none";
     saveRow.style.display = "";
   }
@@ -2422,17 +2437,50 @@ const pts = (weightsByDogPlot[dogKey] || []);
           if (e.target.closest("button")) return;
           void startEdit(id);
         });
-        let startX = null;
+        const SNAP = 110; // px to reveal actions
+        const main = row.querySelector(".entryMain");
+        const actions = row.querySelector(".entryActions");
+        let startX = null, isOpen = false;
+
+        function setTransition(on) {
+          const t = on ? "transform 320ms cubic-bezier(0.34,1.56,0.64,1)" : "none";
+          main.style.transition = t;
+          actions.style.transition = t;
+        }
+        function applyDrag(dx) {
+          // rubber-band past snap point
+          const target = isOpen ? dx - SNAP : dx;
+          const clamped = target < 0
+            ? -SNAP + target * 0.18   // overshoot left with resistance
+            : Math.min(target * 0.18, isOpen ? 0 : 20); // resist going right past closed
+          main.style.transform = `translateX(${clamped}px)`;
+          actions.style.transform = `translateX(${110 + clamped}px)`;
+        }
+        function snapTo(open) {
+          isOpen = open;
+          row.classList.toggle("showActions", open);
+          setTransition(true);
+          main.style.transform = "";
+          actions.style.transform = "";
+          setTimeout(() => { main.style.transition = ""; actions.style.transition = ""; }, 350);
+        }
+
         row.addEventListener("touchstart", (e) => {
           startX = e.touches[0].clientX;
+          setTransition(false);
         }, { passive: true });
         row.addEventListener("touchmove", (e) => {
           if (startX === null) return;
-          const dx = e.touches[0].clientX - startX;
-          if (dx < -30) row.classList.add("showActions");
-          if (dx > 30) row.classList.remove("showActions");
+          applyDrag(e.touches[0].clientX - startX);
         }, { passive: true });
-        row.addEventListener("touchend", () => { startX = null; }, { passive: true });
+        row.addEventListener("touchend", (e) => {
+          if (startX === null) return;
+          const dx = e.changedTouches[0].clientX - startX;
+          startX = null;
+          if (!isOpen && dx < -40) snapTo(true);
+          else if (isOpen && dx > 30) snapTo(false);
+          else snapTo(isOpen); // snap back
+        }, { passive: true });
       });
 
       els.rows.querySelectorAll("button[data-edit]").forEach(btn => {
