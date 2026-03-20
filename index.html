@@ -881,7 +881,7 @@ body.readOnly .addRecordBtn { display: none; }
     </div>
 
     <div class="trendWrap" style="margin-top:12px;">
-      <canvas id="trend" height="180" style="width:100%; height:180px; display:block;"></canvas>
+      <canvas id="trend" height="180" style="width:100%; height:180px; display:block; touch-action:none; -webkit-user-select:none; user-select:none;"></canvas>
       <div id="trendTooltip" class="trendTooltip" role="status" aria-live="polite"></div>
       <div class="trendRow">
         <div class="themeToggle" role="group" aria-label="Chart range">
@@ -2348,7 +2348,7 @@ async function deleteDogEntrySupabase(id) {
     if (!points) return null;
     const all = [...points.events, ...points.weights];
     let best = null;
-    let bestDist = 20 * 20;
+    let bestDist = 44 * 44;
     for (const p of all) {
       const dx = x - p.x;
       const dy = y - p.y;
@@ -2396,14 +2396,16 @@ async function deleteDogEntrySupabase(id) {
 
   els.range12.addEventListener("click", () => setTrendRange("12m"));
   els.rangeAll.addEventListener("click", () => setTrendRange("all"));
-  els.trendCanvas.addEventListener("pointermove", (e) => {
+  function handleTrendPointer(e) {
     const rect = els.trendCanvas.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
     const hit = findNearestHoverPoint(x, y);
     if (hit) showTrendTooltip(hit.label, hit.x, hit.y);
     else hideTrendTooltip();
-  });
+  }
+  els.trendCanvas.addEventListener("pointermove", handleTrendPointer);
+  els.trendCanvas.addEventListener("pointerdown", handleTrendPointer);
   els.trendCanvas.addEventListener("pointerleave", hideTrendTooltip);
   function haptic() { if (navigator.vibrate) navigator.vibrate(10); }
 
