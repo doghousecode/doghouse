@@ -2018,8 +2018,8 @@ async function deleteDogEntrySupabase(id) {
   if (user && spaceId) {
     const ok = await deleteDogEntrySupabase(id);
     if (ok) {
-      showToast("Record deleted");
       await render();
+      showToast("Record deleted");
     }
     return;
   }
@@ -2029,6 +2029,7 @@ async function deleteDogEntrySupabase(id) {
   const next = entries.filter(x => x.id !== id);
   saveEntries(activeDog, next);
   if (editingId === id) cancelEdit();
+  showToast("Record deleted");
   void render();
 }
 
