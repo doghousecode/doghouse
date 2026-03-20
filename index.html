@@ -914,13 +914,12 @@ body.readOnly .addRecordBtn { display: none; }
           <button id="range-12" type="button" aria-pressed="true" class="active">12m</button>
           <button id="range-all" type="button" aria-pressed="false">All</button>
         </div>
-        <div class="legend">
-          <span><span class="legendX" style="color:var(--event-flea);">×</span>Last flea/worm</span>
-          <span><span class="legendX" style="color:var(--event-vax);">×</span>Annual vax</span>
-          <span><span class="legendX" style="color:var(--event-vet);">×</span>Vet appt</span>
-        </div>
       </div>
-      <div class="muted" id="trendLabel" style="margin-top:6px;">—</div>
+      <div class="legend" style="display:flex;flex-direction:row;gap:14px;margin-top:6px;font-size:12px;color:var(--muted);">
+        <span><span class="legendX" style="color:var(--event-vax);">×</span>Annual vax</span>
+        <span><span class="legendX" style="color:var(--event-vet);">×</span>Vet appt</span>
+      </div>
+      <div class="muted" id="trendLabel" style="margin-top:4px;">—</div>
     </div>
 
     <div style="margin-top:12px; display:flex; gap:16px;">
@@ -1042,6 +1041,15 @@ body.readOnly .addRecordBtn { display: none; }
     <div class="row" style="gap:10px; margin-top:12px;">
       <button id="save" class="primary" type="button">Save entry</button>
       <button id="cancelEdit" class="secondary" type="button" style="display:none;">Cancel edit</button>
+    </div>
+
+    <div id="saveConfirm" style="display:none; text-align:center; padding:16px 0 4px;">
+      <div style="font-size:28px; margin-bottom:8px;">✅</div>
+      <div id="saveConfirmMsg" style="font-weight:600; margin-bottom:16px; font-size:15px;"></div>
+      <div style="display:flex; gap:10px;">
+        <button id="addAnotherBtn" class="secondary" type="button">Add another</button>
+        <button id="saveDoneBtn" class="primary" type="button">Done</button>
+      </div>
     </div>
 
   </div>
@@ -1857,9 +1865,35 @@ async function deleteDogEntrySupabase(id) {
     document.addEventListener("touchend", onDragEnd, { passive: true });
   }, { passive: true });
 
+  const saveConfirm    = document.getElementById("saveConfirm");
+  const saveConfirmMsg = document.getElementById("saveConfirmMsg");
+  const saveRow        = els.save.closest(".row");
+
+  function showSaveConfirm(typeName, dogName) {
+    saveRow.style.display = "none";
+    saveConfirm.style.display = "block";
+    saveConfirmMsg.textContent = `${typeName} record added for ${dogName}`;
+  }
+  function hideSaveConfirm() {
+    saveConfirm.style.display = "none";
+    saveRow.style.display = "";
+  }
+
+  document.getElementById("addAnotherBtn").addEventListener("click", () => {
+    hideSaveConfirm();
+    els.notes.value = "";
+    applyDefaultNotes();
+    els.date.value = todayISO();
+    els.save.focus();
+  });
+  document.getElementById("saveDoneBtn").addEventListener("click", () => {
+    hideSaveConfirm();
+    closeSheet();
+  });
+
   addRecordBtn.addEventListener("click", openSheet);
-  sheetClose.addEventListener("click", closeSheet);
-  sheetBackdrop.addEventListener("click", closeSheet);
+  sheetClose.addEventListener("click", () => { hideSaveConfirm(); closeSheet(); });
+  sheetBackdrop.addEventListener("click", () => { hideSaveConfirm(); closeSheet(); });
 
   // AI upload stubs
   ["aiCameraInput", "aiPhotosInput", "aiFilesInput"].forEach(id => {
@@ -2718,7 +2752,7 @@ async function deleteDogEntrySupabase(id) {
       if (user && spaceId) {
         const row = await insertDogEntrySupabase(activeDog, entry);
         if (!row) return;
-        setMsg(`Saved to Supabase ✅`);
+        showSaveConfirm("Weight", DOGS[activeDog]);
         await render();
         return;
       }
@@ -2726,30 +2760,38 @@ async function deleteDogEntrySupabase(id) {
       // Fallback: localStorage
       entries.push(entry);
       saveEntries(activeDog, entries);
-
       els.weight.value = "";
       els.notes.value = "";
       els.unit.value = "kg";
       updateConverted();
-
-      setMsg(`Saved weigh-in for ${DOGS[activeDog]}.`);
-    void render();
-    return;
+      showSaveConfirm("Weight", DOGS[activeDog]);
+      void render();
+      return;
   }
 
     // flea / vax / vet
     const entry = {
       id: (crypto?.randomUUID ? crypto.randomUUID() : String(Date.now())),
       date,
-      type: entryType, // "flea" | "vax" | "vet"
+      type: entryType,
       notes
     };
+
+    const { user: sbUser2, spaceId: sbSpaceId2 } = await getUserAndSpaceId();
+    if (sbUser2 && sbSpaceId2) {
+      const row = await insertDogEntrySupabase(activeDog, entry);
+      if (!row) return;
+      showSaveConfirm(typeLabel(entryType), DOGS[activeDog]);
+      await render();
+      return;
+    }
+
+    // Fallback: localStorage
     entries.push(entry);
     saveEntries(activeDog, entries);
-
     els.notes.value = "";
     applyDefaultNotes();
-    setMsg(`Saved ${entryType === "flea" ? "flea/worm" : (entryType === "vax" ? "vax" : "vet appt")} for ${DOGS[activeDog]}.`);
+    showSaveConfirm(typeLabel(entryType), DOGS[activeDog]);
     void render();
   });
 
