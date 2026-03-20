@@ -854,6 +854,18 @@ body.readOnly #quickWormBtn { opacity: 0.4; pointer-events: none; }
 }
 .sheetActionIcon { font-size: 20px; }
 .sheetActionLabel { font-size: 11px; color: var(--muted); }
+  #toast {
+    position: fixed; bottom: 32px; left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: #2e2e2e; color: #f0f0f0;
+    padding: 10px 20px; border-radius: 999px;
+    font-size: 14px; font-weight: 600; white-space: nowrap;
+    opacity: 0; transition: opacity 200ms ease, transform 200ms ease;
+    pointer-events: none; z-index: 9999;
+  }
+  @media (prefers-color-scheme: dark) {
+    #toast { background: #d8d8d8; color: #1a1a1a; }
+  }
   </style>
   <script>
     (function() {
@@ -2994,12 +3006,6 @@ const pts = (weightsByDogPlot[dogKey] || []);
   window.addEventListener("resize", matchSubToH1);
 
 </script>
-<div id="toast" style="
-  position:fixed; bottom:32px; left:50%; transform:translateX(-50%) translateY(20px);
-  background:var(--text); color:var(--bg); padding:10px 20px; border-radius:999px;
-  font-size:14px; font-weight:600; white-space:nowrap;
-  opacity:0; transition:opacity 200ms ease, transform 200ms ease;
-  pointer-events:none; z-index:9999;
-"></div>
+<div id="toast"></div>
 </body>
 </html>
