@@ -511,11 +511,12 @@
       background: var(--card);
       color: var(--text);
       font-size: 12px;
-      white-space: nowrap;
+      white-space: pre;
       box-shadow: 0 6px 18px rgba(0,0,0,0.12);
       pointer-events: none;
       opacity: 0;
       transform: translate(-9999px, -9999px);
+      z-index: 10;
       transition: opacity 120ms ease;
       z-index: 2;
     }
@@ -881,7 +882,7 @@ body.readOnly .addRecordBtn { display: none; }
     </div>
 
     <div class="trendWrap" style="margin-top:12px;">
-      <canvas id="trend" height="180" style="width:100%; height:180px; display:block;"></canvas>
+      <canvas id="trend" height="180" style="width:100%; height:180px; display:block; touch-action:none; -webkit-user-select:none; user-select:none;"></canvas>
       <div id="trendTooltip" class="trendTooltip" role="status" aria-live="polite"></div>
       <div class="trendRow">
         <div class="themeToggle" role="group" aria-label="Chart range">
@@ -1697,16 +1698,39 @@ async function deleteDogEntrySupabase(id) {
   function showTrendTooltip(text, canvasX, canvasY) {
     const tip = els.trendTooltip;
     if (!tip) return;
+
+    // Set content first so offsetWidth/offsetHeight reflect real size
+    tip.textContent = text;
+    tip.style.opacity = "1";
+    tip.style.transform = "none";
+    tip.style.left = "-9999px";
+    tip.style.top = "-9999px";
+
     const wrap = els.trendCanvas.parentElement;
     const wrapRect = wrap.getBoundingClientRect();
     const canvasRect = els.trendCanvas.getBoundingClientRect();
-    const left = (canvasRect.left - wrapRect.left) + canvasX;
-    const top = (canvasRect.top - wrapRect.top) + canvasY;
-    tip.textContent = text;
-    tip.style.opacity = "1";
-    tip.style.transform = "translate(-50%, -100%)";
+
+    // Anchor point in wrapper-relative coordinates
+    const anchorX = (canvasRect.left - wrapRect.left) + canvasX;
+    const anchorY = (canvasRect.top  - wrapRect.top)  + canvasY;
+
+    const tipW = tip.offsetWidth;
+    const tipH = tip.offsetHeight;
+    const GAP = 8;
+
+    // Default: centered horizontally, above the point
+    let left = anchorX - tipW / 2;
+    let top  = anchorY - tipH - GAP;
+
+    // Allow tooltip to overflow above the chart — no clamping needed (wrapper has no overflow:hidden)
+
+    // Clamp horizontally within the wrapper
+    const maxLeft = wrapRect.width - tipW;
+    if (left < 0) left = 0;
+    if (left > maxLeft) left = maxLeft;
+
     tip.style.left = `${left}px`;
-    tip.style.top = `${top - 8}px`;
+    tip.style.top  = `${top}px`;
   }
 
   function hideTrendTooltip() {
@@ -2085,17 +2109,26 @@ async function deleteDogEntrySupabase(id) {
 
       // Points
       ctx.fillStyle = activeLine;
-      pts.forEach(p => {
+      pts.forEach((p, i) => {
         if (p.synthetic) return;
         const x = xFor(p.t);
         const y = yFor(p.kg);
         ctx.beginPath();
         ctx.arc(x, y, isActive ? 2.8 : 2.2, 0, Math.PI * 2);
         ctx.fill();
+        let deltaStr = "";
+        for (let j = i - 1; j >= 0; j--) {
+          if (!pts[j].synthetic) {
+            const diff = p.kg - pts[j].kg;
+            const sign = diff >= 0 ? "+" : "−";
+            deltaStr = `\n${sign}${displayWeight(Math.abs(diff))} since ${pts[j].date}`;
+            break;
+          }
+        }
         hoverPoints.weights.push({
           x,
           y,
-          label: `${DOGS[dogKey]} • ${p.date} • ${displayWeight(p.kg)}`,
+          label: `${DOGS[dogKey]} • ${p.date} • ${displayWeight(p.kg)}${deltaStr}`,
           priority: 1
         });
       });
@@ -2150,7 +2183,7 @@ async function deleteDogEntrySupabase(id) {
           hoverPoints.events.push({
             x,
             y: yy,
-            label: `${date} • ${eventLabel(type)}`,
+            label: `${DOGS[dogKey]} • ${eventLabel(type)}\n${date}`,
             priority: 2
           });
         });
@@ -2313,7 +2346,7 @@ async function deleteDogEntrySupabase(id) {
     if (!points) return null;
     const all = [...points.events, ...points.weights];
     let best = null;
-    let bestDist = 10 * 10;
+    let bestDist = 44 * 44;
     for (const p of all) {
       const dx = x - p.x;
       const dy = y - p.y;
@@ -2361,14 +2394,16 @@ async function deleteDogEntrySupabase(id) {
 
   els.range12.addEventListener("click", () => setTrendRange("12m"));
   els.rangeAll.addEventListener("click", () => setTrendRange("all"));
-  els.trendCanvas.addEventListener("pointermove", (e) => {
+  function handleTrendPointer(e) {
     const rect = els.trendCanvas.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
     const hit = findNearestHoverPoint(x, y);
     if (hit) showTrendTooltip(hit.label, hit.x, hit.y);
     else hideTrendTooltip();
-  });
+  }
+  els.trendCanvas.addEventListener("pointermove", handleTrendPointer);
+  els.trendCanvas.addEventListener("pointerdown", handleTrendPointer);
   els.trendCanvas.addEventListener("pointerleave", hideTrendTooltip);
   function haptic() { if (navigator.vibrate) navigator.vibrate(10); }
 
