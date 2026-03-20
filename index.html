@@ -511,7 +511,7 @@
       background: var(--card);
       color: var(--text);
       font-size: 12px;
-      white-space: nowrap;
+      white-space: pre;
       box-shadow: 0 6px 18px rgba(0,0,0,0.12);
       pointer-events: none;
       opacity: 0;
@@ -1697,16 +1697,42 @@ async function deleteDogEntrySupabase(id) {
   function showTrendTooltip(text, canvasX, canvasY) {
     const tip = els.trendTooltip;
     if (!tip) return;
+
+    // Set content first so offsetWidth/offsetHeight reflect real size
+    tip.textContent = text;
+    tip.style.opacity = "1";
+    tip.style.transform = "none";
+    tip.style.left = "-9999px";
+    tip.style.top = "-9999px";
+
     const wrap = els.trendCanvas.parentElement;
     const wrapRect = wrap.getBoundingClientRect();
     const canvasRect = els.trendCanvas.getBoundingClientRect();
-    const left = (canvasRect.left - wrapRect.left) + canvasX;
-    const top = (canvasRect.top - wrapRect.top) + canvasY;
-    tip.textContent = text;
-    tip.style.opacity = "1";
-    tip.style.transform = "translate(-50%, -100%)";
+
+    // Anchor point in wrapper-relative coordinates
+    const anchorX = (canvasRect.left - wrapRect.left) + canvasX;
+    const anchorY = (canvasRect.top  - wrapRect.top)  + canvasY;
+
+    const tipW = tip.offsetWidth;
+    const tipH = tip.offsetHeight;
+    const GAP = 8;
+
+    // Default: centered horizontally, above the point
+    let left = anchorX - tipW / 2;
+    let top  = anchorY - tipH - GAP;
+
+    // Flip below if top would be clipped
+    if (top < 0) {
+      top = anchorY + GAP;
+    }
+
+    // Clamp horizontally within the wrapper
+    const maxLeft = wrapRect.width - tipW;
+    if (left < 0) left = 0;
+    if (left > maxLeft) left = maxLeft;
+
     tip.style.left = `${left}px`;
-    tip.style.top = `${top - 8}px`;
+    tip.style.top  = `${top}px`;
   }
 
   function hideTrendTooltip() {
@@ -2085,17 +2111,26 @@ async function deleteDogEntrySupabase(id) {
 
       // Points
       ctx.fillStyle = activeLine;
-      pts.forEach(p => {
+      pts.forEach((p, i) => {
         if (p.synthetic) return;
         const x = xFor(p.t);
         const y = yFor(p.kg);
         ctx.beginPath();
         ctx.arc(x, y, isActive ? 2.8 : 2.2, 0, Math.PI * 2);
         ctx.fill();
+        let deltaStr = "";
+        for (let j = i - 1; j >= 0; j--) {
+          if (!pts[j].synthetic) {
+            const diff = p.kg - pts[j].kg;
+            const sign = diff >= 0 ? "+" : "−";
+            deltaStr = `\n${sign}${displayWeight(Math.abs(diff))} since ${pts[j].date}`;
+            break;
+          }
+        }
         hoverPoints.weights.push({
           x,
           y,
-          label: `${DOGS[dogKey]} • ${p.date} • ${displayWeight(p.kg)}`,
+          label: `${DOGS[dogKey]} • ${p.date} • ${displayWeight(p.kg)}${deltaStr}`,
           priority: 1
         });
       });
@@ -2150,7 +2185,7 @@ async function deleteDogEntrySupabase(id) {
           hoverPoints.events.push({
             x,
             y: yy,
-            label: `${date} • ${eventLabel(type)}`,
+            label: `${DOGS[dogKey]} • ${eventLabel(type)}\n${date}`,
             priority: 2
           });
         });
@@ -2313,7 +2348,7 @@ async function deleteDogEntrySupabase(id) {
     if (!points) return null;
     const all = [...points.events, ...points.weights];
     let best = null;
-    let bestDist = 10 * 10;
+    let bestDist = 20 * 20;
     for (const p of all) {
       const dx = x - p.x;
       const dy = y - p.y;
