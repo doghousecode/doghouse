@@ -929,7 +929,8 @@ body.readOnly .addRecordBtn { display: none; }
       <canvas id="trend" height="180" style="width:100%; height:180px; display:block; touch-action:none; -webkit-user-select:none; user-select:none;"></canvas>
       <div id="trendTooltip" class="trendTooltip" role="status" aria-live="polite"></div>
       <div class="trendRow">
-        <div class="themeToggle" style="width:80px;" role="group" aria-label="Chart range">
+        <div class="themeToggle" style="width:110px;" role="group" aria-label="Chart range">
+          <button id="range-3" type="button" aria-pressed="false">3m</button>
           <button id="range-12" type="button" aria-pressed="true" class="active">12m</button>
           <button id="range-all" type="button" aria-pressed="false">All</button>
         </div>
@@ -1441,6 +1442,7 @@ supabaseClient.auth.onAuthStateChange((_event, session) => {
     typeVet: document.getElementById("type-vet"),
     weightBlock: document.getElementById("weightBlock"),
 
+    range3: document.getElementById("range-3"),
     range12: document.getElementById("range-12"),
     rangeAll: document.getElementById("range-all"),
     exportJsonTop: document.getElementById("exportJsonTop"),
@@ -1770,8 +1772,10 @@ async function deleteDogEntrySupabase(id) {
 
   function setTrendRange(nextRange) {
     trendRange = nextRange;
+    els.range3.setAttribute("aria-pressed", String(trendRange === "3m"));
     els.range12.setAttribute("aria-pressed", String(trendRange === "12m"));
     els.rangeAll.setAttribute("aria-pressed", String(trendRange === "all"));
+    els.range3.classList.toggle("active", trendRange === "3m");
     els.range12.classList.toggle("active", trendRange === "12m");
     els.rangeAll.classList.toggle("active", trendRange === "all");
     if (window.__lastAllByDog) drawTrend(window.__lastAllByDog);
@@ -2081,10 +2085,10 @@ async function deleteDogEntrySupabase(id) {
     let rangeTMin = null;
     let rangeTMax = null;
 
-    if (trendRange === "12m" && allWeights.length) {
+    if ((trendRange === "12m" || trendRange === "3m") && allWeights.length) {
       const tMaxAll = Math.max(...allWeights.map(p => p.t));
       const tMaxRange = Math.max(tMaxAll, Date.now());
-      const tMinRange = tMaxRange - (365 * dayMs);
+      const tMinRange = tMaxRange - ((trendRange === "3m" ? 91 : 365) * dayMs);
       const weightsByDogRange = {};
       let allWeightsRange = [];
       for (const dog of DOG_KEYS) {
@@ -2520,6 +2524,7 @@ const pts = (weightsByDogPlot[dogKey] || []);
   els.typeVax.addEventListener("click", () => { if (!editingId) setEntryType("vax"); });
   els.typeVet.addEventListener("click", () => { if (!editingId) setEntryType("vet"); });
 
+  els.range3.addEventListener("click", () => setTrendRange("3m"));
   els.range12.addEventListener("click", () => setTrendRange("12m"));
   els.rangeAll.addEventListener("click", () => setTrendRange("all"));
   function handleTrendPointer(e) {
