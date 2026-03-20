@@ -2848,9 +2848,11 @@ async function deleteDogEntrySupabase(id) {
     const sub = document.querySelector(".sub");
     if (!h1 || !sub) return;
     sub.style.letterSpacing = "0";
+    h1.style.display  = "inline-block";
     sub.style.display = "inline-block";
     const h1W  = h1.getBoundingClientRect().width;
     const subW = sub.getBoundingClientRect().width;
+    h1.style.display  = "";
     sub.style.display = "";
     if (subW >= h1W) return;
     const chars = sub.textContent.trim().length;
