@@ -344,7 +344,7 @@
       align-items: center;
       gap: 6px;
       padding: 0 8px;
-      background: var(--card);
+      background: transparent;
       transform: translateX(100%);
       transition: transform 160ms ease;
     }
@@ -449,8 +449,8 @@
     .pickerPwForm input { width: 140px; padding: 5px 8px; border: 1px solid var(--border); border-radius: 6px; background: var(--bg); color: var(--text); font-size: 14px; }
     .pickerPwForm button { margin-top: 6px; width: 100%; }
 
-    body.readOnly .entryActions { display: none !important; }
     body.readOnly .entryHandle { display: none !important; }
+    body.readOnly .entryActions button { opacity: 0.35; pointer-events: none; }
     body:not(.admin) .adminOnly { display: none !important; }
 
 
@@ -2436,6 +2436,7 @@ const pts = (weightsByDogPlot[dogKey] || []);
         const id = row.getAttribute("data-entry");
         row.addEventListener("click", (e) => {
           if (e.target.closest("button")) return;
+          if (readOnly) return;
           void startEdit(id);
         });
         const SNAP = 110; // px to reveal actions
