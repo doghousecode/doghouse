@@ -2083,8 +2083,8 @@ async function deleteDogEntrySupabase(id) {
 
     if (trendRange === "12m" && allWeights.length) {
       const tMaxAll = Math.max(...allWeights.map(p => p.t));
-      const tMinRange = tMaxAll - (365 * dayMs);
-      const tMaxRange = tMaxAll;
+      const tMaxRange = Math.max(tMaxAll, Date.now());
+      const tMinRange = tMaxRange - (365 * dayMs);
       const weightsByDogRange = {};
       let allWeightsRange = [];
       for (const dog of DOG_KEYS) {
