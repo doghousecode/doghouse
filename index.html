@@ -1469,6 +1469,19 @@ supabaseClient.auth.onAuthStateChange((_event, session) => {
     els.msg.classList.toggle("error", !!isError);
   }
 
+  let _toastTimer;
+  function showToast(text) {
+    const el = document.getElementById("toast");
+    el.textContent = text;
+    el.style.opacity = "1";
+    el.style.transform = "translateX(-50%) translateY(0)";
+    clearTimeout(_toastTimer);
+    _toastTimer = setTimeout(() => {
+      el.style.opacity = "0";
+      el.style.transform = "translateX(-50%) translateY(20px)";
+    }, 2200);
+  }
+
   // Safe error reporter (won't crash if something is off)
   window.addEventListener("error", (e) => {
     try {
@@ -1917,7 +1930,7 @@ async function deleteDogEntrySupabase(id) {
     saveConfirmOverlay.style.display = "block";
     saveRow.style.display = "none";
     saveConfirm.style.display = "block";
-    saveConfirmMsg.textContent = `${typeName} record added for ${dogName}`;
+    saveConfirmMsg.textContent = `${typeName} saved for ${dogName}`;
   }
   function hideSaveConfirm() {
     saveConfirmOverlay.style.display = "none";
@@ -1982,7 +1995,7 @@ async function deleteDogEntrySupabase(id) {
 
     els.save.textContent = "Save changes";
     els.cancelEdit.style.display = "";
-    setMsg(`Editing ${e.type} entry for ${DOGS[activeDog]}.`);
+    setMsg("");
     openSheet();
   }
 
@@ -2005,7 +2018,7 @@ async function deleteDogEntrySupabase(id) {
   if (user && spaceId) {
     const ok = await deleteDogEntrySupabase(id);
     if (ok) {
-      setMsg("Deleted ✅");
+      showToast("Record deleted");
       await render();
     }
     return;
@@ -2657,7 +2670,7 @@ const pts = (weightsByDogPlot[dogKey] || []);
   if (sbUser && sbSpaceId) {
     const row = await insertDogEntrySupabase(activeDog, entry);
     if (!row) return; // insertDogEntrySupabase already setMsg()'d the error
-    setMsg(`Saved flea/worm to Supabase ✅`);
+    showToast(`Worm recorded for ${DOGS[activeDog]}`);
     await render();
     return;
   }
@@ -2665,7 +2678,7 @@ const pts = (weightsByDogPlot[dogKey] || []);
   // Fallback: localStorage (if logged out)
   entries.push(entry);
   saveEntries(activeDog, entries);
-  setMsg(`Saved flea/worm for ${DOGS[activeDog]}.`);
+  showToast(`Worm recorded for ${DOGS[activeDog]}`);
   void render();
 });
   els.callVetBtn.addEventListener("click", () => {
@@ -2788,16 +2801,16 @@ const pts = (weightsByDogPlot[dogKey] || []);
         };
         const ok = await updateDogEntrySupabase(editingId, patch);
         if (!ok) return;
-        setMsg(`Updated entry for ${DOGS[activeDog]} ✅`);
         cancelEdit();
+        showToast("Record updated");
         await render();
         return;
       }
 
       // Fallback: localStorage
       saveEntries(activeDog, entries);
-      setMsg(`Updated entry for ${DOGS[activeDog]}.`);
       cancelEdit();
+      showToast("Record updated");
       void render();
       return;
   }
@@ -2980,5 +2993,12 @@ const pts = (weightsByDogPlot[dogKey] || []);
   window.addEventListener("resize", matchSubToH1);
 
 </script>
+<div id="toast" style="
+  position:fixed; bottom:32px; left:50%; transform:translateX(-50%) translateY(20px);
+  background:var(--text); color:var(--bg); padding:10px 20px; border-radius:999px;
+  font-size:14px; font-weight:600; white-space:nowrap;
+  opacity:0; transition:opacity 200ms ease, transform 200ms ease;
+  pointer-events:none; z-index:9999;
+"></div>
 </body>
 </html>
