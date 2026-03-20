@@ -516,6 +516,7 @@
       pointer-events: none;
       opacity: 0;
       transform: translate(-9999px, -9999px);
+      z-index: 10;
       transition: opacity 120ms ease;
       z-index: 2;
     }
@@ -1721,8 +1722,7 @@ async function deleteDogEntrySupabase(id) {
     let left = anchorX - tipW / 2;
     let top  = anchorY - tipH - GAP;
 
-    // Clamp to top edge instead of flipping below (below = under thumb)
-    if (top < 0) top = 0;
+    // Allow tooltip to overflow above the chart — no clamping needed (wrapper has no overflow:hidden)
 
     // Clamp horizontally within the wrapper
     const maxLeft = wrapRect.width - tipW;
