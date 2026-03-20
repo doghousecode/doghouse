@@ -2282,7 +2282,7 @@ async function deleteDogEntrySupabase(id) {
         .map(e => ({ t: toTime(e.date), type: e.type, date: e.date }))
         .filter(e => (rangeTMin === null ? true : (e.t >= tMin && e.t <= tMax)));
 
-      const pts = (weightsByDogPlot[dogKey] || []);
+const pts = (weightsByDogPlot[dogKey] || []);
 
       const byDate = new Map();
       for (const ev of rawEvents) {
@@ -2301,7 +2301,7 @@ async function deleteDogEntrySupabase(id) {
         const types = new Set(typeSet);
         if (types.has("vax") && types.has("flea")) types.delete("flea");
 
-        const order = ["vax", "vet", "flea"].filter(tn => types.has(tn));
+        const order = ["vet", "flea", "vax"].filter(tn => types.has(tn)); // vax drawn last = on top
         const offsets = order.length === 2 ? [-8, 8] : (order.length === 3 ? [-10, 0, 10] : [0]);
 
         order.forEach((type, idx) => {
