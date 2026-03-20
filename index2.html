@@ -454,8 +454,8 @@
     }
 
     .kpiBtn:active {
-      transform: scale(0.93);
-      background: color-mix(in srgb, var(--text) 15%, var(--card));
+      transform: scale(0.88);
+      background: color-mix(in srgb, var(--text) 22%, var(--card));
     }
     .segBtn:active, button.primary:active, button.secondary:active, .smallbtn:active {
       transform: translateY(1px);
@@ -586,6 +586,9 @@
 </main>
 
 <script>
+  // Fix iOS Safari :active states — must have a touchstart listener on document
+  document.addEventListener('touchstart', function(){}, {passive: true});
+
   let trendWidthPx = null;
   const TREND_HEIGHT = 180;
 

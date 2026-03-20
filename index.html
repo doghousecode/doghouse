@@ -290,8 +290,8 @@
       transition: transform 80ms ease-out, background 80ms ease-out;
     }
     .kpiBtn:active {
-      transform: scale(0.93);
-      background: color-mix(in srgb, var(--text) 15%, var(--card));
+      transform: scale(0.88);
+      background: color-mix(in srgb, var(--text) 22%, var(--card));
     }
     .kpiSmall { font-size: 12px; color: var(--muted); font-weight: 700; }
     .kpiBig { font-size: 48px; font-weight: 700; line-height: 1; }
@@ -1024,6 +1024,8 @@ body.readOnly .addRecordBtn { display: none; }
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 
+// Fix iOS Safari :active states — must have a touchstart listener on document
+document.addEventListener('touchstart', function(){}, {passive: true});
 
 // ---- Core app globals (missing right now) ----
 let trendWidthPx = null;
