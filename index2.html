@@ -227,15 +227,19 @@
       color: var(--text);
       padding: 10px;
       text-align: center;
-      min-height: 92px;
+      aspect-ratio: 1;
       display: flex;
       flex-direction: column;
       justify-content: center;
-      gap: 4px;
+      gap: 10px;
       cursor: pointer;
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-touch-callout: none;
+      transition: transform 80ms ease-out, background 80ms ease-out;
     }
-    .kpiSmall { font-size: 12px; color: var(--muted); }
-    .kpiBig { font-size: 28px; font-weight: 700; line-height: 1; }
+    .kpiSmall { font-size: 12px; color: var(--muted); font-weight: 700; }
+    .kpiBig { font-size: 56px; font-weight: 700; line-height: 1; }
 
     .entryList { margin-top: 12px; display: flex; flex-direction: column; gap: 8px; }
     .entryYear { margin-top: 8px; font-size: 12px; color: var(--muted); }
@@ -436,7 +440,12 @@
     }
 
     /* --- Polish wins --- */
-    button, .pill, .segBtn, .kpiBtn { -webkit-tap-highlight-color: transparent; }
+    button, .pill, .segBtn, .kpiBtn, .smallbtn {
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-touch-callout: none;
+    }
 
     button:focus-visible, .pill:focus-visible, .segBtn:focus-visible, .kpiBtn:focus-visible,
     input:focus-visible, textarea:focus-visible, select:focus-visible {
@@ -444,7 +453,11 @@
       outline-offset: 2px;
     }
 
-    .kpiBtn:active, .segBtn:active, button.primary:active, button.secondary:active, .smallbtn:active {
+    .kpiBtn:active {
+      transform: scale(0.88);
+      background: color-mix(in srgb, var(--text) 22%, var(--card));
+    }
+    .segBtn:active, button.primary:active, button.secondary:active, .smallbtn:active {
       transform: translateY(1px);
     }
   </style>
@@ -493,8 +506,12 @@
         <span class="kpiSmall">Quickwormer ©</span>
       </button>
       <button id="callVetBtn" class="kpiBtn" type="button">
-        <span class="kpiBig">☎</span>
+        <span class="kpiBig">🏥</span>
         <span class="kpiSmall">Call Vet</span>
+      </button>
+      <button id="callGroomerBtn" class="kpiBtn" type="button">
+        <span class="kpiBig">🚿</span>
+        <span class="kpiSmall">Call Groomer</span>
       </button>
     </div>
 
@@ -569,6 +586,9 @@
 </main>
 
 <script>
+  // Fix iOS Safari :active states — must have a touchstart listener on document
+  document.addEventListener('touchstart', function(){}, {passive: true});
+
   let trendWidthPx = null;
   const TREND_HEIGHT = 180;
 
