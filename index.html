@@ -345,7 +345,6 @@
       gap: 6px;
       padding: 0 8px;
       background: var(--card);
-      border-left: 1px solid var(--border);
       transform: translateX(100%);
       transition: transform 160ms ease;
     }
@@ -2432,6 +2431,7 @@ const pts = (weightsByDogPlot[dogKey] || []);
       }).join("");
       els.rows.innerHTML = listHtml;
 
+      let openSnapTo = null; // track the currently-open row's snapTo fn
       els.rows.querySelectorAll("[data-entry]").forEach(row => {
         const id = row.getAttribute("data-entry");
         row.addEventListener("click", (e) => {
@@ -2458,7 +2458,9 @@ const pts = (weightsByDogPlot[dogKey] || []);
           actions.style.transform = `translateX(${110 + clamped}px)`;
         }
         function snapTo(open) {
+          if (open && openSnapTo && openSnapTo !== snapTo) openSnapTo(false);
           isOpen = open;
+          openSnapTo = open ? snapTo : (openSnapTo === snapTo ? null : openSnapTo);
           row.classList.toggle("showActions", open);
           setTransition(true);
           main.style.transform = "";
