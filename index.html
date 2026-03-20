@@ -5,9 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>The Doghouse</title>
   <!-- Home screen / PWA icons -->
-  <link rel="apple-touch-icon" sizes="180x180" href="/icon.png">
-  <link rel="icon" type="image/png" sizes="192x192" href="/icon.png">
-  <link rel="icon" type="image/png" sizes="512x512" href="/icon.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="/icon.png?v=2">
+  <link rel="icon" type="image/png" sizes="192x192" href="/icon.png?v=2">
+  <link rel="icon" type="image/png" sizes="512x512" href="/icon.png?v=2">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Doghouse">
@@ -677,7 +677,8 @@
   font-weight: 600;
 }
 .addRecordBtn:active { opacity: 0.7; }
-body.readOnly .addRecordBtn { display: none; }
+body.readOnly .addRecordBtn { opacity: 0.4; pointer-events: none; }
+body.readOnly #quickWormBtn { opacity: 0.4; pointer-events: none; }
 
 /* ── Sheet overlay ──────────────────────────────────────── */
 .sheet {
@@ -1855,6 +1856,7 @@ async function deleteDogEntrySupabase(id) {
 
     readOnly = getEffectiveReadOnly(dogKey);
     document.body.classList.toggle("readOnly", readOnly);
+    els.quickWormBtn.disabled = readOnly;
 
     cancelEdit();
     setMsg("");
@@ -2205,12 +2207,11 @@ async function deleteDogEntrySupabase(id) {
     const startYear = new Date(tMin).getFullYear();
     const endYear = new Date(tMax).getFullYear();
 
-    if (trendRange === "12m") {
-      // Quarterly labels: Jan/Apr/Jul/Oct; show year only on Jan
-      const quarterMonths = [0, 3, 6, 9];
+    if (trendRange === "12m" || trendRange === "3m") {
       const monthNames = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+      const months = trendRange === "3m" ? [0,1,2,3,4,5,6,7,8,9,10,11] : [0,3,6,9];
       for (let year = startYear; year <= endYear; year++) {
-        for (const month of quarterMonths) {
+        for (const month of months) {
           const tt = new Date(year, month, 1, 12).getTime();
           if (tt < tMin || tt > tMax) continue;
           const x = xFor(tt);
@@ -2637,6 +2638,7 @@ const pts = (weightsByDogPlot[dogKey] || []);
   // ───────────────────────────────────────────────────────────────
 
   els.quickWormBtn.addEventListener("click", async () => {
+  if (readOnly) return;
   haptic();
   const entries = await loadEntries(activeDog);
 
