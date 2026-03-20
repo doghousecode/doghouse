@@ -2278,17 +2278,9 @@ async function deleteDogEntrySupabase(id) {
     // Draw event X markers for both dogs
     function drawEventsForDog(dogKey) {
       let rawEvents = eventsOnly(allByDog[dogKey] || [])
-        .filter(e => e.date)
+        .filter(e => e.date && e.type !== "flea")
         .map(e => ({ t: toTime(e.date), type: e.type, date: e.date }))
         .filter(e => (rangeTMin === null ? true : (e.t >= tMin && e.t <= tMax)));
-
-      if (!rawEvents.length) return;
-
-      const fleaEvents = rawEvents.filter(e => e.type === "flea");
-      const latestFleaT = fleaEvents.length ? Math.max(...fleaEvents.map(e => e.t)) : null;
-      if (latestFleaT !== null) {
-        rawEvents = rawEvents.filter(e => e.type !== "flea" || e.t === latestFleaT);
-      }
 
       const pts = (weightsByDogPlot[dogKey] || []);
 
