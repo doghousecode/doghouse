@@ -757,23 +757,34 @@ body.readOnly .addRecordBtn { display: none; }
 .headerBadgeBeta { background: var(--active-line); }
 .aiBetaTitle { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
 .aiBetaDesc { font-size: 13px; color: var(--muted); margin: 0 0 12px; }
-.aiBetaRow { display: flex; gap: 8px; }
-.aiBetaBtn {
+.aiUploadRow { display: flex; gap: 10px; }
+.aiUploadBtn {
   flex: 1;
-  padding: 8px 10px;
-  border-radius: 10px;
+  padding: 12px 8px 10px;
+  border-radius: 12px;
   border: 1px solid color-mix(in srgb, var(--active-line) 28%, var(--border));
   background: var(--card);
-  color: var(--text);
   cursor: pointer;
-  font: inherit;
-  font-size: 13px;
   text-align: center;
   display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: center;
-  gap: 5px;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--muted);
+  user-select: none;
+  -webkit-user-select: none;
 }
+.aiUploadBtn svg {
+  width: 26px;
+  height: 26px;
+  stroke: var(--text);
+  fill: none;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.aiUploadBtn:active { opacity: 0.6; }
 
 /* ── Sheet divider ──────────────────────────────────────── */
 .sheetDivider {
@@ -937,6 +948,8 @@ body.readOnly .addRecordBtn { display: none; }
       </button>
     </div>
 
+    <div style="height:1px; background:var(--border); margin:16px 0 14px; opacity:0.5;"></div>
+
     <button id="addRecordBtn" class="addRecordBtn" type="button">＋ Add record</button>
     <p class="muted" id="msg" style="margin: 8px 0 0; min-height: 1em;"></p>
 
@@ -976,10 +989,24 @@ body.readOnly .addRecordBtn { display: none; }
       <div class="aiBetaBadge aiBetaBadgeComingSoon">Coming Soon</div>
       <div class="aiBetaTitle">Let Doghouse create records for you</div>
       <p class="aiBetaDesc">Upload a photo of a vet receipt or health document — AI will extract the details and create draft records for your approval.</p>
-      <div class="aiBetaRow">
-        <label class="aiBetaBtn" for="aiPhotoInput" style="cursor:pointer;">📷 Take / Upload Photo</label>
-        <input id="aiPhotoInput" type="file" accept="image/*,application/pdf" capture="environment" style="display:none;" aria-label="Upload photo or file">
-        <button class="aiBetaBtn" id="aiUploadFileBtn" type="button">📄 Upload File</button>
+      <div class="aiUploadRow">
+        <label class="aiUploadBtn" for="aiCameraInput">
+          <svg viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+          <span>Camera</span>
+        </label>
+        <input id="aiCameraInput" type="file" accept="image/*" capture="environment" style="display:none;">
+
+        <label class="aiUploadBtn" for="aiPhotosInput">
+          <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+          <span>Photos</span>
+        </label>
+        <input id="aiPhotosInput" type="file" accept="image/*" style="display:none;">
+
+        <label class="aiUploadBtn" for="aiFilesInput">
+          <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          <span>Files</span>
+        </label>
+        <input id="aiFilesInput" type="file" accept="image/*,application/pdf" style="display:none;">
       </div>
     </div>
 
@@ -991,10 +1018,10 @@ body.readOnly .addRecordBtn { display: none; }
 
     <div class="segRow">
       <div class="seg" role="group" aria-label="Entry type">
-        <button id="type-weight" class="segBtn" type="button" aria-pressed="true">Weigh-in</button>
-        <button id="type-flea" class="segBtn" type="button" aria-pressed="false">Flea &amp; worm</button>
-        <button id="type-vax" class="segBtn" type="button" aria-pressed="false">Annual vax</button>
-        <button id="type-vet" class="segBtn" type="button" aria-pressed="false">Vet appt</button>
+        <button id="type-weight" class="segBtn" type="button" aria-pressed="true">Weight</button>
+        <button id="type-flea" class="segBtn" type="button" aria-pressed="false">Worm</button>
+        <button id="type-vax" class="segBtn" type="button" aria-pressed="false">Vax</button>
+        <button id="type-vet" class="segBtn" type="button" aria-pressed="false">Vet</button>
       </div>
     </div>
 
@@ -1791,6 +1818,9 @@ async function deleteDogEntrySupabase(id) {
   const sheetClose = document.getElementById("sheetClose");
   const addRecordBtn = document.getElementById("addRecordBtn");
 
+  const sheetPanel = recordSheet.querySelector(".sheetPanel");
+  const sheetHandleRow = recordSheet.querySelector(".sheetHandleRow");
+
   function openSheet() {
     recordSheet.classList.add("open");
     document.body.style.overflow = "hidden";
@@ -1798,20 +1828,45 @@ async function deleteDogEntrySupabase(id) {
   function closeSheet() {
     recordSheet.classList.remove("open");
     document.body.style.overflow = "";
+    sheetPanel.style.transform = "";
+    sheetPanel.style.transition = "";
   }
+
+  // Drag-to-dismiss
+  let _dragY0 = 0;
+  function onDragMove(e) {
+    const delta = Math.max(0, e.touches[0].clientY - _dragY0);
+    sheetPanel.style.transform = `translateY(${delta}px)`;
+  }
+  function onDragEnd(e) {
+    document.removeEventListener("touchmove", onDragMove);
+    document.removeEventListener("touchend", onDragEnd);
+    const delta = e.changedTouches[0].clientY - _dragY0;
+    if (delta > 100) {
+      sheetPanel.style.transition = "transform 220ms ease";
+      sheetPanel.style.transform = "translateY(110%)";
+      setTimeout(closeSheet, 220);
+    } else {
+      sheetPanel.style.transition = "";
+      sheetPanel.style.transform = "";
+    }
+  }
+  sheetHandleRow.addEventListener("touchstart", (e) => {
+    _dragY0 = e.touches[0].clientY;
+    sheetPanel.style.transition = "none";
+    document.addEventListener("touchmove", onDragMove, { passive: true });
+    document.addEventListener("touchend", onDragEnd, { passive: true });
+  }, { passive: true });
 
   addRecordBtn.addEventListener("click", openSheet);
   sheetClose.addEventListener("click", closeSheet);
   sheetBackdrop.addEventListener("click", closeSheet);
 
-  // AI beta stubs
-  document.getElementById("aiPhotoInput").addEventListener("change", (e) => {
-    if (e.target.files?.length) {
-      setMsg("AI import coming soon — file received but not yet processed.", false);
-    }
-  });
-  document.getElementById("aiUploadFileBtn").addEventListener("click", () => {
-    document.getElementById("aiPhotoInput").click();
+  // AI upload stubs
+  ["aiCameraInput", "aiPhotosInput", "aiFilesInput"].forEach(id => {
+    document.getElementById(id).addEventListener("change", (e) => {
+      if (e.target.files?.length) setMsg("AI import coming soon — file received but not yet processed.", false);
+    });
   });
 
   // Filter buttons
