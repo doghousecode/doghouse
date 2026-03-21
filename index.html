@@ -659,10 +659,51 @@
       font-family: 'Bebas Neue', sans-serif;
       font-size: 52px;
       letter-spacing: 0.03em;
-      line-height: 1;
+      line-height: 1.1;
       color: #ffffff;
       margin: 0 0 20px;
     }
+    .coldStartWelcomeTo {
+      display: block;
+      font-size: 28px;
+      letter-spacing: 0.06em;
+    }
+    .coldStartPwStep {
+      display: none;
+      width: 220px;
+      margin: 0 auto;
+    }
+    .coldStartPwLabel {
+      color: rgba(255,255,255,0.7);
+      font-size: 14px;
+      margin: 0 0 10px;
+    }
+    .coldStartPwInput {
+      width: 100%;
+      padding: 13px 16px;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,0.25);
+      background: rgba(255,255,255,0.10);
+      color: #ffffff;
+      font: inherit;
+      font-size: 16px;
+      box-sizing: border-box;
+      margin-bottom: 10px;
+      outline: none;
+    }
+    .coldStartPwInput::placeholder { color: rgba(255,255,255,0.35); }
+    .coldStartPwInput:focus { border-color: rgba(255,255,255,0.55); }
+    .coldStartPwBack {
+      background: none;
+      border: none;
+      color: rgba(255,255,255,0.5);
+      font: inherit;
+      font-size: 14px;
+      cursor: pointer;
+      margin-top: 6px;
+      padding: 4px 0;
+    }
+    .coldStartPwBack:active { color: rgba(255,255,255,0.8); }
     .coldStartUsers {
       display: flex;
       flex-direction: column;
@@ -1088,12 +1129,18 @@ body.readOnly #quickWormBtn { opacity: 0.4; pointer-events: none; }
 <!-- ── Cold-start overlay ───────────────────────────────── -->
 <div id="coldStart" class="gone">
   <div class="coldStartCard">
-    <p class="coldStartHeadline">Welcome to The Doghouse.</p>
+    <p class="coldStartHeadline"><span class="coldStartWelcomeTo">Welcome to</span>The Doghouse</p>
     <div class="coldStartUsers" id="coldStartUsers">
       <button class="coldStartUserBtn" data-user="steve"   type="button">Steve</button>
       <button class="coldStartUserBtn" data-user="melissa" type="button">Melissa</button>
       <button class="coldStartUserBtn" data-user="tim"     type="button">Uncle Tim</button>
       <button class="coldStartUserBtn" data-user="sarah"   type="button">Sarah</button>
+    </div>
+    <div class="coldStartPwStep" id="coldStartPwStep">
+      <p class="coldStartPwLabel" id="coldStartPwLabel">Password for</p>
+      <input class="coldStartPwInput" id="coldStartPwInput" type="password" placeholder="Password" autocomplete="current-password">
+      <button class="coldStartUserBtn" id="coldStartPwGo" type="button">Sign In</button>
+      <button class="coldStartPwBack" id="coldStartPwBack" type="button">← Back</button>
     </div>
     <p id="coldStartStatus" class="coldStartStatus"></p>
   </div>
@@ -1278,25 +1325,61 @@ function hideColdStart() {
   coldStartEl.addEventListener("transitionend", () => coldStartEl.classList.add("gone"), { once: true });
 }
 
-// Inline sign-in for cold start — fires immediately without opening the header picker
-document.getElementById("coldStartUsers").querySelectorAll(".coldStartUserBtn").forEach(btn => {
-  btn.addEventListener("click", async () => {
+// Inline sign-in for cold start — user selection leads to a password step
+const coldStartUsersEl  = document.getElementById("coldStartUsers");
+const coldStartPwStepEl = document.getElementById("coldStartPwStep");
+const coldStartPwLabel  = document.getElementById("coldStartPwLabel");
+const coldStartPwInput  = document.getElementById("coldStartPwInput");
+const coldStartPwGo     = document.getElementById("coldStartPwGo");
+const coldStartPwBack   = document.getElementById("coldStartPwBack");
+let coldStartPwCfg = null;
+
+function coldStartShowPw(cfg) {
+  coldStartPwCfg = cfg;
+  coldStartPwLabel.textContent = `Password for ${cfg.label}`;
+  coldStartPwInput.value = "";
+  coldStartStatusEl.textContent = "";
+  coldStartUsersEl.style.display = "none";
+  coldStartPwStepEl.style.display = "";
+  coldStartPwInput.focus();
+}
+function coldStartShowUsers() {
+  coldStartPwCfg = null;
+  coldStartStatusEl.textContent = "";
+  coldStartPwStepEl.style.display = "none";
+  coldStartUsersEl.style.display = "";
+}
+
+coldStartUsersEl.querySelectorAll(".coldStartUserBtn").forEach(btn => {
+  btn.addEventListener("click", () => {
     // USERS is declared a few lines below; closure captures it at call time
     const cfg = USERS[btn.dataset.user];
-    if (!cfg) return;
-    const allBtns = document.querySelectorAll(".coldStartUserBtn");
-    allBtns.forEach(b => { b.disabled = true; });
-    coldStartStatusEl.textContent = `Signing in as ${cfg.label}…`;
-    const { error } = await supabaseClient.auth.signInWithPassword({
-      email: cfg.email, password: cfg.autoPassword
-    });
-    if (error) {
-      coldStartStatusEl.textContent = `Sign-in failed. Please try again.`;
-      allBtns.forEach(b => { b.disabled = false; });
-    }
-    // On success: onAuthStateChange fires → render → hideColdStart
+    if (cfg) coldStartShowPw(cfg);
   });
 });
+
+async function coldStartDoSignIn() {
+  const cfg = coldStartPwCfg;
+  if (!cfg) return;
+  const password = coldStartPwInput.value;
+  if (!password) { coldStartPwInput.focus(); return; }
+  coldStartPwGo.disabled = true;
+  coldStartPwBack.disabled = true;
+  coldStartStatusEl.textContent = `Signing in as ${cfg.label}…`;
+  const { error } = await supabaseClient.auth.signInWithPassword({ email: cfg.email, password });
+  if (error) {
+    coldStartStatusEl.textContent = "Incorrect password. Please try again.";
+    coldStartPwInput.value = "";
+    coldStartPwInput.focus();
+    coldStartPwGo.disabled = false;
+    coldStartPwBack.disabled = false;
+  }
+  // On success: onAuthStateChange fires → render → hideColdStart
+}
+
+coldStartPwGo.addEventListener("click", coldStartDoSignIn);
+coldStartPwInput.addEventListener("keydown", e => { if (e.key === "Enter") coldStartDoSignIn(); });
+coldStartPwBack.addEventListener("click", coldStartShowUsers);
 
 // auth UI elements
 const loginBtn = document.getElementById("loginBtn");
