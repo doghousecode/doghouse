@@ -632,6 +632,68 @@
       border: 0;
     }
 
+    /* ── Cold-start overlay ─────────────────────────────── */
+    #coldStart {
+      position: fixed;
+      inset: 0;
+      z-index: 50;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      padding-top: 30vh;
+      background: rgba(0, 0, 0, 0.40);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      transition: opacity 300ms ease;
+    }
+    #coldStart.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+    #coldStart.gone { display: none; }
+    .coldStartCard {
+      text-align: center;
+      padding: 0 24px;
+    }
+    .coldStartHeadline {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 52px;
+      letter-spacing: 0.03em;
+      line-height: 1;
+      color: #ffffff;
+      margin: 0 0 20px;
+    }
+    .coldStartUsers {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      width: 220px;
+      margin: 0 auto;
+    }
+    .coldStartUserBtn {
+      width: 100%;
+      padding: 13px 20px;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,0.25);
+      background: rgba(255,255,255,0.12);
+      color: #ffffff;
+      font: inherit;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+      transition: background 160ms ease;
+    }
+    .coldStartUserBtn:active { background: rgba(255,255,255,0.22); }
+    .coldStartUserBtn:disabled { opacity: 0.45; cursor: default; }
+    .coldStartStatus {
+      margin-top: 16px;
+      font-size: 14px;
+      color: rgba(255,255,255,0.65);
+      min-height: 20px;
+      text-align: center;
+    }
+
 /* ── Filter strip ───────────────────────────────────────── */
 .filterStrip {
   display: flex;
@@ -1023,6 +1085,20 @@ body.readOnly #quickWormBtn { opacity: 0.4; pointer-events: none; }
   </div>
 </main>
 
+<!-- ── Cold-start overlay ───────────────────────────────── -->
+<div id="coldStart" class="gone">
+  <div class="coldStartCard">
+    <p class="coldStartHeadline">Welcome to The Doghouse.</p>
+    <div class="coldStartUsers" id="coldStartUsers">
+      <button class="coldStartUserBtn" data-user="steve"   type="button">Steve</button>
+      <button class="coldStartUserBtn" data-user="melissa" type="button">Melissa</button>
+      <button class="coldStartUserBtn" data-user="tim"     type="button">Uncle Tim</button>
+      <button class="coldStartUserBtn" data-user="sarah"   type="button">Sarah</button>
+    </div>
+    <p id="coldStartStatus" class="coldStartStatus"></p>
+  </div>
+</div>
+
 <!-- ── Add Record Sheet ─────────────────────────────────── -->
 <div id="recordSheet" class="sheet" role="dialog" aria-modal="true" aria-label="Add Record">
   <div class="sheetBackdrop" id="sheetBackdrop"></div>
@@ -1186,6 +1262,42 @@ if (!user || !spaceId) return null;
   return data || [];
 }
 
+// cold-start overlay
+// True only on a genuine first visit (no stored session AND no sign-in yet this tab).
+// Once the user has signed in, subsequent logouts use the header button only.
+const coldStartEl = document.getElementById("coldStart");
+const coldStartStatusEl = document.getElementById("coldStartStatus");
+let coldStartMode = !sessionPending && !sessionStorage.getItem("doghouse:signed-in-this-session");
+
+function showColdStart() {
+  coldStartEl.classList.remove("gone", "hidden");
+}
+function hideColdStart() {
+  if (coldStartEl.classList.contains("gone")) return;
+  coldStartEl.classList.add("hidden");
+  coldStartEl.addEventListener("transitionend", () => coldStartEl.classList.add("gone"), { once: true });
+}
+
+// Inline sign-in for cold start — fires immediately without opening the header picker
+document.getElementById("coldStartUsers").querySelectorAll(".coldStartUserBtn").forEach(btn => {
+  btn.addEventListener("click", async () => {
+    // USERS is declared a few lines below; closure captures it at call time
+    const cfg = USERS[btn.dataset.user];
+    if (!cfg) return;
+    const allBtns = document.querySelectorAll(".coldStartUserBtn");
+    allBtns.forEach(b => { b.disabled = true; });
+    coldStartStatusEl.textContent = `Signing in as ${cfg.label}…`;
+    const { error } = await supabaseClient.auth.signInWithPassword({
+      email: cfg.email, password: cfg.autoPassword
+    });
+    if (error) {
+      coldStartStatusEl.textContent = `Sign-in failed. Please try again.`;
+      allBtns.forEach(b => { b.disabled = false; });
+    }
+    // On success: onAuthStateChange fires → render → hideColdStart
+  });
+});
+
 // auth UI elements
 const loginBtn = document.getElementById("loginBtn");
 const logoutBtn = document.getElementById("logoutBtn");
@@ -1228,6 +1340,9 @@ function updateAuthAvatar() {
 
 function setAuthUI(user) {
   if (user) {
+    // Mark that a sign-in has happened this tab — future logouts are "warm"
+    sessionStorage.setItem("doghouse:signed-in-this-session", "1");
+    coldStartMode = false;
     const cfg = currentUserCfg();
     const name = cfg?.label || user.email;
     loginBtn.style.display = "none";
@@ -1236,12 +1351,15 @@ function setAuthUI(user) {
     updateAuthAvatar();
     document.body.classList.toggle("admin", cfg?.admin ?? false);
     // readOnly is now set per-dog in setActiveDog
+    // hideColdStart() is called after render() completes, not here
   } else {
     readOnly = false;
     loginBtn.style.display = sessionPending ? "none" : "";
     logoutBtn.style.display = "none";
     document.body.classList.remove("readOnly");
     document.body.classList.remove("admin");
+    // Only show full cold-start overlay on a genuine first load
+    if (!sessionPending && coldStartMode) showColdStart();
   }
   if (typeof setSpaceUI === "function") setSpaceUI(user);
 }
@@ -1426,7 +1544,10 @@ supabaseClient.auth.onAuthStateChange((_event, session) => {
       }
     }
 
-    if (typeof render === "function") void render();
+    if (typeof render === "function") {
+      await render();
+      if (currentUser) hideColdStart();
+    }
   }, 0);
 });
   const els = {
