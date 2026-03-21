@@ -2526,13 +2526,13 @@ async function deleteDogEntrySupabase(id) {
     drawLineForDog(activeDog);
 
     // Draw event X markers for both dogs
-    function drawEventsForDog(dogKey) {
+    function collectEventsForDog(dogKey, out) {
       let rawEvents = eventsOnly(allByDog[dogKey] || [])
         .filter(e => e.date && e.type !== "flea")
         .map(e => ({ t: toTime(e.date), type: e.type, date: e.date }))
         .filter(e => (rangeTMin === null ? true : (e.t >= tMin && e.t <= tMax)));
 
-const pts = (weightsByDogPlot[dogKey] || []);
+      const pts = (weightsByDogPlot[dogKey] || []);
 
       const byDate = new Map();
       for (const ev of rawEvents) {
@@ -2544,32 +2544,34 @@ const pts = (weightsByDogPlot[dogKey] || []);
       for (const [date, typeSet] of byDate.entries()) {
         const t = toTime(date);
         const kgAt = weightAtTime(pts, t);
-        if (kgAt === null) continue; // no weight line to anchor to
+        if (kgAt === null) continue;
         const x = xFor(t);
         const y = yFor(kgAt);
 
         const types = new Set(typeSet);
         if (types.has("vax") && types.has("flea")) types.delete("flea");
 
-        const order = ["vet", "flea", "vax"].filter(tn => types.has(tn)); // vax drawn last = on top
+        const order = ["vet", "flea", "vax"].filter(tn => types.has(tn));
         const offsets = order.length === 2 ? [-8, 8] : (order.length === 3 ? [-10, 0, 10] : [0]);
 
         order.forEach((type, idx) => {
           const color = (type === "flea") ? fleaC : (type === "vax" ? vaxC : vetC);
-          const yy = y + offsets[idx];
-          drawX(ctx, x, yy, 3, color);
-          hoverPoints.events.push({
-            x,
-            y: yy,
-            label: `${DOGS[dogKey]} • ${eventLabel(type)}\n${date}`,
-            priority: 2
-          });
+          out.push({ type, x, y: y + offsets[idx], color,
+            label: `${DOGS[dogKey]} • ${eventLabel(type)}\n${date}` });
         });
       }
     }
 
-    DOG_KEYS.filter(k => k !== activeDog).forEach(drawEventsForDog);
-    drawEventsForDog(activeDog);
+    // Collect across all dogs, then draw vet/flea before vax so green is always on top
+    const allEventOps = [];
+    DOG_KEYS.filter(k => k !== activeDog).forEach(k => collectEventsForDog(k, allEventOps));
+    collectEventsForDog(activeDog, allEventOps);
+    const typeDrawOrder = { vet: 0, flea: 1, vax: 2 };
+    allEventOps.sort((a, b) => (typeDrawOrder[a.type] ?? 0) - (typeDrawOrder[b.type] ?? 0));
+    for (const op of allEventOps) {
+      drawX(ctx, op.x, op.y, 3, op.color);
+      hoverPoints.events.push({ x: op.x, y: op.y, label: op.label, priority: 2 });
+    }
 
     // Summary label
     els.trendLabel.textContent = "";
