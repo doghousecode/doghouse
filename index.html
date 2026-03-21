@@ -632,6 +632,58 @@
       border: 0;
     }
 
+    /* ── Cold-start overlay ─────────────────────────────── */
+    #coldStart {
+      position: fixed;
+      inset: 0;
+      z-index: 50;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      padding-top: 30vh;
+      background: rgba(0, 0, 0, 0.40);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      transition: opacity 300ms ease;
+    }
+    #coldStart.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+    #coldStart.gone { display: none; }
+    .coldStartCard {
+      text-align: center;
+      padding: 0 24px;
+    }
+    .coldStartHeadline {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 52px;
+      letter-spacing: 0.03em;
+      line-height: 1;
+      color: #ffffff;
+      margin: 0 0 20px;
+    }
+    .coldStartLoginBtn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 12px 28px;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,0.25);
+      background: rgba(255,255,255,0.12);
+      color: #ffffff;
+      font: inherit;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+      transition: background 160ms ease;
+    }
+    .coldStartLoginBtn:active {
+      background: rgba(255,255,255,0.22);
+    }
+
 /* ── Filter strip ───────────────────────────────────────── */
 .filterStrip {
   display: flex;
@@ -1023,6 +1075,14 @@ body.readOnly #quickWormBtn { opacity: 0.4; pointer-events: none; }
   </div>
 </main>
 
+<!-- ── Cold-start overlay ───────────────────────────────── -->
+<div id="coldStart" class="gone">
+  <div class="coldStartCard">
+    <p class="coldStartHeadline">Welcome to The Doghouse.</p>
+    <button id="coldStartLoginBtn" class="coldStartLoginBtn" type="button">Sign in ▾</button>
+  </div>
+</div>
+
 <!-- ── Add Record Sheet ─────────────────────────────────── -->
 <div id="recordSheet" class="sheet" role="dialog" aria-modal="true" aria-label="Add Record">
   <div class="sheetBackdrop" id="sheetBackdrop"></div>
@@ -1186,6 +1246,21 @@ if (!user || !spaceId) return null;
   return data || [];
 }
 
+// cold-start overlay
+const coldStartEl = document.getElementById("coldStart");
+const coldStartLoginBtn = document.getElementById("coldStartLoginBtn");
+function showColdStart() {
+  coldStartEl.classList.remove("gone", "hidden");
+}
+function hideColdStart() {
+  coldStartEl.classList.add("hidden");
+  coldStartEl.addEventListener("transitionend", () => coldStartEl.classList.add("gone"), { once: true });
+}
+coldStartLoginBtn.addEventListener("click", (e) => {
+  e.stopPropagation();
+  loginPicker.style.display = loginPicker.style.display === "block" ? "none" : "block";
+});
+
 // auth UI elements
 const loginBtn = document.getElementById("loginBtn");
 const logoutBtn = document.getElementById("logoutBtn");
@@ -1236,12 +1311,14 @@ function setAuthUI(user) {
     updateAuthAvatar();
     document.body.classList.toggle("admin", cfg?.admin ?? false);
     // readOnly is now set per-dog in setActiveDog
+    hideColdStart();
   } else {
     readOnly = false;
     loginBtn.style.display = sessionPending ? "none" : "";
     logoutBtn.style.display = "none";
     document.body.classList.remove("readOnly");
     document.body.classList.remove("admin");
+    if (!sessionPending) showColdStart();
   }
   if (typeof setSpaceUI === "function") setSpaceUI(user);
 }
