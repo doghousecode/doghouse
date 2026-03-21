@@ -26,7 +26,7 @@
 
       --pill-bg: #ffffff;
       --pill-text: #111111;
-      --pill-active-bg: #111111;
+      --pill-active-bg: #2e2e2e;
       --pill-active-text: #ffffff;
 
       --toggle-active-bg: #e0e0e3;
@@ -864,8 +864,10 @@ body.readOnly #quickWormBtn { opacity: 0.4; pointer-events: none; }
     pointer-events: none; z-index: 9999;
   }
   @media (prefers-color-scheme: dark) {
-    #toast { background: #d8d8d8; color: #1a1a1a; }
+    :root:not([data-theme="light"]) #toast { background: #d8d8d8; color: #1a1a1a; }
   }
+  html[data-theme="dark"] #toast { background: #d8d8d8; color: #1a1a1a; }
+  html[data-theme="light"] #toast { background: #2e2e2e; color: #f0f0f0; }
   </style>
   <script>
     (function() {
