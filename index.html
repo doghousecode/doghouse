@@ -1292,6 +1292,7 @@ const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, 
 });
 let creatorMap = {}; // { [user_id]: { initial, color } }
 let currentUser = null; // cached from onAuthStateChange — avoids re-entering the auth lock
+let cachedSpaceId = localStorage.getItem("doghouse:cached_space_id") || null;
 const SUPABASE_STORAGE_KEY = `sb-${SUPABASE_URL.split('.')[0].split('//')[1]}-auth-token`;
 let sessionPending = !!localStorage.getItem(SUPABASE_STORAGE_KEY);
 
@@ -1740,7 +1741,14 @@ supabaseClient.auth.onAuthStateChange((_event, session) => {
     .single();
 
   console.log("[getUserAndSpaceId] user:", user?.email, "sm:", sm, "error:", error);
-  if (error || !sm?.space_id) return { user, spaceId: null };
+  if (error || !sm?.space_id) {
+    // Network is down — use the in-memory/persisted cache so writes can proceed offline
+    if (cachedSpaceId) return { user, spaceId: cachedSpaceId };
+    return { user, spaceId: null };
+  }
+  // Persist so page reloads while offline can still get the spaceId
+  cachedSpaceId = sm.space_id;
+  localStorage.setItem("doghouse:cached_space_id", sm.space_id);
   return { user, spaceId: sm.space_id };
 }
 
