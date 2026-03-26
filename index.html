@@ -12,6 +12,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Doghouse">
   <meta name="theme-color" content="#111111">
+  <link rel="manifest" href="/manifest.json">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400&display=swap" rel="stylesheet">
   <style>
@@ -971,6 +972,16 @@ body.readOnly #quickWormBtn { opacity: 0.4; pointer-events: none; }
   }
   html[data-theme="dark"] #toast { background: #d8d8d8; color: #1a1a1a; }
   html[data-theme="light"] #toast { background: #2e2e2e; color: #f0f0f0; }
+
+  /* Offline banner */
+  #offlineBanner {
+    display: none;
+    position: fixed; top: 0; left: 0; right: 0;
+    background: #b45309; color: #fff;
+    text-align: center; font-size: 13px; font-weight: 600;
+    padding: 6px 12px; z-index: 9998; letter-spacing: 0.02em;
+  }
+  body.offline #offlineBanner { display: block; }
   </style>
   <script>
     (function() {
@@ -1758,6 +1769,12 @@ async function insertDogEntrySupabase(dogKey, entry) {
 
   if (error) {
     console.error("Insert failed", error);
+    if (!navigator.onLine) {
+      queueOfflineOp({ op: "insert", dogKey, entry });
+      setMsg("Saved locally — will sync when back online");
+      // Return a synthetic entry so the UI updates immediately
+      return { ...entry, id: entry.id || `local-${Date.now()}` };
+    }
     setMsg(`Supabase insert failed: ${error.message}`, true);
     return null;
   }
@@ -1776,6 +1793,11 @@ async function updateDogEntrySupabase(id, patch) {
 
   if (error) {
     console.error("Update failed", error);
+    if (!navigator.onLine) {
+      queueOfflineOp({ op: "update", id, patch });
+      setMsg("Saved locally — will sync when back online");
+      return true;
+    }
     setMsg(`Supabase update failed: ${error.message}`, true);
     return false;
   }
@@ -1793,11 +1815,48 @@ async function deleteDogEntrySupabase(id) {
 
   if (error) {
     console.error("Delete failed", error);
+    if (!navigator.onLine) {
+      queueOfflineOp({ op: "delete", id });
+      setMsg("Deleted locally — will sync when back online");
+      return true;
+    }
     setMsg(`Supabase delete failed: ${error.message}`, true);
     return false;
   }
   return true;
 }
+
+// ── Offline write queue ──────────────────────────────────────────────────────
+// When Supabase writes fail (no signal), operations are queued in localStorage
+// and replayed automatically when the connection is restored.
+const PENDING_KEY = "doghouse:pending_writes";
+
+function queueOfflineOp(op) {
+  const q = JSON.parse(localStorage.getItem(PENDING_KEY) || "[]");
+  q.push({ ...op, timestamp: Date.now() });
+  localStorage.setItem(PENDING_KEY, JSON.stringify(q));
+}
+
+async function drainOfflineQueue() {
+  const q = JSON.parse(localStorage.getItem(PENDING_KEY) || "[]");
+  if (!q.length) return;
+  const remaining = [];
+  for (const op of q) {
+    let ok = false;
+    if (op.op === "insert") ok = !!(await insertDogEntrySupabase(op.dogKey, op.entry));
+    if (op.op === "update") ok = await updateDogEntrySupabase(op.id, op.patch);
+    if (op.op === "delete") ok = await deleteDogEntrySupabase(op.id);
+    if (!ok) remaining.push(op);
+  }
+  localStorage.setItem(PENDING_KEY, JSON.stringify(remaining));
+  if (remaining.length < q.length && typeof render === "function") void render();
+}
+
+window.addEventListener("online",  () => { document.body.classList.remove("offline"); drainOfflineQueue(); });
+window.addEventListener("offline", () => document.body.classList.add("offline"));
+if (!navigator.onLine) document.body.classList.add("offline");
+// ────────────────────────────────────────────────────────────────────────────
+
   async function migrateLocalDataToSupabaseOnce() {
   const user = currentUser;
   if (!user) return;
@@ -1871,7 +1930,9 @@ async function deleteDogEntrySupabase(id) {
 
   // Only use Supabase if it returned real entries
   if (Array.isArray(supabaseData) && supabaseData.length > 0) {
-    return supabaseData.map(normalizeEntry).filter(Boolean);
+    const entries = supabaseData.map(normalizeEntry).filter(Boolean);
+    saveEntries(dogKey, entries); // keep local cache warm for offline visits
+    return entries;
   }
 
   // Otherwise fallback to localStorage
@@ -3213,7 +3274,13 @@ async function deleteDogEntrySupabase(id) {
   document.fonts.ready.then(matchSubToH1);
   window.addEventListener("resize", matchSubToH1);
 
+  // Service worker — enables offline load from cache
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/sw.js');
+  }
+
 </script>
+<div id="offlineBanner">Offline — changes will sync when you're back online</div>
 <div id="toast"></div>
 </body>
 </html>
