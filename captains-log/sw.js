@@ -6,7 +6,9 @@
  * isn't. Hashed build assets are cache-first — their URL changes when
  * their content does, so a hit is always correct.
  */
-const CACHE = "captains-log-v1";
+// Bump to drop every previously cached response — activate deletes any cache
+// whose name doesn't match.
+const CACHE = "captains-log-v2";
 const ROOT = new URL("./", self.registration.scope).pathname;
 
 self.addEventListener("install", (event) => {
