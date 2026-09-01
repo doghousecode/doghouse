@@ -8,7 +8,7 @@
  */
 // Bump to drop every previously cached response — activate deletes any cache
 // whose name doesn't match.
-const CACHE = "captains-log-v2";
+const CACHE = "captains-log-v3";
 const ROOT = new URL("./", self.registration.scope).pathname;
 
 self.addEventListener("install", (event) => {
